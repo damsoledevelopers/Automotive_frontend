@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: ecommerce-sparelo
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run start-prod
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
