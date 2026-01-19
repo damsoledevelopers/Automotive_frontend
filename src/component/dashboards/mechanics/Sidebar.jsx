@@ -12,7 +12,8 @@ import {
   FaSignOutAlt,
   FaTimes,
   FaClock,
-  FaCheckCircle
+  FaCheckCircle,
+  FaTruck
 } from 'react-icons/fa';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -25,6 +26,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { id: 'appointments', label: 'Appointments', icon: FaCalendar, path: '/mechanics/dashboard/appointments' },
     { id: 'history', label: 'Job History', icon: FaHistory, path: '/mechanics/dashboard/history' },
     { id: 'analytics', label: 'Analytics', icon: FaChartLine, path: '/mechanics/dashboard/analytics' },
+    { id: 'procurement', label: 'Procurement', icon: FaTruck, path: '/mechanics/dashboard/procurement' },
     { id: 'parts', label: 'Order Parts', icon: FaShoppingCart, path: '/mechanics/dashboard/parts' },
     { id: 'profile', label: 'Profile', icon: FaUser, path: '/mechanics/dashboard/profile' },
     { id: 'settings', label: 'Settings', icon: FaCog, path: '/mechanics/dashboard/settings' },
@@ -49,13 +51,12 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 lg:static lg:z-auto w-64 border-r border-gray-200`}
+        className={`fixed top-0 left-0 z-50 w-64 bg-white shadow-lg border-r border-gray-200 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          } lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen shrink-0`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 h-[73px]">
             <h2 className="text-xl font-bold text-gray-900">Mechanic Panel</h2>
             <button
               onClick={() => setIsOpen(false)}
@@ -78,11 +79,10 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                         navigate(item.path);
                         setIsOpen(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                        active
-                          ? 'bg-purple-50 text-purple-600 font-semibold'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${active
+                        ? 'bg-purple-50 text-purple-600 font-semibold'
+                        : 'text-gray-700 hover:bg-gray-100'
+                        }`}
                     >
                       <Icon className="text-lg" />
                       <span>{item.label}</span>

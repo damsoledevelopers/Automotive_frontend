@@ -54,12 +54,12 @@ const Overview = ({ timeSeriesData, dateRange, activeJobs, EarningsChart, JobsCh
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h4 className="font-semibold text-gray-900">{job.vehicle}</h4>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      job.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                      job.status === 'diagnosed' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {job.status}
+                    <span className={`px-2 py-1 text-xs rounded-full ${job.status === 'repairing' ? 'bg-blue-100 text-blue-800' :
+                      job.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        job.status === 'pending_customer' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                      }`}>
+                      {job.status.replace('_', ' ')}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 mb-1">Service: {job.service}</p>
@@ -71,11 +71,11 @@ const Overview = ({ timeSeriesData, dateRange, activeJobs, EarningsChart, JobsCh
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button 
-                    onClick={() => navigate(`/service/job/${job.id}`)}
+                  <button
+                    onClick={() => navigate(`/mechanics/dashboard/jobs/${job.id}`)}
                     className="btn-primary text-sm"
                   >
-                    View Details
+                    Manage
                   </button>
                 </div>
               </div>

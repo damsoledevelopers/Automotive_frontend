@@ -19,12 +19,37 @@ import {
 } from 'react-icons/fa';
 
 const Users = ({ usersData }) => {
+  const [view, setView] = useState('list'); // 'list', 'edit', 'view', 'discount'
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDiscountModal, setShowDiscountModal] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: '', email: '', role: 'customer', status: 'Active'
+  });
+
+  const handleAction = (type, user) => {
+    setSelectedUser(user);
+    if (type === 'edit') {
+      setFormData({ ...user });
+      setView('edit');
+    } else if (type === 'view') {
+      setView('view');
+    } else if (type === 'discount') {
+      setView('discount');
+    } else if (type === 'delete') {
+      if (window.confirm(`Delete ${user.name}?`)) {
+        alert('User deleted');
+      }
+    }
+  };
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    alert(`User "${formData.name}" updated!`);
+    setView('list');
+  };
 
   // Enhanced users data with vendors, mechanics, and customers
   const enhancedUsersData = useMemo(() => [
@@ -61,7 +86,7 @@ const Users = ({ usersData }) => {
 
   const filteredUsers = useMemo(() => {
     return enhancedUsersData.filter(user => {
-      const matchesSearch = 
+      const matchesSearch =
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesRole = roleFilter === 'all' || user.role === roleFilter;
@@ -71,7 +96,7 @@ const Users = ({ usersData }) => {
   }, [enhancedUsersData, searchTerm, roleFilter, statusFilter]);
 
   const getRoleIcon = (role) => {
-    switch(role) {
+    switch (role) {
       case 'vendor': return <FaStore className="text-green-600" />;
       case 'mechanics': return <FaTools className="text-blue-600" />;
       default: return <FaUser className="text-gray-600" />;
@@ -87,6 +112,100 @@ const Users = ({ usersData }) => {
     };
     return badges[role] || 'bg-gray-100 text-gray-800';
   };
+
+  if (view === 'view' && selectedUser) {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-black text-gray-900 uppercase">User Profile</h2>
+          <button onClick={() => setView('list')} className="text-gray-500 font-bold hover:text-gray-900">← Back</button>
+        </div>
+        <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 flex flex-col md:flex-row gap-8">
+          <div className="w-24 h-24 bg-blue-600 rounded-full flex items-center justify-center text-white shrink-0 shadow-lg font-black text-3xl">
+            {selectedUser.name.charAt(0)}
+          </div>
+          <div className="flex-1 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-3xl font-black text-gray-900">{selectedUser.name}</h3>
+                <p className="text-gray-500 font-bold">{selectedUser.email}</p>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => handleAction('edit', selectedUser)} className="px-6 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-sm">Edit profile</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 bg-gray-50 rounded-2xl">
+                <p className="text-[10px] font-black text-gray-400 uppercase">Role</p>
+                <p className="font-bold text-gray-900 uppercase">{selectedUser.role}</p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-2xl">
+                <p className="text-[10px] font-black text-gray-400 uppercase">Status</p>
+                <p className="font-bold text-gray-900 uppercase">{selectedUser.status}</p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-2xl">
+                <p className="text-[10px] font-black text-gray-400 uppercase">Total Orders</p>
+                <p className="font-bold text-gray-900">{selectedUser.orders || 0}</p>
+              </div>
+              <div className="p-4 bg-gray-50 rounded-2xl">
+                <p className="text-[10px] font-black text-gray-400 uppercase">Registered</p>
+                <p className="font-bold text-gray-900">{selectedUser.registrationDate || 'N/A'}</p>
+              </div>
+            </div>
+            {selectedUser.privileges && (
+              <div className="p-6 bg-blue-50 rounded-2xl border border-blue-100">
+                <h4 className="text-[10px] font-black text-blue-900 uppercase tracking-widest mb-4">Account Privileges</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedUser.privileges.map(p => <span key={p} className="px-3 py-1 bg-white rounded-full text-xs font-bold text-blue-600 border border-blue-100 shadow-sm">{p}</span>)}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'edit') {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-black text-gray-900 uppercase">Modify User</h2>
+          <button onClick={() => setView('list')} className="text-gray-500 font-bold hover:text-gray-900">Cancel</button>
+        </div>
+        <form onSubmit={handleSave} className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Full Name</label>
+              <input required type="text" className="w-full px-5 py-4 bg-gray-50 rounded-2xl font-bold" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Email Address</label>
+              <input required type="email" className="w-full px-5 py-4 bg-gray-50 rounded-2xl font-bold" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Access Role</label>
+              <select className="w-full px-5 py-4 bg-gray-50 rounded-2xl font-bold" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
+                <option value="customer">Customer</option>
+                <option value="vendor">Vendor</option>
+                <option value="mechanics">Mechanic</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Account Status</label>
+              <select className="w-full px-5 py-4 bg-gray-50 rounded-2xl font-bold" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+                <option value="Suspended">Suspended</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl uppercase tracking-widest">Update Permissions</button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -180,11 +299,10 @@ const Users = ({ usersData }) => {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      user.status === 'Active' ? 'bg-green-100 text-green-800' : 
-                      user.status === 'Suspended' ? 'bg-red-100 text-red-800' : 
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs rounded-full ${user.status === 'Active' ? 'bg-green-100 text-green-800' :
+                        user.status === 'Suspended' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                      }`}>
                       {user.status}
                     </span>
                   </td>
@@ -201,36 +319,26 @@ const Users = ({ usersData }) => {
                   </td>
                   <td className="px-6 py-4 text-sm font-semibold text-gray-900">{user.revenue || 'N/A'}</td>
                   <td className="px-6 py-4 text-xs text-gray-500">{user.lastLogin || 'Never'}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => setSelectedUser(user)}
-                        className="text-blue-600 hover:text-blue-900" 
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => handleAction('view', user)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                         title="View Details"
                       >
                         <FaEye />
                       </button>
-                      <button 
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowEditModal(true);
-                        }}
-                        className="text-green-600 hover:text-green-900" 
+                      <button
+                        onClick={() => handleAction('edit', user)}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
                         title="Edit"
                       >
                         <FaEdit />
                       </button>
-                      <button 
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowDiscountModal(true);
-                        }}
-                        className="text-purple-600 hover:text-purple-900" 
-                        title="Assign Discount"
+                      <button
+                        onClick={() => handleAction('delete', user)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Delete"
                       >
-                        <FaGift />
-                      </button>
-                      <button className="text-red-600 hover:text-red-900" title="Suspend/Delete">
                         <FaTrash />
                       </button>
                     </div>
@@ -242,203 +350,6 @@ const Users = ({ usersData }) => {
         </div>
       </div>
 
-      {/* User Detail Modal */}
-      {selectedUser && !showEditModal && !showDiscountModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-gray-900">User Details</h3>
-                <button onClick={() => setSelectedUser(null)} className="text-gray-400 hover:text-gray-600">
-                  <FaTimesCircle className="text-xl" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Name</p>
-                  <p className="font-semibold text-gray-900">{selectedUser.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Email</p>
-                  <p className="font-semibold text-gray-900">{selectedUser.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Role</p>
-                  <span className={`inline-block px-2 py-1 text-xs rounded-full ${getRoleBadge(selectedUser.role)}`}>
-                    {selectedUser.role}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Status</p>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    selectedUser.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {selectedUser.status}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Registration Date</p>
-                  <p className="font-semibold text-gray-900">{selectedUser.registrationDate || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Last Login</p>
-                  <p className="font-semibold text-gray-900">{selectedUser.lastLogin || 'Never'}</p>
-                </div>
-              </div>
-              {selectedUser.privileges && (
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Privileges</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedUser.privileges.map((priv, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                        {priv}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-2">
-              <button
-                onClick={() => setSelectedUser(null)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Close
-              </button>
-              <button
-                onClick={() => {
-                  setShowEditModal(true);
-                }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Edit User
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit User Modal */}
-      {showEditModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">Edit User</h3>
-                <button onClick={() => {
-                  setShowEditModal(false);
-                  setSelectedUser(null);
-                }} className="text-gray-400 hover:text-gray-600">
-                  <FaTimesCircle className="text-xl" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                <input
-                  type="text"
-                  defaultValue={selectedUser.name}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input
-                  type="email"
-                  defaultValue={selectedUser.email}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                  <option value="active" selected={selectedUser.status === 'Active'}>Active</option>
-                  <option value="inactive" selected={selectedUser.status === 'Inactive'}>Inactive</option>
-                  <option value="suspended" selected={selectedUser.status === 'Suspended'}>Suspended</option>
-                </select>
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setShowEditModal(false);
-                  setSelectedUser(null);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Assign Discount Modal */}
-      {showDiscountModal && selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">Assign Special Discount</h3>
-                <button onClick={() => {
-                  setShowDiscountModal(false);
-                  setSelectedUser(null);
-                }} className="text-gray-400 hover:text-gray-600">
-                  <FaTimesCircle className="text-xl" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">User</label>
-                <p className="text-sm text-gray-900">{selectedUser.name} ({selectedUser.email})</p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
-                <select className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                  <option value="percentage">Percentage</option>
-                  <option value="fixed">Fixed Amount</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Value</label>
-                <input
-                  type="number"
-                  placeholder="Enter discount value"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Valid Until</label>
-                <input
-                  type="date"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-2">
-              <button
-                onClick={() => {
-                  setShowDiscountModal(false);
-                  setSelectedUser(null);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                Assign Discount
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

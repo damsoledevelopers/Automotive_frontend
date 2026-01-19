@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  FaExclamationTriangle, 
-  FaBox, 
-  FaCheckCircle, 
+import {
+  FaExclamationTriangle,
+  FaBox,
+  FaCheckCircle,
   FaTimesCircle,
   FaBell,
   FaEdit,
@@ -13,10 +13,22 @@ import {
 } from 'react-icons/fa';
 
 const Inventory = ({ products }) => {
+  const [view, setView] = useState('list'); // 'list' or 'add'
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showRestockModal, setShowRestockModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const [formData, setFormData] = useState({
+    name: '',
+    sku: '',
+    category: 'Brakes',
+    price: '',
+    stock: '',
+    description: '',
+    brand: '',
+    compatibility: ''
+  });
 
   // Calculate stock statistics
   const stockStats = useMemo(() => {
@@ -25,7 +37,7 @@ const Inventory = ({ products }) => {
     const outOfStock = products.filter(p => p.stock === 0).length;
     const lowStock = products.filter(p => p.stock > 0 && p.stock < 20).length;
     const totalStockValue = products.reduce((sum, p) => sum + (p.stock * (p.price || 0)), 0);
-    
+
     return {
       totalSKUs,
       inStock,
@@ -38,15 +50,15 @@ const Inventory = ({ products }) => {
   // Filter products
   const filteredProducts = useMemo(() => {
     let filtered = products;
-    
+
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(p => 
+      filtered = filtered.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     // Status filter
     if (filterStatus === 'low') {
       filtered = filtered.filter(p => p.stock > 0 && p.stock < 20);
@@ -55,7 +67,7 @@ const Inventory = ({ products }) => {
     } else if (filterStatus === 'in') {
       filtered = filtered.filter(p => p.stock >= 20);
     }
-    
+
     return filtered;
   }, [products, searchTerm, filterStatus]);
 
@@ -78,15 +90,184 @@ const Inventory = ({ products }) => {
     return { label: 'In Stock', color: 'bg-green-100 text-green-800', icon: FaCheckCircle };
   };
 
+  const handleAddProduct = (e) => {
+    e.preventDefault();
+    alert(`Product "${formData.name}" added successfully! (Simulation)`);
+    setView('list');
+    setFormData({
+      name: '',
+      sku: '',
+      category: 'Brakes',
+      price: '',
+      stock: '',
+      description: '',
+      brand: '',
+      compatibility: ''
+    });
+  };
+
+  if (view === 'add') {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Add New Product</h3>
+            <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Expansion & Inventory Growth</p>
+          </div>
+          <button
+            onClick={() => setView('list')}
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold flex items-center gap-2 transition"
+          >
+            ← Back to Inventory
+          </button>
+        </div>
+
+        <form onSubmit={handleAddProduct} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <section className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 space-y-6">
+              <h4 className="text-lg font-black text-gray-900 border-b pb-4">Product Details</h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Product Name</label>
+                  <input
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g. Premium Ceramic Brake Pads"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">SKU Number</label>
+                  <input
+                    required
+                    value={formData.sku}
+                    onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
+                    placeholder="PR-BK-772"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition font-mono font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none transition font-bold appearance-none bg-white"
+                  >
+                    <option>Brakes</option>
+                    <option>Suspension</option>
+                    <option>Engine</option>
+                    <option>Filters</option>
+                    <option>Cooling</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Brand Name</label>
+                  <input
+                    value={formData.brand}
+                    onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
+                    placeholder="OEM / Bosch"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none transition font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">MRP Rate (₹)</label>
+                  <input
+                    required
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                    placeholder="2500"
+                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none transition font-bold"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Product Description</label>
+                <textarea
+                  rows={4}
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Detailed technical specifications..."
+                  className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none transition font-medium"
+                />
+              </div>
+            </section>
+
+            <section className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 space-y-6">
+              <h4 className="text-lg font-black text-gray-900 border-b pb-4">Vehicle Compatibility</h4>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Compatible Models</label>
+                <input
+                  value={formData.compatibility}
+                  onChange={(e) => setFormData(prev => ({ ...prev, compatibility: e.target.value }))}
+                  placeholder="Toyota Innova (2015-2022), Mahindra XUV500..."
+                  className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none transition font-bold"
+                />
+                <p className="text-[10px] text-gray-400 italic">Separate multiple models with commas</p>
+              </div>
+            </section>
+          </div>
+
+          <div className="space-y-6">
+            <section className="bg-indigo-900 text-white p-8 rounded-3xl shadow-xl space-y-6">
+              <h4 className="text-lg font-bold border-b border-white/20 pb-4">Stock Management</h4>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Initial Opening Stock</label>
+                <input
+                  required
+                  type="number"
+                  value={formData.stock}
+                  onChange={(e) => setFormData(prev => ({ ...prev, stock: e.target.value }))}
+                  placeholder="0"
+                  className="w-full bg-white/10 border border-white/20 px-5 py-3 rounded-2xl focus:bg-white/20 outline-none transition font-black text-xl"
+                />
+              </div>
+              <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/10">
+                <FaBell className="text-yellow-400" />
+                <div>
+                  <p className="text-[10px] font-bold text-white uppercase">Stock Alert</p>
+                  <p className="text-[8px] text-indigo-200">Notify me when stock drops below 10 units.</p>
+                </div>
+              </div>
+            </section>
+
+            <div className="bg-white p-2 rounded-3xl shadow-lg border border-gray-100">
+              <button
+                type="submit"
+                className="w-full py-6 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-xl shadow-2xl shadow-blue-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+              >
+                <FaPlus /> SAVE PRODUCT
+              </button>
+            </div>
+
+            <div className="p-6 bg-gray-50 rounded-3xl border border-dashed border-gray-300 text-center">
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Internal Note</p>
+              <p className="text-[10px] text-gray-500 italic">Adding a product will automatically trigger a sync with the workshop catalog.</p>
+            </div>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h3 className="text-xl font-bold text-gray-900">Maintain Product Inventory & Availability</h3>
-          <p className="text-sm text-gray-600 mt-1">Track stock levels, manage availability, and receive restocking alerts</p>
+          <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Product Inventory</h3>
+          <p className="text-sm text-gray-600 font-bold uppercase tracking-widest">Global Availability Control</p>
         </div>
-        <button className="btn-primary flex items-center gap-2">
-          <FaPlus /> Add New Product
+        <button
+          onClick={() => setView('add')}
+          className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black shadow-xl shadow-blue-100 flex items-center gap-3 transition-transform hover:scale-105 active:scale-95"
+        >
+          <FaPlus /> ADD NEW PRODUCT
         </button>
       </div>
 
@@ -245,11 +426,10 @@ const Inventory = ({ products }) => {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className={`text-sm font-bold ${
-                          product.stock === 0 ? 'text-red-600' :
-                          product.stock < 20 ? 'text-orange-600' :
-                          'text-green-600'
-                        }`}>
+                        <span className={`text-sm font-bold ${product.stock === 0 ? 'text-red-600' :
+                            product.stock < 20 ? 'text-orange-600' :
+                              'text-green-600'
+                          }`}>
                           {product.stock}
                         </span>
                         {product.stock < 20 && product.stock > 0 && (

@@ -6,10 +6,16 @@ import Sidebar from './Sidebar';
 import Overview from './pages/Overview';
 import Jobs from './pages/Jobs';
 import Appointments from './pages/Appointments';
+import CustomerJobView from './pages/CustomerJobView';
 import History from './pages/History';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
+import JobWorkflow from './pages/JobWorkflow';
+import Procurement from './pages/Procurement';
+import NewJob from './pages/NewJob';
+import AppointmentDetails from './pages/AppointmentDetails';
+import Notifications from './pages/Notifications';
 import {
   FaWrench,
   FaCar,
@@ -121,50 +127,50 @@ const MechanicsDashboard = () => {
   const stats = useMemo(() => {
     const calculated = calculateStats();
     return [
-      { 
-        label: 'Active Jobs', 
-        value: calculated.activeJobs.toString(), 
-        icon: FaWrench, 
+      {
+        label: 'Active Jobs',
+        value: calculated.activeJobs.toString(),
+        icon: FaWrench,
         color: 'bg-blue-500',
         change: `${calculated.activeJobs} ongoing`,
         trend: 'neutral'
       },
-      { 
-        label: 'Completed Today', 
-        value: calculated.completedToday.toString(), 
-        icon: FaCheckCircle, 
+      {
+        label: 'Completed Today',
+        value: calculated.completedToday.toString(),
+        icon: FaCheckCircle,
         color: 'bg-green-500',
         change: `+${calculated.changes.completed}%`,
         trend: 'up'
       },
-      { 
-        label: 'Pending Orders', 
-        value: calculated.pendingOrders.toString(), 
-        icon: FaShoppingCart, 
+      {
+        label: 'Pending Orders',
+        value: calculated.pendingOrders.toString(),
+        icon: FaShoppingCart,
         color: 'bg-yellow-500',
         change: 'Parts needed',
         trend: 'neutral'
       },
-      { 
-        label: 'Total Earnings', 
-        value: `₹${(calculated.totalEarnings / 1000).toFixed(0)}K`, 
-        icon: FaMoneyBillWave, 
+      {
+        label: 'Total Earnings',
+        value: `₹${(calculated.totalEarnings / 1000).toFixed(0)}K`,
+        icon: FaMoneyBillWave,
         color: 'bg-purple-500',
         change: `+${calculated.changes.earnings}%`,
         trend: 'up'
       },
-      { 
-        label: 'This Month', 
-        value: `₹${(calculated.thisMonthEarnings / 1000).toFixed(0)}K`, 
-        icon: FaChartLine, 
+      {
+        label: 'This Month',
+        value: `₹${(calculated.thisMonthEarnings / 1000).toFixed(0)}K`,
+        icon: FaChartLine,
         color: 'bg-indigo-500',
         change: 'Earnings',
         trend: 'neutral'
       },
-      { 
-        label: 'Avg Rating', 
-        value: calculated.avgRating, 
-        icon: FaStar, 
+      {
+        label: 'Avg Rating',
+        value: calculated.avgRating,
+        icon: FaStar,
         color: 'bg-yellow-400',
         change: 'Customer rating',
         trend: 'neutral'
@@ -216,59 +222,19 @@ const MechanicsDashboard = () => {
       }));
   }, [jobs, refreshKey]);
 
-  // Earnings chart component
-  const EarningsChart = () => {
-    const maxEarnings = Math.max(...timeSeriesData.map(d => d.earnings));
-    return (
-      <div className="space-y-2">
-        <div className="flex items-end justify-between h-32 gap-1">
-          {timeSeriesData.slice(-7).map((data, idx) => (
-            <div key={idx} className="flex-1 flex flex-col items-center">
-              <div
-                className="w-full bg-gradient-to-t from-purple-500 to-purple-300 rounded-t transition-all hover:opacity-80"
-                style={{ height: `${(data.earnings / maxEarnings) * 100}%` }}
-                title={`₹${data.earnings.toLocaleString()}`}
-              />
-              <span className="text-xs text-gray-500 mt-1">
-                {new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // Jobs completed chart
-  const JobsChart = () => {
-    const maxJobs = Math.max(...timeSeriesData.map(d => d.completed));
-    return (
-      <div className="space-y-2">
-        <div className="flex items-end justify-between h-32 gap-1">
-          {timeSeriesData.slice(-7).map((data, idx) => (
-            <div key={idx} className="flex-1 flex flex-col items-center">
-              <div
-                className="w-full bg-gradient-to-t from-green-500 to-green-300 rounded-t transition-all hover:opacity-80"
-                style={{ height: `${(data.completed / maxJobs) * 100}%` }}
-                title={`${data.completed} jobs`}
-              />
-              <span className="text-xs text-gray-500 mt-1">
-                {new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   // Determine which page to show based on location
   const getCurrentPage = () => {
     const path = location.pathname;
     if (path === '/mechanics/dashboard' || path === '/mechanics/dashboard/') return 'overview';
     if (path.includes('/profile')) return 'profile';
+    if (path.includes('/jobs/new')) return 'new-job';
+    if (path.includes('/procurement')) return 'procurement';
+    if (path.includes('/jobs/customer-view')) return 'customer-view';
+    if (path.includes('/jobs/') && path.split('/').length > 4) return 'job-detail';
     if (path.includes('/jobs')) return 'jobs';
+    if (path.includes('/appointments/') && path.split('/').length > 4) return 'appointment-detail';
     if (path.includes('/appointments')) return 'appointments';
+    if (path.includes('/notifications')) return 'notifications';
     if (path.includes('/history')) return 'history';
     if (path.includes('/analytics')) return 'analytics';
     if (path.includes('/settings')) return 'settings';
@@ -294,14 +260,14 @@ const MechanicsDashboard = () => {
   }, [showProfileMenu]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-0">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+        <header className="bg-white shadow-sm border-b border-gray-200 shrink-0">
           <div className="px-4 md:px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -328,11 +294,14 @@ const MechanicsDashboard = () => {
                     <option value="90d">Last 90 days</option>
                   </select>
                 </div>
-                <button className="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition">
+                <button
+                  onClick={() => navigate('/mechanics/dashboard/notifications')}
+                  className="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition"
+                >
                   <FaBell className="text-xl" />
                   <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
-                
+
                 {/* Profile Dropdown */}
                 <div className="relative profile-menu">
                   <button
@@ -401,7 +370,7 @@ const MechanicsDashboard = () => {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main className="flex-1 p-4 md:p-6 lg:p-8">
           {/* Stats Grid - Only visible on Overview page */}
           {currentPage === 'overview' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -416,13 +385,11 @@ const MechanicsDashboard = () => {
                         <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
                         <div className="flex items-center gap-2">
                           {TrendIcon && (
-                            <TrendIcon className={`text-sm ${
-                              stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                            }`} />
+                            <TrendIcon className={`text-sm ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                              }`} />
                           )}
-                          <p className={`text-sm font-semibold ${
-                            stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                          }`}>
+                          <p className={`text-sm font-semibold ${stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                            }`}>
                             {stat.change}
                           </p>
                           {stat.trend !== 'neutral' && <span className="text-xs text-gray-500">from last month</span>}
@@ -441,12 +408,12 @@ const MechanicsDashboard = () => {
           {/* Page Content */}
           <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6">
             {currentPage === 'overview' && (
-              <Overview 
+              <Overview
                 timeSeriesData={timeSeriesData}
                 dateRange={dateRange}
                 activeJobs={activeJobs}
-                EarningsChart={EarningsChart}
-                JobsChart={JobsChart}
+                EarningsChart={() => <EarningsChart timeSeriesData={timeSeriesData} />}
+                JobsChart={() => <JobsChart timeSeriesData={timeSeriesData} />}
               />
             )}
 
@@ -463,7 +430,7 @@ const MechanicsDashboard = () => {
             )}
 
             {currentPage === 'analytics' && (
-              <Analytics 
+              <Analytics
                 jobs={jobs}
                 timeSeriesData={timeSeriesData}
                 stats={stats}
@@ -477,6 +444,28 @@ const MechanicsDashboard = () => {
             {currentPage === 'profile' && (
               <Profile />
             )}
+
+            {currentPage === 'job-detail' && (
+              <JobWorkflow />
+            )}
+
+            {currentPage === 'new-job' && (
+              <NewJob />
+            )}
+
+            {currentPage === 'appointment-detail' && (
+              <AppointmentDetails upcomingAppointments={upcomingAppointments} />
+            )}
+
+            {currentPage === 'procurement' && (
+              <Procurement />
+            )}
+            {currentPage === 'notifications' && (
+              <Notifications />
+            )}
+            {currentPage === 'customer-view' && (
+              <CustomerJobView />
+            )}
           </div>
         </main>
       </div>
@@ -485,3 +474,50 @@ const MechanicsDashboard = () => {
 };
 
 export default MechanicsDashboard;
+
+// Sub-components moved outside to follow React best practices
+const EarningsChart = ({ timeSeriesData }) => {
+  if (!timeSeriesData || timeSeriesData.length === 0) return null;
+  const maxEarnings = Math.max(...timeSeriesData.map(d => d.earnings)) || 1;
+  return (
+    <div className="space-y-2">
+      <div className="flex items-end justify-between h-32 gap-1">
+        {timeSeriesData.slice(-7).map((data, idx) => (
+          <div key={idx} className="flex-1 flex flex-col items-center">
+            <div
+              className="w-full bg-gradient-to-t from-purple-500 to-purple-300 rounded-t transition-all hover:opacity-80"
+              style={{ height: `${(data.earnings / maxEarnings) * 100}%` }}
+              title={`₹${data.earnings.toLocaleString()}`}
+            />
+            <span className="text-xs text-gray-500 mt-1">
+              {new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const JobsChart = ({ timeSeriesData }) => {
+  if (!timeSeriesData || timeSeriesData.length === 0) return null;
+  const maxJobs = Math.max(...timeSeriesData.map(d => d.completed)) || 1;
+  return (
+    <div className="space-y-2">
+      <div className="flex items-end justify-between h-32 gap-1">
+        {timeSeriesData.slice(-7).map((data, idx) => (
+          <div key={idx} className="flex-1 flex flex-col items-center">
+            <div
+              className="w-full bg-gradient-to-t from-green-500 to-green-300 rounded-t transition-all hover:opacity-80"
+              style={{ height: `${(data.completed / maxJobs) * 100}%` }}
+              title={`${data.completed} jobs`}
+            />
+            <span className="text-xs text-gray-500 mt-1">
+              {new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

@@ -116,51 +116,51 @@ const VendorDashboard = () => {
   const stats = useMemo(() => {
     const calculated = calculateStats();
     return [
-      { 
-        label: 'Total Products', 
-        value: calculated.totalProducts.toLocaleString(), 
-        icon: FaBox, 
-        color: 'bg-blue-500', 
+      {
+        label: 'Total Products',
+        value: calculated.totalProducts.toLocaleString(),
+        icon: FaBox,
+        color: 'bg-blue-500',
         change: `+${calculated.changes.products}%`,
         trend: 'up'
       },
-      { 
-        label: 'Orders', 
-        value: calculated.totalOrders.toLocaleString(), 
-        icon: FaShoppingCart, 
-        color: 'bg-green-500', 
+      {
+        label: 'Orders',
+        value: calculated.totalOrders.toLocaleString(),
+        icon: FaShoppingCart,
+        color: 'bg-green-500',
         change: `+${calculated.changes.orders}%`,
         trend: 'up'
       },
-      { 
-        label: 'Revenue', 
-        value: `₹${(calculated.totalRevenue / 1000000).toFixed(2)}M`, 
-        icon: FaMoneyBillWave, 
-        color: 'bg-yellow-500', 
+      {
+        label: 'Revenue',
+        value: `₹${(calculated.totalRevenue / 1000000).toFixed(2)}M`,
+        icon: FaMoneyBillWave,
+        color: 'bg-yellow-500',
         change: `+${calculated.changes.revenue}%`,
         trend: 'up'
       },
-      { 
-        label: 'Stock Value', 
-        value: `₹${(calculated.stockValue / 1000000).toFixed(2)}M`, 
-        icon: FaWarehouse, 
-        color: 'bg-purple-500', 
+      {
+        label: 'Stock Value',
+        value: `₹${(calculated.stockValue / 1000000).toFixed(2)}M`,
+        icon: FaWarehouse,
+        color: 'bg-purple-500',
         change: `+${calculated.changes.stock}%`,
         trend: 'up'
       },
-      { 
-        label: 'Low Stock Items', 
-        value: calculated.lowStockItems.toString(), 
-        icon: FaExclamationTriangle, 
-        color: 'bg-red-500', 
+      {
+        label: 'Low Stock Items',
+        value: calculated.lowStockItems.toString(),
+        icon: FaExclamationTriangle,
+        color: 'bg-red-500',
         change: 'Needs attention',
         trend: 'neutral'
       },
-      { 
-        label: 'Pending Orders', 
-        value: calculated.pendingOrders.toString(), 
-        icon: FaClock, 
-        color: 'bg-orange-500', 
+      {
+        label: 'Pending Orders',
+        value: calculated.pendingOrders.toString(),
+        icon: FaClock,
+        color: 'bg-orange-500',
         change: 'To process',
         trend: 'neutral'
       },
@@ -179,9 +179,9 @@ const VendorDashboard = () => {
       { id: 7, name: 'Radiator Cap', sku: 'RC-007', stock: 200, price: 250, status: 'Active', category: 'Cooling', sales: 312, rating: 4.3 },
       { id: 8, name: 'Fuel Filter', sku: 'FF-008', stock: 56, price: 650, status: 'Active', category: 'Fuel', sales: 145, rating: 4.6 },
     ];
-    
+
     if (searchTerm) {
-      return allProducts.filter(p => 
+      return allProducts.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.sku.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -207,52 +207,6 @@ const VendorDashboard = () => {
       .sort((a, b) => b.sales - a.sales)
       .slice(0, 5);
   }, [products]);
-
-  // Sales chart component
-  const SalesChart = () => {
-    const maxSales = Math.max(...timeSeriesData.map(d => d.sales));
-    return (
-      <div className="space-y-2">
-        <div className="flex items-end justify-between h-32 gap-1">
-          {timeSeriesData.slice(-7).map((data, idx) => (
-            <div key={idx} className="flex-1 flex flex-col items-center">
-              <div
-                className="w-full bg-gradient-to-t from-green-500 to-green-300 rounded-t transition-all hover:opacity-80"
-                style={{ height: `${(data.sales / maxSales) * 100}%` }}
-                title={`${data.sales} units`}
-              />
-              <span className="text-xs text-gray-500 mt-1">
-                {new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  // Revenue chart component
-  const RevenueChart = () => {
-    const maxRevenue = Math.max(...timeSeriesData.map(d => d.revenue));
-    return (
-      <div className="space-y-2">
-        <div className="flex items-end justify-between h-32 gap-1">
-          {timeSeriesData.slice(-7).map((data, idx) => (
-            <div key={idx} className="flex-1 flex flex-col items-center">
-              <div
-                className="w-full bg-gradient-to-t from-blue-500 to-blue-300 rounded-t transition-all hover:opacity-80"
-                style={{ height: `${(data.revenue / maxRevenue) * 100}%` }}
-                title={`₹${data.revenue.toLocaleString()}`}
-              />
-              <span className="text-xs text-gray-500 mt-1">
-                {new Date(data.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
 
   // Determine which page to show based on location
   const getCurrentPage = () => {
@@ -286,14 +240,14 @@ const VendorDashboard = () => {
   }, [showProfileMenu]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex">
+    <div className="h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex overflow-hidden">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-0">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+        <header className="bg-white shadow-sm border-b border-gray-200 shrink-0">
           <div className="px-4 md:px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -324,7 +278,7 @@ const VendorDashboard = () => {
                   <FaBell className="text-xl" />
                   <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
-                
+
                 {/* Profile Dropdown */}
                 <div className="relative profile-menu">
                   <button
@@ -409,13 +363,11 @@ const VendorDashboard = () => {
                           <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
                           <div className="flex items-center gap-2">
                             {TrendIcon && (
-                              <TrendIcon className={`text-sm ${
-                                stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                              }`} />
+                              <TrendIcon className={`text-sm ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                                }`} />
                             )}
-                            <p className={`text-sm font-semibold ${
-                              stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                            }`}>
+                            <p className={`text-sm font-semibold ${stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                              }`}>
                               {stat.change}
                             </p>
                             {stat.trend !== 'neutral' && <span className="text-xs text-gray-500">from last month</span>}
@@ -469,74 +421,53 @@ const VendorDashboard = () => {
 
               {/* Right Sidebar - Only visible on Overview page */}
               {currentPage === 'overview' && (
-              <div className="space-y-6">
-                {/* Quick Actions */}
-            <div className="card bg-white rounded-xl shadow-md border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="space-y-2">
-                <button className="w-full btn-primary justify-start">
-                  <FaPlus className="mr-2" /> Add New Product
-                </button>
-                <button className="w-full btn-outline justify-start">
-                  <FaBox className="mr-2" /> Manage Inventory
-                </button>
-                <button className="w-full btn-outline justify-start">
-                  <FaShoppingCart className="mr-2" /> View Orders
-                </button>
-                <button className="w-full btn-outline justify-start">
-                  <FaChartLine className="mr-2" /> View Analytics
-                </button>
-                <button className="w-full btn-outline justify-start">
-                  <FaWarehouse className="mr-2" /> Stock Alerts
-                </button>
-              </div>
-            </div>
+                <div className="space-y-6">
 
-            {/* Top Selling Products */}
-            <div className="card bg-white rounded-xl shadow-md border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Top Selling Products</h3>
-              <div className="space-y-3">
-                {topSelling.map((product, idx) => (
-                  <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold text-xs">
-                        {idx + 1}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">{product.name}</p>
-                        <p className="text-xs text-gray-600">{product.sales} sales</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <FaStar className="text-yellow-400 text-xs" />
-                      <span className="text-xs text-gray-600">{product.rating}</span>
+                  {/* Top Selling Products */}
+                  <div className="card bg-white rounded-xl shadow-md border border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Top Selling Products</h3>
+                    <div className="space-y-3">
+                      {topSelling.map((product, idx) => (
+                        <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold text-xs">
+                              {idx + 1}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">{product.name}</p>
+                              <p className="text-xs text-gray-600">{product.sales} sales</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <FaStar className="text-yellow-400 text-xs" />
+                            <span className="text-xs text-gray-600">{product.rating}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Account Info */}
-            <div className="card bg-white rounded-xl shadow-md border border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Account Information</h3>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-600">Email</p>
-                  <p className="text-sm font-semibold text-gray-900">{user?.email || 'vendor@example.com'}</p>
+                  {/* Account Info */}
+                  <div className="card bg-white rounded-xl shadow-md border border-gray-100">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4">Account Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm text-gray-600">Email</p>
+                        <p className="text-sm font-semibold text-gray-900">{user?.email || 'vendor@example.com'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Account Type</p>
+                        <p className="text-sm font-semibold text-gray-900 capitalize">{user?.role || 'Vendor'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Store Status</p>
+                        <span className="inline-flex items-center gap-2 px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                          <FaCheckCircle /> Active
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-600">Account Type</p>
-                  <p className="text-sm font-semibold text-gray-900 capitalize">{user?.role || 'Vendor'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Store Status</p>
-                  <span className="inline-flex items-center gap-2 px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                    <FaCheckCircle /> Active
-                  </span>
-                </div>
-              </div>
-            </div>
-              </div>
               )}
             </div>
           </div>

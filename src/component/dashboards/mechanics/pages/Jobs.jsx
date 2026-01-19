@@ -1,9 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaWrench, FaPlus, FaFilter, FaClock } from 'react-icons/fa';
+import { useJob } from '../../../../contexts/JobContext';
 
 const Jobs = ({ activeJobs }) => {
   const navigate = useNavigate();
+  const { createJob } = useJob();
+
+  const handleNewJob = () => {
+    navigate('/mechanics/dashboard/jobs/new');
+  };
 
   return (
     <div>
@@ -13,7 +19,10 @@ const Jobs = ({ activeJobs }) => {
           <button className="btn-outline flex items-center gap-2 text-sm">
             <FaFilter /> Filter
           </button>
-          <button className="btn-primary flex items-center gap-2 text-sm">
+          <button
+            onClick={handleNewJob}
+            className="btn-primary flex items-center gap-2 text-sm"
+          >
             <FaPlus /> New Job
           </button>
         </div>
@@ -25,12 +34,13 @@ const Jobs = ({ activeJobs }) => {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <h4 className="font-semibold text-gray-900">{job.vehicle}</h4>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    job.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                    job.status === 'diagnosed' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {job.status}
+                  <span className={`px-2 py-1 text-xs rounded-full ${job.status === 'repairing' ? 'bg-blue-100 text-blue-800' :
+                    job.status === 'approved' ? 'bg-green-100 text-green-800' :
+                      job.status === 'pending_customer' ? 'bg-yellow-100 text-yellow-800' :
+                        job.status === 'paid' ? 'bg-purple-100 text-purple-800' :
+                          'bg-gray-100 text-gray-800'
+                    }`}>
+                    {job.status.replace('_', ' ')}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mb-1">Service: {job.service}</p>
@@ -40,11 +50,11 @@ const Jobs = ({ activeJobs }) => {
                 </p>
               </div>
               <div className="flex gap-2">
-                <button 
-                  onClick={() => navigate(`/service/job/${job.id}`)}
+                <button
+                  onClick={() => navigate(`/mechanics/dashboard/jobs/${job.id}`)}
                   className="btn-primary text-sm"
                 >
-                  View
+                  Manage Job
                 </button>
               </div>
             </div>

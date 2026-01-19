@@ -20,6 +20,7 @@ import Profile from './pages/Profile';
 import Payments from './pages/Payments';
 import Marketing from './pages/Marketing';
 import Support from './pages/Support';
+import Mechanics from './pages/Mechanics';
 import {
   FaUsers,
   FaStore,
@@ -126,67 +127,67 @@ const SuperAdminDashboard = () => {
       changes,
     };
     return [
-      { 
-        label: 'Total Users', 
-        value: calculated.totalUsers.toLocaleString(), 
-        icon: FaUsers, 
-        color: 'bg-blue-500', 
+      {
+        label: 'Total Users',
+        value: calculated.totalUsers.toLocaleString(),
+        icon: FaUsers,
+        color: 'bg-blue-500',
         change: `+${calculated.changes.users}%`,
         trend: 'up'
       },
-      { 
-        label: 'Vendors', 
-        value: calculated.totalVendors.toLocaleString(), 
-        icon: FaStore, 
-        color: 'bg-green-500', 
+      {
+        label: 'Vendors',
+        value: calculated.totalVendors.toLocaleString(),
+        icon: FaStore,
+        color: 'bg-green-500',
         change: `+${calculated.changes.vendors}%`,
         trend: 'up'
       },
-      { 
-        label: 'Mechanics', 
-        value: calculated.totalMechanics.toLocaleString(), 
-        icon: FaTools, 
-        color: 'bg-yellow-500', 
+      {
+        label: 'Mechanics',
+        value: calculated.totalMechanics.toLocaleString(),
+        icon: FaTools,
+        color: 'bg-yellow-500',
         change: `+${calculated.changes.mechanics}%`,
         trend: 'up'
       },
-      { 
-        label: 'Total Orders', 
-        value: calculated.totalOrders.toLocaleString(), 
-        icon: FaShoppingCart, 
-        color: 'bg-purple-500', 
+      {
+        label: 'Total Orders',
+        value: calculated.totalOrders.toLocaleString(),
+        icon: FaShoppingCart,
+        color: 'bg-purple-500',
         change: `+${calculated.changes.orders}%`,
         trend: 'up'
       },
-      { 
-        label: 'Revenue', 
-        value: `₹${(calculated.totalRevenue / 1000000).toFixed(2)}M`, 
-        icon: FaMoneyBillWave, 
-        color: 'bg-red-500', 
+      {
+        label: 'Revenue',
+        value: `₹${(calculated.totalRevenue / 1000000).toFixed(2)}M`,
+        icon: FaMoneyBillWave,
+        color: 'bg-red-500',
         change: `+${calculated.changes.revenue}%`,
         trend: 'up'
       },
-      { 
-        label: 'Products', 
-        value: calculated.totalProducts.toLocaleString(), 
-        icon: FaBox, 
-        color: 'bg-indigo-500', 
+      {
+        label: 'Products',
+        value: calculated.totalProducts.toLocaleString(),
+        icon: FaBox,
+        color: 'bg-indigo-500',
         change: `+${calculated.changes.products}%`,
         trend: 'up'
       },
-      { 
-        label: 'Active Jobs', 
-        value: calculated.activeJobs.toString(), 
-        icon: FaTools, 
-        color: 'bg-orange-500', 
+      {
+        label: 'Active Jobs',
+        value: calculated.activeJobs.toString(),
+        icon: FaTools,
+        color: 'bg-orange-500',
         change: `${calculated.activeJobs} ongoing`,
         trend: 'neutral'
       },
-      { 
-        label: 'Completed Jobs', 
-        value: calculated.completedJobs.toString(), 
-        icon: FaCheckCircle, 
-        color: 'bg-teal-500', 
+      {
+        label: 'Completed Jobs',
+        value: calculated.completedJobs.toString(),
+        icon: FaCheckCircle,
+        color: 'bg-teal-500',
         change: 'This month',
         trend: 'neutral'
       },
@@ -282,16 +283,16 @@ const SuperAdminDashboard = () => {
   const currentPage = getCurrentPage();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="h-screen bg-gray-50 flex overflow-hidden">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:ml-64 bg-gray-50">
-      {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200 shrink-0">
           <div className="px-4 md:px-6 py-4">
-          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -299,28 +300,28 @@ const SuperAdminDashboard = () => {
                 >
                   <FaBars className="text-xl" />
                 </button>
-            <div>
+                <div>
                   <h1 className="text-base md:text-lg font-bold text-gray-900">Super Admin Dashboard</h1>
-              <p className="text-xs text-gray-600">Welcome back, {user?.name || 'Admin'}</p>
-            </div>
+                  <p className="text-xs text-gray-600">Welcome back, {user?.name || 'Admin'}</p>
+                </div>
               </div>
               <div className="flex items-center gap-2 md:gap-4">
                 <div className="hidden md:flex items-center gap-2">
-                <select
-                  value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="7d">Last 7 days</option>
-                  <option value="30d">Last 30 days</option>
-                  <option value="90d">Last 90 days</option>
-                </select>
-              </div>
-              <button className="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition">
-                <FaBell className="text-xl" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                  <select
+                    value={dateRange}
+                    onChange={(e) => setDateRange(e.target.value)}
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="7d">Last 7 days</option>
+                    <option value="30d">Last 30 days</option>
+                    <option value="90d">Last 90 days</option>
+                  </select>
+                </div>
+                <button className="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition">
+                  <FaBell className="text-xl" />
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
-                
+
                 {/* Profile Dropdown */}
                 <div className="relative profile-menu">
                   <button
@@ -361,8 +362,8 @@ const SuperAdminDashboard = () => {
                         >
                           <FaUser className="text-sm" />
                           <span>My Profile</span>
-              </button>
-              <button
+                        </button>
+                        <button
                           onClick={() => {
                             navigate('/login');
                             setShowProfileMenu(false);
@@ -371,61 +372,59 @@ const SuperAdminDashboard = () => {
                         >
                           <FaSignInAlt className="text-sm" />
                           <span>Login</span>
-              </button>
-              <button
-                onClick={handleLogout}
+                        </button>
+                        <button
+                          onClick={handleLogout}
                           className="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors text-sm mt-1"
-              >
+                        >
                           <FaSignOutAlt className="text-sm" />
                           <span>Logout</span>
-              </button>
+                        </button>
                       </div>
                     </div>
                   )}
                 </div>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
         {/* Content Area */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 md:p-6 lg:p-8">
             {/* Stats Grid - Only visible on Overview page */}
             {currentPage === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            const TrendIcon = stat.trend === 'up' ? FaArrowUp : stat.trend === 'down' ? FaArrowDown : null;
-            return (
-              <div key={index} className="card-hover bg-white rounded-xl shadow-md p-6 border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
-                    <p className="text-2xl font-bold text-gray-900 mb-2">{stat.value}</p>
-                    <div className="flex items-center gap-2">
-                      {TrendIcon && (
-                        <TrendIcon className={`text-sm ${
-                          stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                        }`} />
-                      )}
-                      <p className={`text-sm font-semibold ${
-                        stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                      }`}>
-                        {stat.change}
-                      </p>
-                      <span className="text-xs text-gray-500">from last month</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {stats.map((stat, index) => {
+                  const Icon = stat.icon;
+                  const TrendIcon = stat.trend === 'up' ? FaArrowUp : stat.trend === 'down' ? FaArrowDown : null;
+                  return (
+                    <div key={index} className="card-hover bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
+                          <p className="text-2xl font-bold text-gray-900 mb-2">{stat.value}</p>
+                          <div className="flex items-center gap-2">
+                            {TrendIcon && (
+                              <TrendIcon className={`text-sm ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                                }`} />
+                            )}
+                            <p className={`text-sm font-semibold ${stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                              }`}>
+                              {stat.change}
+                            </p>
+                            <span className="text-xs text-gray-500">from last month</span>
+                          </div>
+                        </div>
+                        <div className={`${stat.color} p-4 rounded-xl text-white shadow-lg`}>
+                          <Icon className="text-2xl" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className={`${stat.color} p-4 rounded-xl text-white shadow-lg`}>
-                    <Icon className="text-2xl" />
-                  </div>
-                </div>
+                  );
+                })}
               </div>
-            );
-          })}
-                  </div>
-                )}
+            )}
 
             <div className={`grid grid-cols-1 ${currentPage === 'overview' ? 'lg:grid-cols-3' : ''} gap-6`}>
               {/* Main Content */}
@@ -451,6 +450,9 @@ const SuperAdminDashboard = () => {
                   )}
                   {currentPage === 'garages' && (
                     <Garages />
+                  )}
+                  {currentPage === 'mechanics' && (
+                    <Mechanics />
                   )}
                   {currentPage === 'products' && (
                     <Products />
@@ -488,97 +490,95 @@ const SuperAdminDashboard = () => {
                   {currentPage === 'support' && (
                     <Support />
                   )}
-            </div>
-          </div>
+                </div>
+              </div>
 
               {/* Right Sidebar - Only visible on Overview page */}
               {currentPage === 'overview' && (
-          <div className="space-y-6">
-            {/* Recent Activities */}
-            <div className="card bg-white rounded-xl shadow-md border border-gray-100">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-bold text-gray-900">Recent Activities</h3>
-                <button className="text-sm text-primary-600 hover:text-primary-700">View All</button>
-              </div>
-              <div className="space-y-4">
-                {recentActivities.map((activity) => {
-                  const Icon = activity.icon;
-                  return (
-                    <div key={activity.id} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
-                      <div className={`p-2 rounded-lg ${
-                        activity.type === 'user' ? 'bg-blue-100' :
-                        activity.type === 'order' ? 'bg-green-100' :
-                        'bg-gray-100'
-                      }`}>
-                        <Icon className={`text-sm ${
-                          activity.type === 'user' ? 'text-blue-600' :
-                          activity.type === 'order' ? 'text-green-600' :
-                          'text-gray-600'
-                        }`} />
+                <div className="space-y-6">
+                  {/* Recent Activities */}
+                  <div className="card bg-white rounded-xl shadow-md border border-gray-100">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base font-bold text-gray-900">Recent Activities</h3>
+                      <button className="text-sm text-primary-600 hover:text-primary-700">View All</button>
+                    </div>
+                    <div className="space-y-4">
+                      {recentActivities.map((activity) => {
+                        const Icon = activity.icon;
+                        return (
+                          <div key={activity.id} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
+                            <div className={`p-2 rounded-lg ${activity.type === 'user' ? 'bg-blue-100' :
+                              activity.type === 'order' ? 'bg-green-100' :
+                                'bg-gray-100'
+                              }`}>
+                              <Icon className={`text-sm ${activity.type === 'user' ? 'text-blue-600' :
+                                activity.type === 'order' ? 'text-green-600' :
+                                  'text-gray-600'
+                                }`} />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-700">{activity.message}</p>
+                              <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="card bg-white rounded-xl shadow-md border border-gray-100">
+                    <h3 className="text-base font-bold text-gray-900 mb-4">Quick Actions</h3>
+                    <div className="space-y-2">
+                      <button className="w-full btn-outline text-left justify-start">
+                        <FaUserShield className="mr-2" /> Manage Users
+                      </button>
+                      <button className="w-full btn-outline text-left justify-start">
+                        <FaStore className="mr-2" /> Manage Vendors
+                      </button>
+                      <button className="w-full btn-outline text-left justify-start">
+                        <FaTools className="mr-2" /> Manage Mechanics
+                      </button>
+                      <button className="w-full btn-outline text-left justify-start">
+                        <FaChartLine className="mr-2" /> View Analytics
+                      </button>
+                      <button className="w-full btn-outline text-left justify-start">
+                        <FaCog className="mr-2" /> System Settings
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* System Status */}
+                  <div className="card bg-white rounded-xl shadow-md border border-gray-100">
+                    <h3 className="text-base font-bold text-gray-900 mb-4">System Status</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">API Status</span>
+                        <span className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm font-semibold text-green-600">Operational</span>
+                        </span>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-700">{activity.message}</p>
-                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Database</span>
+                        <span className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm font-semibold text-green-600">Healthy</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Server Load</span>
+                        <span className="text-sm font-semibold text-gray-900">42%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Uptime</span>
+                        <span className="text-sm font-semibold text-gray-900">99.9%</span>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="card bg-white rounded-xl shadow-md border border-gray-100">
-              <h3 className="text-base font-bold text-gray-900 mb-4">Quick Actions</h3>
-              <div className="space-y-2">
-                <button className="w-full btn-outline text-left justify-start">
-                  <FaUserShield className="mr-2" /> Manage Users
-                </button>
-                <button className="w-full btn-outline text-left justify-start">
-                  <FaStore className="mr-2" /> Manage Vendors
-                </button>
-                <button className="w-full btn-outline text-left justify-start">
-                  <FaTools className="mr-2" /> Manage Mechanics
-                </button>
-                <button className="w-full btn-outline text-left justify-start">
-                  <FaChartLine className="mr-2" /> View Analytics
-                </button>
-                <button className="w-full btn-outline text-left justify-start">
-                  <FaCog className="mr-2" /> System Settings
-                </button>
-              </div>
-            </div>
-
-            {/* System Status */}
-            <div className="card bg-white rounded-xl shadow-md border border-gray-100">
-              <h3 className="text-base font-bold text-gray-900 mb-4">System Status</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">API Status</span>
-                  <span className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-semibold text-green-600">Operational</span>
-                  </span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Database</span>
-                  <span className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm font-semibold text-green-600">Healthy</span>
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Server Load</span>
-                  <span className="text-sm font-semibold text-gray-900">42%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Uptime</span>
-                  <span className="text-sm font-semibold text-gray-900">99.9%</span>
-                </div>
-              </div>
-            </div>
-          </div>
               )}
-        </div>
+            </div>
           </div>
         </main>
       </div>

@@ -2,11 +2,51 @@ import React from 'react';
 import { FaCheckCircle, FaDownload, FaFileInvoice, FaStar } from 'react-icons/fa';
 
 const History = ({ jobHistory }) => {
+  const handleExport = () => {
+    if (!jobHistory || jobHistory.length === 0) {
+      alert('No data to export');
+      return;
+    }
+
+    // Define CSV headers
+    const headers = ['Vehicle', 'Service', 'Customer', 'Completed At', 'Rating', 'Amount'];
+
+    // Map data to rows
+    const rows = jobHistory.map(job => [
+      job.vehicle,
+      job.service,
+      job.customer,
+      job.completedAt ? new Date(job.completedAt).toLocaleString() : 'Recently',
+      job.rating,
+      job.amount
+    ]);
+
+    // Construct CSV content
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    // Create blob and download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `job_history_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-bold text-gray-900">Job History</h3>
-        <button className="btn-outline flex items-center gap-2 text-sm">
+        <button
+          onClick={handleExport}
+          className="btn-outline flex items-center gap-2 text-sm"
+        >
           <FaDownload /> Export
         </button>
       </div>

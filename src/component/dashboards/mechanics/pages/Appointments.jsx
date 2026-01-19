@@ -1,7 +1,10 @@
 import React from 'react';
-import { FaCalendar, FaClock, FaPhone } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaCalendar, FaClock } from 'react-icons/fa';
 
 const Appointments = ({ upcomingAppointments }) => {
+  const navigate = useNavigate();
+
   return (
     <div>
       <h3 className="text-xl font-bold text-gray-900 mb-4">Upcoming Appointments</h3>
@@ -13,9 +16,8 @@ const Appointments = ({ upcomingAppointments }) => {
                 <div className="flex items-center gap-3 mb-2">
                   <FaCalendar className="text-primary-600" />
                   <h4 className="font-semibold text-gray-900">{appointment.vehicle}</h4>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                  }`}>
+                  <span className={`px-2 py-1 text-xs rounded-full ${appointment.status === 'confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
                     {appointment.status}
                   </span>
                 </div>
@@ -25,10 +27,13 @@ const Appointments = ({ upcomingAppointments }) => {
                   <span className="text-xs text-gray-500 flex items-center gap-1">
                     <FaClock /> {appointment.date} at {appointment.time}
                   </span>
-                 
+
                 </div>
               </div>
-              <button className="btn-outline text-sm">
+              <button
+                onClick={() => navigate(`/mechanics/dashboard/appointments/${appointment.id}`)}
+                className="btn-outline text-sm"
+              >
                 View Details
               </button>
             </div>

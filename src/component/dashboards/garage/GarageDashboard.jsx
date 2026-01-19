@@ -169,10 +169,10 @@ const GarageDashboard = () => {
   const currentPage = getCurrentPage();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex">
+    <div className="h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex overflow-hidden">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      <div className="flex-1 flex flex-col lg:ml-0">
-        <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-white shadow-sm border-b border-gray-200 shrink-0">
           <div className="px-4 md:px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -203,7 +203,7 @@ const GarageDashboard = () => {
                   <FaBell className="text-xl" />
                   <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                 </button>
-                
+
                 {/* Profile Dropdown */}
                 <div className="relative profile-menu">
                   <button
@@ -286,13 +286,11 @@ const GarageDashboard = () => {
                           <p className="text-3xl font-bold text-gray-900 mb-2">{stat.value}</p>
                           <div className="flex items-center gap-2">
                             {TrendIcon && (
-                              <TrendIcon className={`text-sm ${
-                                stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                              }`} />
+                              <TrendIcon className={`text-sm ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                                }`} />
                             )}
-                            <p className={`text-sm font-semibold ${
-                              stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                            }`}>
+                            <p className={`text-sm font-semibold ${stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                              }`}>
                               {stat.change}
                             </p>
                             <span className="text-xs text-gray-500">from last month</span>
