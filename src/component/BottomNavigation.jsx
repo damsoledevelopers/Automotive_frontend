@@ -207,66 +207,68 @@ const BottomNavigation = () => {
       animate={item.showUserInfo ? "visible" : { opacity: 1, y: 0 }}
       exit={item.showUserInfo ? "exit" : { opacity: 0, y: 10 }}
       transition={item.showUserInfo ? undefined : { duration: 0.2 }}
-      className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 bg-white border border-gray-200 rounded-2xl shadow-2xl z-40 min-w-56 max-h-96 overflow-y-auto"
+      className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-3 bg-gradient-to-b from-white to-gray-50 border border-gray-300 rounded-xl shadow-xl z-40 w-64 overflow-hidden"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="py-2">
+      <div className="p-0">
         {item.showUserInfo && (
-          <div className="flex items-center space-x-3 px-4 py-3 pb-3 mb-2 border-b border-gray-200">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 flex items-center space-x-3 px-4 py-4 border-b border-gray-200">
             <img
               src={mockUser.avatar}
               alt={mockUser.name}
-              className="w-10 h-10 rounded-sm"
+              className="w-12 h-12 rounded-full border-2 border-gray-200"
             />
-            <div>
-              <div className="font-semibold text-gray-800 text-sm">{mockUser.name}</div>
-              <div className="text-xs text-gray-500">{mockUser.email}</div>
+            <div className="flex-1">
+              <div className="font-bold text-gray-800 text-sm">{mockUser.name}</div>
+              <div className="text-xs text-gray-600">{mockUser.email}</div>
             </div>
           </div>
         )}
 
-        {item.submenu.map((subItem, subIndex) => (
-          <div key={subIndex} className="relative group/sub">
-            <Link
-              to={subItem.href || "#"}
-              onClick={() => setActiveMenu(null)}
-              className="flex items-center justify-between px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200"
-            >
-              <span className="font-medium text-sm">{subItem.name}</span>
-              {subItem.submenu && (
-                <FaChevronRight className="text-xs text-gray-400 group-hover/sub:text-red-600" />
-              )}
-            </Link>
+        <div className="max-h-72 overflow-y-auto scrollbar-hide">
+          {item.submenu.map((subItem, subIndex) => (
+            <div key={subIndex} className="relative group/sub">
+              <Link
+                to={subItem.href || "#"}
+                onClick={() => setActiveMenu(null)}
+                className="flex items-center justify-between px-4 py-3.5 text-red-600 font-semibold text-sm hover:bg-gray-100 transition-all duration-150 border-b border-gray-100 last:border-0"
+              >
+                <span>{subItem.name}</span>
+                {subItem.submenu && (
+                  <FaChevronRight className="text-xs text-gray-400" />
+                )}
+              </Link>
 
-            {subItem.submenu && (
-              <div className="absolute top-0 left-full ml-1 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 min-w-56 opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-300">
-                <div className="py-2 max-h-96 overflow-y-auto">
-                  {subItem.submenu.map((nestedItem, nestedIndex) => (
-                    <Link
-                      key={nestedIndex}
-                      to={nestedItem.href}
-                      onClick={() => setActiveMenu(null)}
-                      className="block px-4 py-3 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 font-medium text-sm"
-                    >
-                      {nestedItem.name}
-                    </Link>
-                  ))}
+              {subItem.submenu && (
+                <div className="absolute top-0 left-full ml-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-52 opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-300">
+                  <div className="py-2">
+                    {subItem.submenu.map((nestedItem, nestedIndex) => (
+                      <Link
+                        key={nestedIndex}
+                        to={nestedItem.href}
+                        onClick={() => setActiveMenu(null)}
+                        className="block px-4 py-2.5 hover:bg-blue-50 transition-all duration-150 font-medium text-sm text-gray-700"
+                      >
+                        {nestedItem.name}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          ))}
+        </div>
 
         {item.showUserInfo && (
-          <div className="pt-2 mt-2 border-t border-gray-200">
+          <div className="pt-0 border-t border-gray-200">
             <motion.button
               onClick={handleSignOut}
-              className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-2.5 mx-4 rounded-lg hover:bg-gray-200 transition-colors"
-              whileHover={{ scale: 1.02 }}
+              className="w-full flex items-center justify-center space-x-2 text-red-600 hover:bg-red-50 py-3.5 transition-colors font-semibold"
+              whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
             >
               <FaSignOutAlt className="text-sm" />
-              <span className="font-medium text-sm">Sign Out</span>
+              <span className="font-semibold text-sm">Sign Out</span>
             </motion.button>
           </div>
         )}
