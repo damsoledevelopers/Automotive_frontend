@@ -517,7 +517,7 @@ const TimingBelt = () => {
                         {/* Bottom Section - View Details Button */}
                         <div className="flex items-center justify-end mt-auto">
                           <Link
-                            to={`/catalog/part-p-${product.id}`}
+                            to={`/catalog/timing-belt/${product.id}`}
                             state={{ product }}
                             className="bg-blue-100 text-blue-600 text-[9px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:bg-blue-200 transition-colors"
                           >
@@ -552,7 +552,7 @@ const TimingBelt = () => {
                         <p className="text-[9px] sm:text-xs text-gray-500 font-mono mb-3 truncate">
                           {product.partNumber}
                         </p>
-                        <div className="space-y-2">
+                        <div className="space-y-2 mb-3">
                           {product.fulfilledBySparelo && (
                             <div className="flex items-center gap-1.5">
                               <input
@@ -565,7 +565,17 @@ const TimingBelt = () => {
                               <span className="text-blue-600 font-bold text-[10px] sm:text-sm">S</span>
                             </div>
                           )}
-                  
+                        </div>
+                        
+                        {/* View Details Button for Grid View */}
+                        <div className="flex items-center justify-end mt-auto">
+                          <Link
+                            to={`/catalog/timing-belt/${product.id}`}
+                            state={{ product }}
+                            className="bg-blue-100 text-blue-600 text-[9px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:bg-blue-200 transition-colors"
+                          >
+                            View Details
+                          </Link>
                         </div>
                       </>
                     )}

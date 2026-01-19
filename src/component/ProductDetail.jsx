@@ -58,20 +58,22 @@ const ProductDetail = () => {
     warranty: '90 days' // 7 days / 90 days / 30 days
   });
 
-  // Get product from location state (passed from TimingBelt) or fetch it
+  // Get product from location state (passed from product cards) or fetch it
   useEffect(() => {
     const fetchProduct = async () => {
       setLoading(true);
       
-      // If product data is passed via state, use it
+      // If product data is passed via state, use it (from View Details click)
       if (location.state?.product) {
         const productData = location.state.product;
         
-        // Generate multiple image views (main + different angles)
+        // Use the exact same image from the product card
+        // If multiple images exist, use them; otherwise use the same image for all thumbnails
+        const mainImage = productData.image || (productData.images && productData.images[0]) || PLACEHOLDER_IMAGE;
         const productImages =
           productData.images && productData.images.length > 0
             ? productData.images
-            : buildImageVariants(productData.image, productData.id);
+            : [mainImage, mainImage, mainImage, mainImage]; // Use same image for all thumbnails
         
         // Calculate stock (random between 5-30)
         const stock = Math.floor(Math.random() * 25) + 5;
@@ -246,73 +248,27 @@ const ProductDetail = () => {
         {/* Breadcrumbs */}
         <Breadcrumbs />
 
-        {/* Page Title */}
+        {/* Breadcrumbs and Page Title */}
         <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Spares page</h1>
           {product && (
             <div>
-              <h2 className="text-lg text-gray-600 mb-1">{product.brand}</h2>
-              <h3 className="text-xl font-semibold text-gray-800">{product.name}</h3>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{product.brand}</h1>
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">{product.name}</h2>
             </div>
           )}
         </div>
 
-        {/* New Spares / Used Spares Toggle Buttons */}
-        <div className="flex gap-4 mb-6">
-          <button
-            onClick={() => setSpareType('new')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              spareType === 'new'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            New spares
-          </button>
-          <button
-            onClick={() => setSpareType('used')}
-            className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-              spareType === 'used'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Used spares
-          </button>
-        </div>
-        <p className="text-sm text-gray-600 mb-6">Based on selection spares will be shown.</p>
-
-        {/* Main Content Area */}
+        {/* Main Content Area - Product Images and Details */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 sm:mb-8">
-          {/* Left Column - Spare Pic Carousel */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Spare pic {selectedImage + 1}/{product.images.length}</h3>
-            
-            {/* Main Image */}
-            <div className="relative mb-4 bg-gray-50 rounded-lg overflow-hidden" style={{ minHeight: '300px' }}>
-              {product.isOEM && (
-                <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold z-10">
-                  OEM
-                </div>
-              )}
-              <img
-                src={product.images[selectedImage]}
-                alt={product.name}
-                className="w-full h-full object-contain"
-                style={{ minHeight: '300px' }}
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/600x400?text=Product+Image';
-                }}
-              />
-            </div>
-
-            {/* Image Thumbnails */}
-            <div className="flex gap-2 justify-center">
+          {/* Left Column - Product Images with Thumbnails */}
+          <div className="flex gap-4">
+            {/* Thumbnail Images - Left Side */}
+            <div className="flex flex-col gap-2 flex-shrink-0">
               {product.images.slice(0, 3).map((img, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`border-2 rounded-lg overflow-hidden w-20 h-20 flex-shrink-0 ${
+                  className={`border-2 rounded-lg overflow-hidden w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 ${
                     selectedImage === index ? 'border-blue-600' : 'border-gray-200'
                   }`}
                 >
@@ -327,140 +283,182 @@ const ProductDetail = () => {
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Right Column - Video */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Video</h3>
-            <div className="bg-gray-100 rounded-lg overflow-hidden" style={{ minHeight: '300px' }}>
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="text-center">
-                  <FaInfoCircle className="text-4xl text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">Video will be displayed here</p>
+            {/* Main Image */}
+            <div className="flex-1 relative bg-white border border-gray-200 rounded-lg overflow-hidden">
+              {product.isOEM && (
+                <div className="absolute top-3 left-3 bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold z-10">
+                  OEM
                 </div>
+              )}
+              <div className="w-full h-full flex items-center justify-center bg-gray-50" style={{ minHeight: '400px' }}>
+                <img
+                  src={product.images[selectedImage] || product.image}
+                  alt={product.name}
+                  className="w-full h-full object-contain p-4"
+                  style={{ maxHeight: '500px' }}
+                  onError={(e) => {
+                    e.target.src = PLACEHOLDER_IMAGE;
+                  }}
+                />
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Product Details Section */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Product Details</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* Right Column - Product Information */}
+          <div className="space-y-4">
+            {/* Brand and Product Name */}
             <div>
-              <label className="text-sm font-semibold text-gray-700">OEM Part number</label>
-              <p className="text-base text-gray-900 mt-1">{product.partNumber || 'N/A'}</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">{product.brand}</h2>
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-3">{product.name}</h3>
             </div>
-            
-            <div>
-              <label className="text-sm font-semibold text-gray-700">Manufacturer</label>
-              <p className="text-base text-gray-900 mt-1">
-                {productAttributes.manufacturer === 'OEM' && 'OEM'}
-                {productAttributes.manufacturer === 'After Market (High quality)' && (
-                  <span>After Market <span className="text-green-600">(High quality)</span></span>
-                )}
-                {productAttributes.manufacturer === 'After Market (Standard)' && (
-                  <span>After Market <span className="text-gray-600">(Standard)</span></span>
-                )}
-                {productAttributes.manufacturer === 'Unknown' && 'Unknown'}
-              </p>
-            </div>
-            
-            <div>
-              <label className="text-sm font-semibold text-gray-700">Compatibility</label>
-              <p className="text-base text-gray-900 mt-1">{productAttributes.compatibility}</p>
-            </div>
-            
-            <div>
-              <label className="text-sm font-semibold text-gray-700">Tested</label>
-              <p className="text-base text-gray-900 mt-1 capitalize">{productAttributes.tested}</p>
-            </div>
-            
-            <div>
-              <label className="text-sm font-semibold text-gray-700">Part Age</label>
-              <p className="text-base text-gray-900 mt-1">{productAttributes.partAge}</p>
-            </div>
-            
-            <div>
-              <label className="text-sm font-semibold text-gray-700">Condition</label>
-              <p className="text-base text-gray-900 mt-1">{productAttributes.condition}</p>
-            </div>
-            
-            <div>
-              <label className="text-sm font-semibold text-gray-700">Warranty</label>
-              <p className="text-base text-gray-900 mt-1">{productAttributes.warranty}</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Pricing and Order Section */}
-        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Pricing Box */}
-            <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
-              <div className="mb-2">
-                <span className="text-sm text-gray-600">New price: </span>
-                <span className="text-lg font-semibold text-gray-900">₹{(product.mrp || product.price).toLocaleString('en-IN')}</span>
-              </div>
-              <div className="mb-2">
-                <span className="text-sm text-gray-600">Our price: </span>
-                <span className="text-xl font-bold text-blue-600">₹{product.price.toLocaleString('en-IN')}</span>
-              </div>
-              {discount > 0 && (
-                <div>
-                  <span className="text-sm font-semibold text-green-600">Discount: {discount}%</span>
-                </div>
+            {/* Delivery Info */}
+            <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+              <FaTruck className="text-blue-600" />
+              <span>Free Delivery (within {product.deliveryDays || 5} days)</span>
+            </div>
+
+            {/* Fulfillment Badges */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {product.fulfilledBySparelo && (
+                <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                  <FaCheckCircle className="text-green-600" />
+                  Fulfilled by b
+                </span>
+              )}
+              {product.freeDelivery && (
+                <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                  <FaTruck />
+                  Free Delivery
+                </span>
+              )}
+              {product.spareloChoice && (
+                <span className="inline-flex items-center gap-1.5 bg-purple-100 text-purple-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                  boodmo's Choice
+                </span>
               )}
             </div>
 
-            {/* Order Section */}
-            <div>
-              <div className="flex items-center gap-4 mb-4">
-                <button
-                  onClick={handleAddToCart}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-                >
-                  Place order
-                </button>
-                
-                {/* Quantity Selector */}
-                <div className="flex items-center gap-2 border border-gray-300 rounded-lg">
-                  <button
-                    onClick={() => handleQuantityChange(-1)}
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100"
-                  >
-                    -
-                  </button>
-                  <span className="px-4 py-2 text-gray-900 font-semibold min-w-[3rem] text-center">{quantity}</span>
-                  <button
-                    onClick={() => handleQuantityChange(1)}
-                    className="px-3 py-2 text-gray-700 hover:bg-gray-100"
-                  >
-                    +
-                  </button>
+            {/* Seller Info */}
+            <div className="text-sm text-gray-600 mb-2">
+              <span>Sold by: </span>
+              <span className="font-semibold text-gray-900">{product.seller || product.soldBy || "Delhi/TKL"}</span>
+            </div>
+
+            {/* Replacements Link */}
+            {product.replacementsPrice && (
+              <div className="mb-4">
+                <Link to="#" className="text-blue-600 hover:underline text-sm font-medium">
+                  Replacements from ₹{product.replacementsPrice.toLocaleString('en-IN')}
+                </Link>
+              </div>
+            )}
+
+            {/* Price Section */}
+            <div className="mb-4">
+              <div className="flex items-baseline gap-3 mb-2">
+                <span className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  ₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+              {product.mrp && product.mrp > product.price && (
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm text-gray-500 line-through">
+                    MRP: ₹{product.mrp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-semibold">
+                    -{discount}%
+                  </span>
+                </div>
+              )}
+              <p className="text-xs text-gray-500">Incl. of all taxes</p>
+              <p className="text-sm text-blue-600 mt-2">
+                {product.stock || 6} in stock
+              </p>
+            </div>
+
+            {/* Check Compatibility Button */}
+            <button className="w-full flex items-center justify-center gap-2 bg-white border-2 border-blue-600 text-blue-600 px-4 py-2.5 rounded-lg font-semibold hover:bg-blue-50 transition-colors mb-4">
+              <FaHome className="text-lg" />
+              Check Compatibility
+            </button>
+
+            {/* Product Specifications */}
+            <div className="border-t border-gray-200 pt-4 mb-4">
+              <div className="grid grid-cols-3 gap-4 mb-3">
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Part Number</p>
+                  <div className="flex items-center gap-1">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {displayPartNumber}
+                    </p>
+                    <FaEye className="text-gray-400 text-xs cursor-pointer" />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Origin</p>
+                  <p className="text-sm font-semibold text-gray-900">{product.origin || "OEM"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Class</p>
+                  <p className="text-sm font-semibold text-gray-900">{product.class || "Timing Belt"}</p>
                 </div>
               </div>
-              
-              {/* Estimated Delivery Time */}
-              <div className="mb-4">
-                <p className="text-sm text-gray-600">
-                  Estimated delivery time: <span className="font-semibold text-gray-900">{product.deliveryDays || 4} days</span>
-                </p>
-              </div>
-              
-              {/* Navigate to Delivery Address */}
-              <div className="border-t border-gray-200 pt-4">
-                <button
-                  onClick={() => navigate('/checkout/address')}
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2"
-                >
-                  <FaMapMarkerAlt />
-                  Navigate to Delivery address
-                </button>
+
+              {/* Action Links */}
+              <div className="flex flex-wrap gap-3 mt-3">
+                <Link to="#" className="text-blue-600 hover:underline text-sm font-medium">
+                  View OEM Catalog
+                </Link>
+                <Link to="#" className="text-blue-600 hover:underline text-sm font-medium">
+                  View Compatibility
+                </Link>
+                {product.replacementsPrice && (
+                  <Link to="#" className="text-blue-600 hover:underline text-sm font-medium">
+                    View Replacements from ₹{product.replacementsPrice.toLocaleString('en-IN')}
+                  </Link>
+                )}
               </div>
             </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleAddToCart}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+              >
+                Add to cart
+              </button>
+              <button
+                onClick={handleBuyNow}
+                className="w-full bg-white border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+              >
+                Buy now
+              </button>
+            </div>
+
+            {/* Delivery Location */}
+            <div className="flex items-center gap-2 text-sm text-gray-600 pt-3 border-t border-gray-200">
+              <FaMapMarkerAlt className="text-blue-600" />
+              <span>Deliver to {getShippingAddress()}</span>
+            </div>
+
+            {/* Wishlist */}
+            <button
+              onClick={handleToggleWishlist}
+              className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors"
+            >
+              <FaHeart className={inWishlist ? "text-red-600 fill-current" : ""} />
+              <span className="text-sm font-medium">ADD TO WISHLIST</span>
+            </button>
           </div>
+        </div>
+
+        {/* Description Section */}
+        <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-3">Description</h2>
+          <p className="text-sm text-gray-700">{product.description}</p>
         </div>
 
         {/* Guarantees/Services Section */}

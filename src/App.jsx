@@ -96,6 +96,7 @@ import Wheels from "./component/catalogue/Wheels";
 import Belts_Chains_Rollers from "./component/catalogue/Belts_Chains_Rollers";
 import Belt from "./component/catalogue/Belt";
 import TimingBelt from "./component/catalogue/TimingBelt";
+import TimingBeltDetail from "./component/catalogue/TimingBeltDetail";
 import TimingBeltKit from "./component/catalogue/TimingBeltKit";
 import VBelt from "./component/catalogue/VBelt";
 import BrakeParts from "./component/catalogue/BrakeParts";
@@ -329,6 +330,7 @@ function App() {
                     <Route path="/catalog/4032-belts/" element={<Belt />} />
                     <Route path="/catalog/4390-timing_belt/" element={<TimingBelt />} />
                     <Route path="/catalog/4033-time_belt/" element={<TimingBelt />} />
+                    <Route path="/catalog/timing-belt/:itemId" element={<TimingBeltDetail />} />
                     <Route path="/catalog/4393-timing_belt_kit/" element={<TimingBeltKit />} />
                     <Route path="/catalog/3720-v_belt/" element={<VBelt />} />
                     <Route path="/catalog/3713-brakes/" element={<BrakeParts />} />
@@ -395,6 +397,7 @@ function App() {
 
                     {/* Product detail page for back_url_id */}
                     <Route path="/catalog/part-p-:itemId" element={<ProductDetail />} />
+                    <Route path="/catalog/part-p-:itemId/" element={<ProductDetail />} />
 
                     {/* Vehicle-based search landing */}
                     <Route path="/vehicle-search" element={<VehicleSearchResults />} />

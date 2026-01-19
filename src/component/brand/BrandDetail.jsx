@@ -903,7 +903,7 @@ const BrandDetail = () => {
 
                       {/* View Details Button */}
                       <Link
-                        to={`/catalog/part-p-${product.id}/`}
+                        to={`/catalog/part-p-${product.id}`}
                         state={{ product: product }}
                         className="inline-block px-4 py-2 bg-blue-400 hover:bg-blue-500 text-white rounded-lg font-semibold text-xs transition-colors shadow-sm"
                       >
