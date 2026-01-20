@@ -100,6 +100,7 @@ import TimingBeltDetail from "./component/catalogue/TimingBeltDetail";
 import TimingBeltKit from "./component/catalogue/TimingBeltKit";
 import VBelt from "./component/catalogue/VBelt";
 import BrakeParts from "./component/catalogue/BrakeParts";
+import SubCategoryPage from "./component/catalogue/SubCategoryPage";
 import ClutchParts from "./component/catalogue/ClutchParts";
 import EngineOilParts from "./component/catalogue/EngineOilParts";
 import FilterParts from "./component/catalogue/FilterParts";
@@ -202,7 +203,12 @@ function App() {
         <JobProvider>
           <EscrowProvider>
             <CartProvider>
-              <Router>
+              <Router
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
                 <ScrollToTop />
                 <Layout>
                   <Routes>
@@ -395,9 +401,16 @@ function App() {
                     {/* Redirect landing after Oriparts back_url_pn */}
                     <Route path="/search/:pn" element={<PartSearchResults />} />
 
-                    {/* Product detail page for back_url_id */}
+                    {/* Product detail page for back_url_id - Must come before catch-all */}
+                    {/* These routes must be more specific to match before the catch-all */}
                     <Route path="/catalog/part-p-:itemId" element={<ProductDetail />} />
                     <Route path="/catalog/part-p-:itemId/" element={<ProductDetail />} />
+
+                    {/* Catch-all route for catalog sub-categories (e.g., /catalog/4079-accessory_kit_disc_brake_pads/) */}
+                    {/* This handles all other catalog routes that don't match specific patterns above */}
+                    {/* Note: SubCategoryPage will redirect "part-p-*" routes to ProductDetail */}
+                    <Route path="/catalog/:categorySlug" element={<SubCategoryPage />} />
+                    <Route path="/catalog/:categorySlug/" element={<SubCategoryPage />} />
 
                     {/* Vehicle-based search landing */}
                     <Route path="/vehicle-search" element={<VehicleSearchResults />} />

@@ -13,6 +13,7 @@ import {
 } from "react-icons/fa";
 import LocationConfirmModal from "./LocationConfirmModal";
 import AddAddressModal from "./AddAddressModal";
+import WorkflowWrapper from "../workflow/WorkflowWrapper";
 
 const ShippingAddress = () => {
   const navigate = useNavigate();
@@ -141,87 +142,7 @@ const ShippingAddress = () => {
   }, []);
 
   // Progress Bar Component
-  const ProgressBar = React.memo(() => (
-    <motion.div 
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="mt-2 md:mt-4 mb-2 bg-white border border-gray-200 p-2 sm:p-3 md:p-4"
-    >
-      <div className="flex items-center justify-center space-x-0.5 sm:space-x-1 md:space-x-2">
-        <motion.button
-          onClick={() => navigate('/cart')}
-          className="flex flex-col items-center cursor-pointer group flex-shrink-0 min-w-[45px] sm:min-w-[50px] md:min-w-[55px]"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <motion.div 
-            className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-gray-100 rounded-full flex items-center justify-center mb-0.5 sm:mb-1 group-hover:bg-gray-200 transition-colors"
-          >
-            <FaShoppingCart className="text-gray-700 text-xs sm:text-sm md:text-base" />
-          </motion.div>
-          <span className="text-[10px] sm:text-xs text-gray-600 font-medium">Cart</span>
-        </motion.button>
-        <motion.div 
-          className="h-0.5 flex-1 sm:flex-none sm:w-6 md:w-8 lg:w-10 xl:w-12 bg-gray-300 rounded-full"
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        />
-        <motion.div 
-          className="flex flex-col items-center flex-shrink-0 min-w-[45px] sm:min-w-[50px] md:min-w-[55px]"
-          initial={{ scale: 0.9 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.3, type: "spring" }}
-        >
-          <motion.div 
-            className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-gray-900 rounded-full flex items-center justify-center mb-0.5 sm:mb-1 relative overflow-hidden"
-          >
-            <FaMapMarkerAlt className="text-white text-xs sm:text-sm md:text-base relative z-10" />
-          </motion.div>
-          <span className="text-[10px] sm:text-xs text-gray-900 font-semibold">Address</span>
-        </motion.div>
-        <div className="h-0.5 flex-1 sm:flex-none sm:w-6 md:w-8 lg:w-10 xl:w-12 bg-gray-300 rounded-full"></div>
-        <motion.button
-          onClick={() => {
-            const savedAddress = localStorage.getItem('shippingAddress');
-            if (savedAddress) {
-              navigate('/checkout/review');
-            }
-          }}
-          className="flex flex-col items-center cursor-pointer group flex-shrink-0 min-w-[45px] sm:min-w-[50px] md:min-w-[55px]"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <motion.div 
-            className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-gray-100 rounded-full flex items-center justify-center mb-0.5 sm:mb-1 group-hover:bg-gray-200 transition-colors"
-          >
-            <FaFileAlt className="text-gray-700 text-xs sm:text-sm md:text-base" />
-          </motion.div>
-          <span className="text-[10px] sm:text-xs text-gray-600 font-medium">Review</span>
-        </motion.button>
-        <div className="h-0.5 flex-1 sm:flex-none sm:w-6 md:w-8 lg:w-10 xl:w-12 bg-gray-300 rounded-full"></div>
-        <motion.button
-          onClick={() => {
-            const savedAddress = localStorage.getItem('shippingAddress');
-            if (savedAddress) {
-              navigate('/checkout/payment');
-            }
-          }}
-          className="flex flex-col items-center cursor-pointer group flex-shrink-0 min-w-[45px] sm:min-w-[50px] md:min-w-[55px]"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <motion.div 
-            className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-gray-100 rounded-full flex items-center justify-center mb-0.5 sm:mb-1 group-hover:bg-gray-200 transition-colors"
-          >
-            <FaCreditCard className="text-gray-700 text-xs sm:text-sm md:text-base" />
-          </motion.div>
-          <span className="text-[10px] sm:text-xs text-gray-600 font-medium">Pay</span>
-        </motion.button>
-      </div>
-    </motion.div>
-  ));
+  // ProgressBar removed - using WorkflowWrapper instead
 
   // Address Card Component
   const AddressCard = React.memo(({ address, index, isSelected, onSelect, onOpenMap }) => (
@@ -290,9 +211,9 @@ const ShippingAddress = () => {
   // Show Address Selection Page (after map confirmation)
   if (showAddressSelection) {
     return (
-      <div className="bg-gray-50 py-3 pb-16">
-        <div className="max-w-6xl mx-auto px-4">
-          <ProgressBar />
+      <WorkflowWrapper currentStep="address">
+        <div className="bg-gray-50 py-3 pb-16">
+          <div className="max-w-6xl mx-auto px-4">
 
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -399,15 +320,16 @@ const ShippingAddress = () => {
           onClose={() => setShowAddAddressModal(false)}
           onConfirmLocation={handleNewAddressConfirmLocation}
         />
-      </div>
+        </div>
+      </WorkflowWrapper>
     );
   }
 
   // Show Form Entry Page (initial state)
   return (
-    <div className="bg-gray-50 py-3 pb-4">
-      <div className="max-w-6xl mx-auto px-4">
-        <ProgressBar />
+    <WorkflowWrapper currentStep="address">
+      <div className="bg-gray-50 py-3 pb-4">
+        <div className="max-w-6xl mx-auto px-4">
 
         <motion.h1 
           initial={{ opacity: 0, y: -20 }}
@@ -623,7 +545,8 @@ const ShippingAddress = () => {
         onConfirm={handleConfirmLocation}
         address={isAddingNewAddress ? pendingAddressData : formData}
       />
-    </div>
+      </div>
+    </WorkflowWrapper>
   );
 };
 

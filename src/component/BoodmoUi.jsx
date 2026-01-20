@@ -55,7 +55,7 @@ export const BoodmoUi = () => {
         </div>
 
         {/* 🔹 Centered Content - No Background */}
-        <div className="relative z-10 w-full max-w-6xl px-6 md:px-8 text-center text-white">
+        <div className="relative z-10 w-full px-6 md:px-8 text-center text-white">
           {/* Main Heading */}
           <h1 className="text-2xl md:text-4xl mb-4 text-white font-semibold">
             Find Genuine <span className="text-red-400">OEM</span> & <br />

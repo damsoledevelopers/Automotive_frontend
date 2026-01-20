@@ -288,7 +288,7 @@ const Footer = () => {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-5">
               {/* Copyright */}
               <div className="text-gray-400 text-xs sm:text-sm text-center md:text-left order-2 md:order-1">
-                Sparelo © {new Date().getFullYear()} Demo Store. All Rights Reserved. Designed by Vaishnavi
+                Sparelo © {new Date().getFullYear()} Demo Store. All Rights Reserved. <br />Designed by Sakshi
               </div>
 
               {/* Payment Methods */}

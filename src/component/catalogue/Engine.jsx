@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
-const engineCategories = [
-  { id: 1, name: "Air Supply", img: "https://boodmo.com/media/cache/catalog_image/images/categories/8fea232.jpg", link: "/catalog/3332-air_supply/" },
-  { id: 2, name: "Belt and Chain Drive", img: "https://boodmo.com/media/cache/catalog_image/images/categories/cfa6334.jpg", link: "/catalog/3717-belt_chain_drive/" },
+// Generate engine categories with product data
+const engineCategoriesBase = [
+  { id: 1, name: "Air Supply", img: "https://boodmo.com/media/cache/catalog_image/images/categories/8fea232.jpg", link: "/catalog/part-p-1001" },
+  { id: 2, name: "Belt and Chain Drive", img: "https://boodmo.com/media/cache/catalog_image/images/categories/cfa6334.jpg", link: "/catalog/part-p-1002" },
   { id: 3, name: "Big End Bearing", img: "https://boodmo.com/media/cache/catalog_image/images/categories/40e95ca.jpg", link: "/catalog/4104-crankshaft_bearing/" },
   { id: 4, name: "Camshaft Bush", img: "https://boodmo.com/media/cache/catalog_image/images/categories/3759fa0.jpg", link: "/catalog/4286-camshaft_bushes/" },
   { id: 5, name: "Camshaft Gear", img: "https://boodmo.com/media/cache/catalog_image/images/categories/a3c7c58.jpg", link: "/catalog/4372-gear_camshaft/" },
@@ -80,9 +82,11 @@ const engineCategories = [
   { id:73, name: "Vacuum Hose", img: "https://boodmo.com/media/cache/catalog_image/images/categories/1322d53.jpg", link: "/catalog/4844-brake_vacuum_hose/" },
   { id:74, name: "Vacuum Modulator", img: "https://boodmo.com/media/cache/catalog_image/images/categories/367da6c.jpg", link: "/catalog/4744-vacuum_modulator/" },
   { id:75, name: "Vacuum Pump", img: "https://boodmo.com/media/cache/catalog_image/images/categories/da8dbf3.jpg", link: "/catalog/3804-vacuum_pump_engine/" },
-  { id:76, name: "Water Pump Gasket", img: "https://boodmo.com/media/cache/catalog_image/images/categories/9807081.jpg", link: "/catalog/4236-water_pump_gasket/" }
+  { id:76, name: "Water Pump Gasket", img: "https://boodmo.com/media/cache/catalog_image/images/categories/9807081.jpg", link: "/catalog/part-p-1076" }
 ];
 
+// Generate categories with product data
+const engineCategories = generateCategoryWithProducts(engineCategoriesBase, "Engine", 1500);
 
 const Engine = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -108,8 +112,8 @@ const Engine = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
         <div className="mb-4 sm:mb-6 md:mb-8">
@@ -140,21 +144,25 @@ const Engine = () => {
 
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product) => (
+              {filteredProducts.map((category) => (
                 <Link
-                  key={product.id}
-                  to={product.link}
+                  key={category.id}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Engine", slug: "engine" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + product.name;
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + category.name;
                     }}
                   />
-                  <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">{product.name}</span>
+                  <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">{category.name}</span>
                 </Link>
               ))}
             </div>

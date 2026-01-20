@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
-const catalogCategories = [
+const catalogCategoriesBase = [
   {
     name: "Alternator",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/fc36a32.webp",
@@ -237,6 +238,16 @@ const catalogCategories = [
   },
 ];
 
+// Generate categories with product data - IDs will be auto-generated from index if missing
+const catalogCategories = generateCategoryWithProducts(
+  catalogCategoriesBase.map((item, index) => ({
+    ...item,
+    id: item.id || (index + 1),
+    link: item.link.startsWith('/catalog/part-p-') ? item.link : `/catalog/part-p-${10000 + index + 1}`
+  })),
+  "Electrical Components",
+  1500
+);
 
 export const Electric_Components = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -265,7 +276,7 @@ export const Electric_Components = () => {
 
   return (
     <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
         {/* Header */}
@@ -299,24 +310,28 @@ export const Electric_Components = () => {
           {/* Categories Grid */}
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((category, index) => (
                 <Link
-                  key={product.id || index}
-                  to={product.link}
+                  key={category.id || index}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Electrical Components", slug: "electric_components" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-14 h-14 object-cover rounded-md mb-2 mx-auto"
                   />
-                  <span className="text-gray-800 font-medium text-xs">{product.name}</span>
+                  <span className="text-gray-800 font-medium text-xs">{category.name}</span>
                 </Link>
               ))}
             </div>
 
             {/* SEO Content Section */}
-            <section className="bg-white text-gray-800 py-10 px-6 max-w-5xl mx-auto">
+            <section className="bg-white text-gray-800 py-10 px-6 w-full">
               <div className="space-y-4">
                 {/* Title */}
                 <h2 className="text-2xl md:text-3xl font-bold text-red-700 border-b-2 border-red-300 inline-block pb-2">

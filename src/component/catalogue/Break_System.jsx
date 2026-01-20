@@ -4,197 +4,324 @@ import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
 
-// ✅ Brake System Categories / Products
+// Helper function to generate product data for each category
+const generateProductData = (id, name, img, basePrice = 1000) => {
+  const brands = ["BOSCH", "BREMBO", "DELPHI", "LUCAS", "ZURICH"];
+  const origins = ["OEM (genuine)", "Aftermarket"];
+  const sellers = ["Bengaluru/BPN", "Mumbai/MUM", "Delhi/DEL", "Pune/SWA"];
+  
+  const brand = brands[id % brands.length];
+  const isOEM = id % 2 === 1;
+  const origin = isOEM ? origins[0] : origins[1];
+  const seller = sellers[id % sellers.length];
+  const price = basePrice + (id * 100);
+  const mrp = price * 1.2;
+  const discount = Math.floor(((mrp - price) / mrp) * 100);
+  
+  return {
+    id: id,
+    name: name.toUpperCase(),
+    brand: brand,
+    partNumber: `${brand.substring(0, 2)}-${id.toString().padStart(3, '0')}`,
+    price: price,
+    mrp: mrp,
+    discount: discount,
+    isOEM: isOEM,
+    fulfilledBySparelo: id % 3 !== 0,
+    freeDelivery: id % 2 === 0,
+    image: img,
+    spareloChoice: id % 4 === 0,
+    class: "Brake",
+    soldBy: seller,
+    origin: origin,
+    deliveryDays: 3 + (id % 3),
+  };
+};
+
+// ✅ Brake System Categories / Products with Product Data
 export const brakeSystemCategory = [
- {
+  {
+    id: 1,
     name: "Accessory Kit Brake Pads",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/5301830.jpg",
-    link: "/catalog/4079-accessory_kit_disc_brake_pads/",
+    link: "/catalog/part-p-1",
+    product: {
+      id: 1,
+      name: "ACCESSORY KIT BRAKE PADS",
+      brand: "BOSCH",
+      partNumber: "BP-ACC-001",
+      price: 850.00,
+      mrp: 1100.00,
+      discount: 23,
+      isOEM: true,
+      fulfilledBySparelo: true,
+      freeDelivery: true,
+      image: "https://boodmo.com/media/cache/catalog_image/images/categories/5301830.jpg",
+      spareloChoice: true,
+      class: "Brake",
+      soldBy: "Bengaluru/BPN",
+      origin: "OEM (genuine)",
+      deliveryDays: 4,
+    },
   },
   {
+    id: 2,
     name: "Accessory Kit Brake Shoes",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/7c21f31.jpg",
-    link: "/catalog/4078-accessory_kit_brake_shoes/",
+    link: "/catalog/part-p-2",
+    product: generateProductData(2, "Accessory Kit Brake Shoes", "https://boodmo.com/media/cache/catalog_image/images/categories/7c21f31.jpg", 650),
   },
   {
+    id: 3,
     name: "Anti Lock Braking System",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/8f5c1a8.jpg",
-    link: "/catalog/4977-anti_lock_braking_system/",
+    link: "/catalog/part-p-3",
+    product: generateProductData(3, "Anti Lock Braking System", "https://boodmo.com/media/cache/catalog_image/images/categories/8f5c1a8.jpg", 8500),
   },
   {
+    id: 4,
     name: "Brake Booster",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/53f3538.jpg",
-    link: "/catalog/3613-brake_booster/",
+    link: "/catalog/part-p-4",
+    product: generateProductData(4, "Brake Booster", "https://boodmo.com/media/cache/catalog_image/images/categories/53f3538.jpg", 3200),
   },
   {
+    id: 5,
     name: "Brake Cable",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/ba2a08c.jpg",
-    link: "/catalog/4081-brake_cable/",
+    link: "/catalog/part-p-5",
+    product: generateProductData(5, "Brake Cable", "https://boodmo.com/media/cache/catalog_image/images/categories/ba2a08c.jpg", 450),
   },
   {
+    id: 6,
     name: "Brake Caliper",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/b32d5b3.jpg",
-    link: "/catalog/3617-brake_caliper/",
+    link: "/catalog/part-p-6",
+    product: generateProductData(6, "Brake Caliper", "https://boodmo.com/media/cache/catalog_image/images/categories/b32d5b3.jpg", 4500),
   },
   {
+    id: 7,
     name: "Brake Caliper Piston",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/6f34472.jpg",
-    link: "/catalog/4088-piston_brake_caliper/",
+    link: "/catalog/part-p-7",
+    product: generateProductData(7, "Brake Caliper Piston", "https://boodmo.com/media/cache/catalog_image/images/categories/6f34472.jpg", 1200),
   },
   {
+    id: 8,
     name: "Brake Caliper Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/e814060.jpg",
-    link: "/catalog/4082-brake_caliper_repair_kit/",
+    link: "/catalog/part-p-8",
+    product: generateProductData(8, "Brake Caliper Repair Kit", "https://boodmo.com/media/cache/catalog_image/images/categories/e814060.jpg", 550),
   },
   {
+    id: 9,
     name: "Brake Disc",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/7eaaa12.jpg",
-    link: "/catalog/4067-brake_discs/",
+    link: "/catalog/part-p-9",
+    product: generateProductData(9, "Brake Disc", "https://boodmo.com/media/cache/catalog_image/images/categories/7eaaa12.jpg", 2500),
   },
   {
+    id: 10,
     name: "Brake Disc Back Plate",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/8a10f30.jpg",
-    link: "/catalog/4083-brake_disc_back_plate/",
+    link: "/catalog/part-p-10",
+    product: generateProductData(10, "Brake Disc Back Plate", "https://boodmo.com/media/cache/catalog_image/images/categories/8a10f30.jpg", 850),
   },
   {
+    id: 11,
     name: "Brake Disc Bolt",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/07bf068.jpg",
-    link: "/catalog/4096-bolt_brake_disc/",
+    link: "/catalog/part-p-11",
+    product: generateProductData(11, "Brake Disc Bolt", "https://boodmo.com/media/cache/catalog_image/images/categories/07bf068.jpg", 150),
   },
   {
+    id: 12,
     name: "Brake Drum Back Plate",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/df87719.jpg",
-    link: "/catalog/4572-brake_drum_back_plate/",
+    link: "/catalog/part-p-12",
+    product: generateProductData(12, "Brake Drum Back Plate", "https://boodmo.com/media/cache/catalog_image/images/categories/df87719.jpg", 1200),
   },
   {
+    id: 13,
     name: "Brake Fluid",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/3de286d.jpg",
-    link: "/catalog/3665-brake_fluid/",
+    link: "/catalog/part-p-13",
+    product: generateProductData(13, "Brake Fluid", "https://boodmo.com/media/cache/catalog_image/images/categories/3de286d.jpg", 350),
   },
   {
+    id: 14,
     name: "Brake Fluid Reservoir",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/b25f76c.jpg",
-    link: "/catalog/4076-brake_fluid_reservoir/",
+    link: "/catalog/part-p-14",
+    product: generateProductData(14, "Brake Fluid Reservoir", "https://boodmo.com/media/cache/catalog_image/images/categories/b25f76c.jpg", 450),
   },
   {
+    id: 15,
     name: "Brake Hose",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/7664137.jpg",
-    link: "/catalog/3525-brake_hydraulics_hoses/",
+    link: "/catalog/part-p-15",
+    product: generateProductData(15, "Brake Hose", "https://boodmo.com/media/cache/catalog_image/images/categories/7664137.jpg", 650),
   },
   {
+    id: 16,
     name: "Brake Hose Connector",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/a9ba9c5.jpg",
-    link: "/catalog/4981-brake_hose_connector/",
+    link: "/catalog/part-p-16",
+    product: generateProductData(16, "Brake Hose Connector", "https://boodmo.com/media/cache/catalog_image/images/categories/a9ba9c5.jpg", 550),
   },
   {
+    id: 17,
     name: "Brake Light Switch",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/bb8c6bf.jpg",
-    link: "/catalog/4084-brake_light_switch/",
+    link: "/catalog/part-p-17",
+    product: generateProductData(17, "Brake Light Switch", "https://boodmo.com/media/cache/catalog_image/images/categories/bb8c6bf.jpg", 450),
   },
   {
+    id: 18,
     name: "Brake Master Cylinder",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/01c4258.jpg",
-    link: "/catalog/3614-brake_master_cylinder/",
+    link: "/catalog/part-p-18",
+    product: generateProductData(18, "Brake Master Cylinder", "https://boodmo.com/media/cache/catalog_image/images/categories/01c4258.jpg", 3200),
   },
   {
+    id: 19,
     name: "Brake Master Cylinder Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/f8ce1d4.jpg",
-    link: "/catalog/4091-repair_kit_brake_master_cylinder/",
+    link: "/catalog/part-p-19",
+    product: generateProductData(19, "Brake Master Cylinder Repair Kit", "https://boodmo.com/media/cache/catalog_image/images/categories/f8ce1d4.jpg", 750),
   },
   {
+    id: 20,
     name: "Brake Pads",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/a237d70.jpg",
-    link: "/catalog/4066-brake_pads/",
+    link: "/catalog/part-p-20",
+    product: generateProductData(20, "Brake Pads", "https://boodmo.com/media/cache/catalog_image/images/categories/a237d70.jpg", 1250),
   },
   {
+    id: 21,
     name: "Brake Pad Wear Sensor",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/e077c87.jpg",
-    link: "/catalog/4092-brake_pad_wear_sensor/",
+    link: "/catalog/part-p-21",
+    product: generateProductData(21, "Brake Pad Wear Sensor", "https://boodmo.com/media/cache/catalog_image/images/categories/e077c87.jpg", 850),
   },
   {
+    id: 22,
     name: "Brake Pedal",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/fb720c8.jpg",
-    link: "/catalog/4718-brake_pedal/",
+    link: "/catalog/part-p-22",
+    product: generateProductData(22, "Brake Pedal", "https://boodmo.com/media/cache/catalog_image/images/categories/fb720c8.jpg", 950),
   },
   {
+    id: 23,
     name: "Brake Pipe",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/151a598.jpg",
-    link: "/catalog/4095-brake_pipes/",
+    link: "/catalog/part-p-23",
+    product: generateProductData(23, "Brake Pipe", "https://boodmo.com/media/cache/catalog_image/images/categories/151a598.jpg", 550),
   },
   {
+    id: 24,
     name: "Brake Power Regulator",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/dd5743e.jpg",
-    link: "/catalog/4094-brake_power_regulator/",
+    link: "/catalog/part-p-24",
+    product: generateProductData(24, "Brake Power Regulator", "https://boodmo.com/media/cache/catalog_image/images/categories/dd5743e.jpg", 1200),
   },
   {
+    id: 25,
     name: "Brake Proportioning Valve",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/a1ba1b4.jpg",
-    link: "/catalog/4887-brake_pressure_control_valve/",
+    link: "/catalog/part-p-25",
+    product: generateProductData(25, "Brake Proportioning Valve", "https://boodmo.com/media/cache/catalog_image/images/categories/a1ba1b4.jpg", 1100),
   },
   {
+    id: 26,
     name: "Brake Shoe Lining",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/0083846.jpg",
-    link: "/catalog/4093-drum_brake_lining_kit/",
+    link: "/catalog/part-p-26",
+    product: generateProductData(26, "Brake Shoe Lining", "https://boodmo.com/media/cache/catalog_image/images/categories/0083846.jpg", 650),
   },
   {
+    id: 27,
     name: "Brake Shoes",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/e4404d8.jpg",
-    link: "/catalog/3722-brake_shoes/",
+    link: "/catalog/part-p-27",
+    product: generateProductData(27, "Brake Shoes", "https://boodmo.com/media/cache/catalog_image/images/categories/e4404d8.jpg", 980),
   },
   {
+    id: 28,
     name: "Brake System Bracket",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/b2291e9.jpg",
-    link: "/catalog/4861-brake_system_bracket/",
+    link: "/catalog/part-p-28",
+    product: generateProductData(28, "Brake System Bracket", "https://boodmo.com/media/cache/catalog_image/images/categories/b2291e9.jpg", 750),
   },
   {
+    id: 29,
     name: "Caliper Bracket",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/69fb874.jpg",
-    link: "/catalog/4089-caliper_bracket/",
+    link: "/catalog/part-p-29",
+    product: generateProductData(29, "Caliper Bracket", "https://boodmo.com/media/cache/catalog_image/images/categories/69fb874.jpg", 850),
   },
   {
+    id: 30,
     name: "Drum Brake",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/39e04d3.jpg",
-    link: "/catalog/3383-drum_brake/",
+    link: "/catalog/part-p-30",
+    product: generateProductData(30, "Drum Brake", "https://boodmo.com/media/cache/catalog_image/images/categories/39e04d3.jpg", 1800),
   },
   {
+    id: 31,
     name: "Drum Brake Adjuster",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/c282445.jpg",
-    link: "/catalog/4080-adjuster_drum_brake/",
+    link: "/catalog/part-p-31",
+    product: generateProductData(31, "Drum Brake Adjuster", "https://boodmo.com/media/cache/catalog_image/images/categories/c282445.jpg", 450),
   },
   {
+    id: 32,
     name: "Handbrake",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/d3d6760.jpg",
-    link: "/catalog/3384-hand_brake/",
+    link: "/catalog/part-p-32",
+    product: generateProductData(32, "Handbrake", "https://boodmo.com/media/cache/catalog_image/images/categories/d3d6760.jpg", 1200),
   },
   {
+    id: 33,
     name: "Handbrake Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/7428b3e.jpg",
-    link: "/catalog/4959-handbrake_repair_kit/",
+    link: "/catalog/part-p-33",
+    product: generateProductData(33, "Handbrake Repair Kit", "https://boodmo.com/media/cache/catalog_image/images/categories/7428b3e.jpg", 550),
   },
   {
+    id: 34,
     name: "Handbrake Warning Light Switch",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/6523392.jpg",
-    link: "/catalog/4293-switch_handbrake_warning_light/",
+    link: "/catalog/part-p-34",
+    product: generateProductData(34, "Handbrake Warning Light Switch", "https://boodmo.com/media/cache/catalog_image/images/categories/6523392.jpg", 350),
   },
   {
+    id: 35,
     name: "Vacuum Hose",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/1322d53.jpg",
-    link: "/catalog/5001-brake_vacuum_hose/",
+    link: "/catalog/part-p-35",
+    product: generateProductData(35, "Vacuum Hose", "https://boodmo.com/media/cache/catalog_image/images/categories/1322d53.jpg", 450),
   },
   {
+    id: 36,
     name: "Vacuum Pump",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/bee8d1e.jpg",
-    link: "/catalog/3805-vacuum_pump_brake/",
+    link: "/catalog/part-p-36",
+    product: generateProductData(36, "Vacuum Pump", "https://boodmo.com/media/cache/catalog_image/images/categories/bee8d1e.jpg", 2800),
   },
   {
+    id: 37,
     name: "Wheel Brake Cylinder",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/452d84b.jpg",
-    link: "/catalog/3723-wheel_brake_cylinder/",
+    link: "/catalog/part-p-37",
+    product: generateProductData(37, "Wheel Brake Cylinder", "https://boodmo.com/media/cache/catalog_image/images/categories/452d84b.jpg", 1500),
   },
   {
+    id: 38,
     name: "Wheel Brake Cylinder Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/01ae522.jpg",
-    link: "/catalog/4090-repair_kit_wheel_brake_cylinder/",
+    link: "/catalog/part-p-38",
+    product: generateProductData(38, "Wheel Brake Cylinder Repair Kit", "https://boodmo.com/media/cache/catalog_image/images/categories/01ae522.jpg", 650),
   },
 ];
 
@@ -225,32 +352,35 @@ export const Break_System = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white dark:bg-gray-900 py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
         {/* 🔖 Page Title */}
-        <div className="mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white mb-2">
-            Brake System
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300">
+        <div className="mb-4 sm:mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="flex-1">
+            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 dark:text-white mb-2">
+              Brake System
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600 dark:text-gray-300">
             Explore a complete range of brake system components including pads,
             discs, calipers, hoses, and master cylinders to ensure safe and
             efficient braking performance.
           </p>
+          </div>
+          <div className="flex-shrink-0">
+            {/* 🔎 Search & Filter Bar */}
+            <SearchFilterBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              sortBy={sortBy}
+              handleSort={handleSort}
+              showFilters={showFilters}
+              setShowFilters={setShowFilters}
+              categoryName="Brake System"
+            />
+          </div>
         </div>
-
-        {/* 🔎 Search & Filter Bar */}
-        <SearchFilterBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          sortBy={sortBy}
-          handleSort={handleSort}
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          categoryName="Brake System"
-        />
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
           <CatalogueSidebar 
@@ -261,22 +391,26 @@ export const Break_System = () => {
           {/* 🧩 Categories Grid */}
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((category) => (
                 <Link
-                  key={index}
-                  to={product.link}
+                  key={category.id}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Brake System", slug: "brakes" }
+                  }}
                   className="bg-white dark:bg-gray-800 p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + product.name;
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + category.name;
                     }}
                   />
                   <span className="text-gray-800 dark:text-gray-100 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">
-                    {product.name}
+                    {category.name}
                   </span>
                 </Link>
               ))}
@@ -305,14 +439,14 @@ export const Break_System = () => {
           <p className="mb-4">The automotive vehicles usually come equipped with two types of braking systems.</p>
 
           <p className="mb-4">
-            <strong className="text-blue-700">Disk Brakes:</strong> It is a type of braking system which uses calipers to squeeze pairs of pads
+            <strong className="text-[#131c36]">Disk Brakes:</strong> It is a type of braking system which uses calipers to squeeze pairs of pads
             against a disc in order to create friction. This as a result slows down the shaft rotation including axle, to
             reduce its rotational speed. The energy of motion is converted into waste heat which needs to be dispersed.
             Most of the vehicles these days use hydraulic actuated disc brakes.
           </p>
 
           <p className="mb-6">
-            <strong className="text-blue-700">Drum Brakes:</strong> It is a type that uses friction caused as a result of shoes or pads that are pressed
+            <strong className="text-[#131c36]">Drum Brakes:</strong> It is a type that uses friction caused as a result of shoes or pads that are pressed
             outwards against a cylinder-shaped part called a brake drum. The presently used drum brake kits were first
             invented by Maybach in 1900 and patented by Louis Renault in 1902.
           </p>
@@ -335,7 +469,7 @@ export const Break_System = () => {
         <div className="text-center mt-6">
           <button
             onClick={() => setExpanded(!expanded)}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow transition-all"
+            className="px-5 py-2 bg-[#131c36] hover:bg-[#0f1528] text-white rounded-lg shadow transition-all"
           >
             {expanded ? "View Less" : "View More"}
           </button>

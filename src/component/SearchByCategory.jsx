@@ -157,7 +157,7 @@ export default function SearchByCategory() {
 
   return (
     <section className={`relative bg-white ${isCategoryPage ? 'pt-20 md:pt-24 pb-8 md:pb-12' : 'py-4 sm:py-6 md:py-8'} overflow-hidden`}>
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         {/* Red Accent Line */}
         <div className="w-16 h-0.5 bg-red-600 mb-4 md:mb-5"></div>
 

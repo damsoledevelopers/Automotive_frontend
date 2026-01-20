@@ -74,7 +74,7 @@ const CurrentOffers = () => {
 
   return (
     <section className="relative bg-white py-4 sm:py-6 md:py-8 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-6 lg:px-8">
+      <div className="w-full mx-auto px-4 sm:px-5 md:px-6 lg:px-8">
         
         {/* Header Section */}
         {/* <div className="mb-5 md:mb-6">

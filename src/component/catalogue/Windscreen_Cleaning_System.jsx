@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
-const windscreenComponents = [
+const windscreenComponentsBase = [
   {
     id: 1,
     name: "Connector Washer Fluid Pipe",
@@ -111,6 +113,18 @@ const windscreenComponents = [
 ];
 
 const Windscreen_Cleaning_System = () => {
+  // Generate categories with product data (memoized to prevent infinite loops)
+  const windscreenComponents = useMemo(() => {
+    return generateCategoryWithProducts(
+      windscreenComponentsBase.map((item) => ({
+        ...item,
+        link: item.link.startsWith('/catalog/part-p-') ? item.link : `/catalog/part-p-${30000 + item.id}`
+      })),
+      "Windscreen Cleaning System",
+      3600
+    );
+  }, []);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
   const [showFilters, setShowFilters] = useState(false);
@@ -122,10 +136,10 @@ const Windscreen_Cleaning_System = () => {
     const filtered = windscreenComponents.filter(
       (product) =>
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchTerm.toLowerCase())
+        (product.product?.brand && product.product.brand.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredProducts(filtered);
-  }, [searchTerm]);
+  }, [searchTerm, windscreenComponents]);
 
   // Sort
   const handleSort = (value) => {
@@ -133,10 +147,10 @@ const Windscreen_Cleaning_System = () => {
     let sorted = [...filteredProducts];
     switch (value) {
       case "price-low":
-        sorted.sort((a, b) => a.price - b.price);
+        sorted.sort((a, b) => (a.product?.price || 0) - (b.product?.price || 0));
         break;
       case "price-high":
-        sorted.sort((a, b) => b.price - a.price);
+        sorted.sort((a, b) => (b.product?.price || 0) - (a.product?.price || 0));
         break;
       case "name":
         sorted.sort((a, b) => a.name.localeCompare(b.name));
@@ -148,12 +162,12 @@ const Windscreen_Cleaning_System = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6 pt-2 pb-4">
         <Breadcrumbs />
 
-        <div className="mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">Windscreen Cleaning System</h1>
+        <div className="mb-3 sm:mb-4">
+          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-1">Windscreen Cleaning System</h1>
           <p className="text-xs sm:text-sm md:text-base text-gray-600">
             Explore our collection of windscreens, wiper blades, washer fluids, and all components for an optimal cleaning system.
           </p>
@@ -180,25 +194,33 @@ const Windscreen_Cleaning_System = () => {
           {/* Products Grid */}
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
-                <div key={product.id || index} className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow-sm text-center">
-                  <a href={product.link} target="_blank" rel="noopener noreferrer">
-                     <img
-                    src={product.img}
-                    alt={product.name}
+              {filteredProducts.map((category, index) => (
+                <Link
+                  key={category.id || index}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Windscreen Cleaning System", slug: "windscreen_cleaning_system" }
+                  }}
+                  className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
+                >
+                  <img
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (product.name || 'Part');
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (category.name || 'Part');
                     }}
                   />
-                    <h3 className="text-gray-800 font-semibold text-[9px] sm:text-[10px] md:text-xs lg:text-sm mb-1 line-clamp-2 px-1">{product.name}</h3>
-                  </a>
-                </div>
+                  <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">
+                    {category.name}
+                  </span>
+                </Link>
               ))}
             </div>
 
             {/* Content Section */}
-            <section className="bg-white text-gray-800 py-10 px-6 max-w-5xl mx-auto">
+            <section className="bg-white text-gray-800 py-10 px-6 w-full">
               <div className="space-y-4">
                 <h2 className="text-2xl md:text-3xl font-bold text-red-700 border-b-2 border-red-300 inline-block pb-2">
                   About Windscreen Cleaning System

@@ -119,14 +119,14 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const isActive = (path) => location.pathname === path;
 
   const sidebarContent = (
-    <div className="bg-white dark:bg-gray-900 p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl shadow-sm border border-gray-100 lg:sticky lg:top-16 sm:top-20 h-full overflow-y-auto">
+    <div className="bg-white dark:bg-gray-900 p-3 sm:p-4 md:p-5 rounded-lg sm:rounded-xl shadow-sm border border-gray-100 lg:sticky lg:top-4 max-h-[calc(100vh-2rem)] overflow-y-auto scrollbar-hide">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-3 sm:mb-4 pb-2 sm:pb-3 border-b border-gray-200">
           <h3 className="text-[10px] sm:text-xs md:text-sm lg:text-base font-semibold text-gray-800 dark:text-gray-100">Filters</h3>
           <button 
             onClick={handleReset}
-            className="text-[9px] sm:text-[10px] md:text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+            className="text-[9px] sm:text-[10px] md:text-xs text-[#131c36] hover:text-[#0f1528] dark:text-[#131c36] font-medium"
           >
             RESET
           </button>
@@ -145,7 +145,7 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
             <span className="font-semibold text-gray-800 dark:text-gray-100">
               Garage
             </span>
-            <span className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
+            <span className="text-xs sm:text-sm text-[#131c36] dark:text-[#131c36]">
               {isOpen ? "−" : "+"}
             </span>
           </div>
@@ -221,7 +221,7 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
           <h4 className="font-semibold text-xs sm:text-sm text-gray-800 dark:text-gray-300 mb-3">
             Category
           </h4>
-          <div className="space-y-1 max-h-96 overflow-y-auto custom-scrollbar">
+          <div className="space-y-1 max-h-96 overflow-y-auto">
             {categories.map((category) => (
               <div key={category.name}>
                 <div className="flex items-center justify-between">
@@ -229,8 +229,8 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
                     to={category.link}
                     className={`flex-1 block text-xs px-2 py-1.5 rounded transition-all duration-200 ${
                       isActive(category.link)
-                        ? "font-semibold text-white bg-blue-600"
-                        : "text-gray-700 dark:text-gray-300 hover:text-blue-600 hover:bg-blue-50"
+                        ? "font-semibold text-white bg-[#131c36]"
+                        : "text-gray-700 dark:text-gray-300 hover:text-[#131c36] hover:bg-[#131c36]/10"
                     }`}
                   >
                     {category.name}
@@ -255,8 +255,8 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
                               to={subCat.link}
                               className={`block text-[10px] font-medium px-2 py-1 mb-0.5 rounded transition-all duration-200 ${
                                 isActive(subCat.link)
-                                  ? "text-blue-600 bg-blue-50"
-                                  : "text-gray-700 hover:text-blue-600 hover:bg-gray-50"
+                                  ? "text-[#131c36] bg-[#131c36]/10"
+                                  : "text-gray-700 hover:text-[#131c36] hover:bg-gray-50"
                               }`}
                             >
                               {subCat.name}
@@ -268,8 +268,8 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
                                   to={item.link}
                                   className={`block text-[10px] px-2 py-0.5 rounded transition-all duration-200 ${
                                     isActive(item.link)
-                                      ? "font-medium text-blue-600 bg-blue-50"
-                                      : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                                      ? "font-medium text-[#131c36] bg-[#131c36]/10"
+                                      : "text-gray-600 hover:text-[#131c36] hover:bg-gray-50"
                                   }`}
                                 >
                                   {item.name}
@@ -283,8 +283,8 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
                             to={subCat.link}
                             className={`block text-[10px] px-2 py-1 rounded transition-all duration-200 ${
                               isActive(subCat.link)
-                                ? "font-medium text-blue-600 bg-blue-50"
-                                : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
+                                ? "font-medium text-[#131c36] bg-[#131c36]/10"
+                                : "text-gray-600 hover:text-[#131c36] hover:bg-gray-50"
                             }`}
                           >
                             {subCat.name}
@@ -309,8 +309,8 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
                 to={brand.link}
                 className={`block text-xs px-2 py-1.5 rounded transition-all duration-200 ${
                   isActive(brand.link)
-                    ? "font-semibold text-white bg-blue-600"
-                    : "text-gray-700 dark:text-gray-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-gray-700"
+                    ? "font-semibold text-white bg-[#131c36]"
+                    : "text-gray-700 dark:text-gray-300 hover:text-[#131c36] hover:bg-[#131c36]/10 dark:hover:bg-gray-700"
                 }`}
               >
                 {brand.name}
@@ -326,7 +326,7 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
       {/* Mobile Filter Button */}
       <button
         onClick={() => setIsMobileOpen(true)}
-        className="lg:hidden fixed bottom-4 right-4 z-40 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
+        className="lg:hidden fixed bottom-4 right-4 z-40 bg-[#131c36] text-white p-4 rounded-full shadow-lg hover:bg-[#0f1528] transition-all duration-200 flex items-center gap-2"
         aria-label="Open filters"
       >
         <FaFilter className="text-lg" />

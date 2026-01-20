@@ -3,115 +3,140 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
 const Exhaust_System = () => {
-  const exhaustCategories = [
+  const exhaustCategoriesBase = [
   {
+    id: 1,
     name: "Catalytic Converter",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/5acb744.jpg",
-    link: "/catalog/3511-emission_control_systems/",
+    link: "/catalog/part-p-12001",
   },
   {
+    id: 2,
     name: "Cooler EGR",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/d1e33d6.jpg",
-    link: "/catalog/4234-cooler_egr/",
+    link: "/catalog/part-p-12002",
   },
   {
+    id: 3,
     name: "Diesel Particulate Filter",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/4509007.webp",
-    link: "/catalog/5203-diesel_particulate_filter/",
+    link: "/catalog/part-p-12003",
   },
   {
+    id: 4,
     name: "EGR Pipe",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/3f1a689.jpg",
-    link: "/catalog/4777-egr_pipe/",
+    link: "/catalog/part-p-12004",
   },
   {
+    id: 5,
     name: "EGR Valve",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/80f936e.jpg",
-    link: "/catalog/4174-exhaust_gas_recirculation_valve/",
+    link: "/catalog/part-p-12005",
   },
   {
+    id: 6,
     name: "EGR Valve Gasket",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/16f8c0a.jpg",
-    link: "/catalog/4175-egr_valve_gasket/",
+    link: "/catalog/part-p-12006",
   },
   {
+    id: 7,
     name: "Exhaust Gas Temperature Sensor",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/e813476.jpg",
-    link: "/catalog/4240-sensor_exhaust_gas_temperature/",
+    link: "/catalog/part-p-12007",
   },
   {
+    id: 8,
     name: "Exhaust Manifold",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/f5db622.jpg",
-    link: "/catalog/3601-exhaust_manifold/",
+    link: "/catalog/part-p-12008",
   },
   {
+    id: 9,
     name: "Exhaust Manifold Gasket",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/955b4a7.jpg",
-    link: "/catalog/4178-exhaust_manifold_gasket/",
+    link: "/catalog/part-p-12009",
   },
   {
+    id: 10,
     name: "Exhaust Pipe",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/853e56e.jpg",
-    link: "/catalog/3602-exhaust_pipe/",
+    link: "/catalog/part-p-12010",
   },
   {
+    id: 11,
     name: "Exhaust Pipe Gasket",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/bad1141.jpg",
-    link: "/catalog/3371-exhaust_system_complete/",
+    link: "/catalog/part-p-12011",
   },
   {
+    id: 12,
     name: "Exhaust System Bracket",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/342bada.jpg",
-    link: "/catalog/4860-exhaust_system_bracket/",
+    link: "/catalog/part-p-12012",
   },
   {
+    id: 13,
     name: "Exhaust System Rubber Strip",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/5188978.jpg",
-    link: "/catalog/4237-rubber_strip_exhaust_system/",
+    link: "/catalog/part-p-12013",
   },
   {
+    id: 14,
     name: "Exhaust Tip",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/25a8ed2.jpg",
-    link: "/catalog/4907-exhaust_tip/",
+    link: "/catalog/part-p-12014",
   },
   {
+    id: 15,
     name: "Intercooler",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/03c5278.jpg",
-    link: "/catalog/4527-intercooler/",
+    link: "/catalog/part-p-12015",
   },
   {
+    id: 16,
     name: "Lambda Sensor",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/7a22417.jpg",
-    link: "/catalog/3603-lambda_sensor/",
+    link: "/catalog/part-p-12016",
   },
   {
+    id: 17,
     name: "Resonator",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/c443254.jpg",
-    link: "/catalog/4776-resonator/",
+    link: "/catalog/part-p-12017",
   },
   {
+    id: 18,
     name: "Silencer",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/90383f1.jpg",
-    link: "/catalog/3372-muffler_silencer/",
+    link: "/catalog/part-p-12018",
   },
   {
+    id: 19,
     name: "Turbocharger",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/7f1fc19.jpg",
-    link: "/catalog/4557-turbocharger/",
+    link: "/catalog/part-p-12019",
   },
   {
+    id: 20,
     name: "Turbocharger Gasket",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/cf18261.jpg",
-    link: "/catalog/4559-turbocharger_gasket/",
+    link: "/catalog/part-p-12020",
   },
   {
+    id: 21,
     name: "Turbocharger Hose",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/38b3dfc.jpg",
-    link: "/catalog/4562-turbocharger_hose/",
+    link: "/catalog/part-p-12021",
   },
 ];
+
+  // Generate categories with product data
+  const exhaustCategories = generateCategoryWithProducts(exhaustCategoriesBase, "Exhaust System", 2000);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
@@ -136,8 +161,8 @@ const Exhaust_System = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
         <div className="mb-4 sm:mb-6 md:mb-8">
@@ -167,22 +192,26 @@ const Exhaust_System = () => {
 
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((category, index) => (
                 <Link
-                  key={product.id}
-                  to={product.link}
+                  key={category.id || index}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Exhaust System", slug: "exhaust" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (product.name || 'Part');
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (category.name || 'Part');
                     }}
                   />
                   <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">
-                    {product.name}
+                    {category.name}
                   </span>
                 </Link>
               ))}

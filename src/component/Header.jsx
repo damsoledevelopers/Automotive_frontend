@@ -18,7 +18,7 @@ import {
 } from "react-icons/fa";
 import { IoReorderThreeOutline } from "react-icons/io5";
 import { motion, AnimatePresence } from "framer-motion";
-import logo3 from "./logo3.png"; 
+import logo3 from "./logo3.png";
 import { Sider } from "./Sider";
 import { useCart } from '../contexts/CartContext';
 
@@ -83,9 +83,8 @@ export const Header = () => {
   return (
     <>
       <motion.header
-        className={`hidden md:block w-full bg-white fixed top-0 left-0 right-0 z-50 ${
-          isScrolled ? "shadow-xl bg-white/95 backdrop-blur-sm" : "shadow-sm"
-        }`}
+        className={`hidden md:block w-full bg-white fixed top-0 left-0 right-0 z-50 ${isScrolled ? "shadow-xl bg-white/95 backdrop-blur-sm" : "shadow-sm"
+          }`}
         initial={{ y: 0 }}
         animate={{
           y: isHeaderVisible ? 0 : -100,
@@ -93,8 +92,8 @@ export const Header = () => {
         }}
       >
         {/* ===== FULL WIDTH CONTAINER FIXED ===== */}
-        <div className="w-full px-6 py-3">
-          
+        <div className="w-full px-6 py-2">
+
           {/* TOP ROW */}
           <div className="flex items-center justify-between w-full">
 
@@ -106,10 +105,12 @@ export const Header = () => {
                 whileHover={{ scale: 1.05 }}
               >
                 <img
-                  src={logo3}
-                  alt="Logo"
-                  className="h-12 w-auto"
+                  src="/final_logo.png"
+                  alt=""
+                  style={{ height: "80px", width: "auto", filter: "blur(1.2px)" }}
                 />
+
+
               </motion.div>
 
               <button

@@ -58,9 +58,9 @@ const TimingBeltDetail = () => {
           ...productData,
           images: productImages,
           fullPartNumber: productData.partNumber,
-          mrp: productData.mrp || productData.price * 1.05,
+          mrp: productData.mrp || Math.round(productData.price * 1.05 * 100) / 100, // 5% markup for MRP
           stock: stock,
-          replacementsPrice: replacementsPrice,
+          replacementsPrice: productData.replacementsPrice || Math.round(productData.price * 0.77), // ~77% for ₹655 from ₹850
           seller: productData.soldBy || "Bengaluru/BPN",
           fulfilledBySparelo: productData.fulfilledBySparelo || false,
           spareloChoice: productData.spareloChoice || false,
@@ -85,8 +85,9 @@ const TimingBeltDetail = () => {
           brand: "MARUTI SUZUKI",
           seller: "Bengaluru/BPN",
           price: 850.00,
-          mrp: 850.00,
-          stock: 9,
+          mrp: 892.50, // 5% markup
+          stock: 5,
+          replacementsPrice: 655,
           isOEM: true,
           origin: "OEM (genuine)",
           class: "Timing Belt",
@@ -148,9 +149,9 @@ const TimingBeltDetail = () => {
     const savedAddress = localStorage.getItem('shippingAddress');
     if (savedAddress) {
       const address = JSON.parse(savedAddress);
-      return `${address.cityState} - ${address.postalCode}`;
+      return `Pune, ${address.cityState || 'MAHARASHTRA'}, India - ${address.postalCode || '412406'}`;
     }
-    return "MAHARASHTRA - Pune 234544";
+    return "Pune, MAHARASHTRA, India - 412406";
   };
 
   if (loading) {
@@ -192,27 +193,32 @@ const TimingBeltDetail = () => {
     setQuantity(prev => Math.max(1, prev + change));
   };
 
+  // Dark blue/teal color from the header image (#1e3a8a or similar)
+  const primaryColor = '#131c36'; // Dark blue
+  const primaryColorHover = '#131c36';
+  const primaryColorLight = '#3b82f6';
+
   return (
     <div className="h-screen bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 py-3 h-full flex flex-col">
         {/* Compact Header - Brand and Product Name */}
-        <div className="mb-2 flex-shrink-0">
-          <h1 className="text-xl font-bold text-gray-900">{product.brand}</h1>
-          <h2 className="text-lg font-semibold text-gray-800">{product.name}</h2>
+        <div className="mb-3 flex-shrink-0">
+          <h1 className="text-lg font-bold text-gray-900">{product.brand}</h1>
+          <h2 className="text-base font-semibold text-gray-800">{product.name}</h2>
         </div>
 
         {/* Main Content Area - Compact Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 overflow-hidden">
           {/* Left Column - Product Images with Thumbnails */}
-          <div className="flex gap-2 h-full">
+          <div className="flex gap-3 h-full">
             {/* Thumbnail Images - Left Side */}
-            <div className="flex flex-col gap-1.5 flex-shrink-0">
+            <div className="flex flex-col gap-2 flex-shrink-0">
               {product.images.slice(0, 3).map((img, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`border-2 rounded overflow-hidden w-12 h-12 flex-shrink-0 ${
-                    selectedImage === index ? 'border-blue-600' : 'border-gray-200'
+                  className={`border-2 rounded overflow-hidden w-14 h-14 flex-shrink-0 transition-all ${
+                    selectedImage === index ? 'border-[#1e3a8a] shadow-md' : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
                   <img
@@ -228,9 +234,9 @@ const TimingBeltDetail = () => {
             </div>
 
             {/* Main Image */}
-            <div className="flex-1 relative bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <div className="flex-1 relative bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
               {product.isOEM && (
-                <div className="absolute top-2 left-2 bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold z-10">
+                <div className="absolute top-2 left-2 text-white px-2.5 py-1 rounded text-xs font-bold z-10 shadow-md" style={{ backgroundColor: primaryColor }}>
                   OEM
                 </div>
               )}
@@ -238,7 +244,7 @@ const TimingBeltDetail = () => {
                 <img
                   src={product.images[selectedImage] || product.image}
                   alt={product.name}
-                  className="w-full h-full object-contain p-3"
+                  className="w-full h-full object-contain p-4"
                   onError={(e) => {
                     e.target.src = PLACEHOLDER_IMAGE;
                   }}
@@ -247,37 +253,37 @@ const TimingBeltDetail = () => {
             </div>
           </div>
 
-          {/* Right Column - Product Information - Compact */}
-          <div className="space-y-2 overflow-y-auto pr-2">
+          {/* Right Column - Product Information - Professional Layout */}
+          <div className="space-y-3 overflow-y-auto pr-2">
             {/* Delivery Info */}
-            <div className="flex items-center gap-2 text-xs text-gray-600">
-              <FaTruck className="text-blue-600 text-xs" />
-              <span>Free Delivery (within {product.deliveryDays || 5} days)</span>
+            <div className="flex items-center gap-2 text-sm text-gray-700 font-medium">
+              <FaTruck style={{ color: primaryColor }} className="text-sm" />
+              <span>Free Delivery (within {product.deliveryDays || 4} days)</span>
             </div>
 
             {/* Fulfillment Badges */}
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {product.fulfilledBySparelo && (
-                <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-semibold">
-                  <FaCheckCircle className="text-green-600 text-xs" />
+                <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-semibold border border-green-200">
+                  <FaCheckCircle className="text-green-600" />
                   Fulfilled by b
                 </span>
               )}
               {product.freeDelivery && (
-                <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-semibold">
-                  <FaTruck className="text-xs" />
+                <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold border border-blue-200">
+                  <FaTruck />
                   Free Delivery
                 </span>
               )}
               {product.spareloChoice && (
-                <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-semibold">
+                <span className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 px-3 py-1.5 rounded-full text-xs font-semibold border border-purple-200">
                   boodmo's Choice
                 </span>
               )}
             </div>
 
             {/* Seller Info */}
-            <div className="text-xs text-gray-600">
+            <div className="text-sm text-gray-700">
               <span>Sold by: </span>
               <span className="font-semibold text-gray-900">{product.seller || product.soldBy || "Bengaluru/BPN"}</span>
             </div>
@@ -285,7 +291,7 @@ const TimingBeltDetail = () => {
             {/* Replacements Link */}
             {product.replacementsPrice && (
               <div>
-                <Link to="#" className="text-blue-600 hover:underline text-xs font-medium">
+                <Link to="#" className="text-sm font-medium hover:underline" style={{ color: primaryColor }}>
                   Replacements from ₹{product.replacementsPrice.toLocaleString('en-IN')}
                 </Link>
               </div>
@@ -293,65 +299,68 @@ const TimingBeltDetail = () => {
 
             {/* Price Section */}
             <div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold text-gray-900">
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-3xl font-bold text-gray-900">
                   ₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
               {product.mrp && product.mrp > product.price && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 line-through">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm text-gray-500 line-through">
                     MRP: ₹{product.mrp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
-                  <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-xs font-semibold">
+                  <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-semibold border border-blue-200">
                     -{discount}%
                   </span>
                 </div>
               )}
-              <p className="text-xs text-gray-500">Incl. of all taxes</p>
-              <p className="text-xs text-blue-600">
-                {product.stock || 6} in stock
+              <p className="text-xs text-gray-500 mb-1">Incl. of all taxes</p>
+              <p className="text-sm font-medium" style={{ color: primaryColor }}>
+                {product.stock || 5} in stock
               </p>
             </div>
 
             {/* Check Compatibility Button */}
-            <button className="w-full flex items-center justify-center gap-2 bg-white border-2 border-blue-600 text-blue-600 px-3 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-sm">
-              <FaHome className="text-sm" />
+            <button 
+              className="w-full flex items-center justify-center gap-2 bg-white border-2 px-4 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm shadow-sm"
+              style={{ borderColor: primaryColor, color: primaryColor }}
+            >
+              <FaHome />
               Check Compatibility
             </button>
 
             {/* Product Specifications */}
-            <div className="border-t border-gray-200 pt-2">
-              <div className="grid grid-cols-3 gap-2 mb-2">
+            <div className="border-t border-gray-200 pt-3">
+              <div className="grid grid-cols-3 gap-3 mb-3">
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-0.5">Part Number</p>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Part Number</p>
                   <div className="flex items-center gap-1">
-                    <p className="text-xs font-semibold text-gray-900">
-                      {displayPartNumber}
+                    <p className="text-sm font-semibold text-gray-900">
+                      {product.partNumber}
                     </p>
-                    <FaEye className="text-gray-400 text-xs cursor-pointer" />
+                    <FaEye className="text-gray-400 text-xs cursor-pointer hover:text-gray-600" />
                   </div>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-0.5">Origin</p>
-                  <p className="text-xs font-semibold text-gray-900">{product.origin || "OEM (genuine)"}</p>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Origin</p>
+                  <p className="text-sm font-semibold text-gray-900">{product.origin || "OEM (genuine)"}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-0.5">Class</p>
-                  <p className="text-xs font-semibold text-gray-900">{product.class || "Timing Belt"}</p>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Class</p>
+                  <p className="text-sm font-semibold text-gray-900">{product.class || "Timing Belt"}</p>
                 </div>
               </div>
 
               {/* Action Links */}
-              <div className="flex flex-wrap gap-2">
-                <Link to="#" className="text-blue-600 hover:underline text-xs font-medium">
+              <div className="flex flex-wrap gap-3">
+                <Link to="#" className="text-sm font-medium hover:underline" style={{ color: primaryColor }}>
                   View OEM Catalog
                 </Link>
-                <Link to="#" className="text-blue-600 hover:underline text-xs font-medium">
+                <Link to="#" className="text-sm font-medium hover:underline" style={{ color: primaryColor }}>
                   View Compatibility
                 </Link>
                 {product.replacementsPrice && (
-                  <Link to="#" className="text-blue-600 hover:underline text-xs font-medium">
+                  <Link to="#" className="text-sm font-medium hover:underline" style={{ color: primaryColor }}>
                     View Replacements from ₹{product.replacementsPrice.toLocaleString('en-IN')}
                   </Link>
                 )}
@@ -359,52 +368,54 @@ const TimingBeltDetail = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <button
                 onClick={handleAddToCart}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors text-sm"
+                className="w-full text-white px-4 py-2.5 rounded-lg font-semibold transition-all text-sm shadow-md hover:shadow-lg"
+                style={{ backgroundColor: primaryColor }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = primaryColorHover}
+                onMouseLeave={(e) => e.target.style.backgroundColor = primaryColor}
               >
                 Add to cart
               </button>
               <button
                 onClick={handleBuyNow}
-                className="w-full bg-white border-2 border-blue-600 text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-blue-50 transition-colors text-sm"
+                className="w-full bg-white border-2 px-4 py-2.5 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-sm shadow-sm"
+                style={{ borderColor: primaryColor, color: primaryColor }}
               >
                 Buy now
               </button>
             </div>
 
-            {/* Delivery Location and Guarantees - Compact */}
-            <div className="border-t border-gray-200 pt-2 space-y-1.5">
-              <div className="flex items-center gap-2 text-xs text-gray-600">
-                <FaMapMarkerAlt className="text-blue-600 text-xs" />
-                <span>Deliver to {getShippingAddress()}</span>
-              </div>
+            {/* Delivery Location */}
+            <div className="flex items-center gap-2 text-sm text-gray-700 pt-2 border-t border-gray-200">
+              <FaMapMarkerAlt style={{ color: primaryColor }} />
+              <span>Deliver to Pune, MAHARASHTRA, India - 412406</span>
+            </div>
               
-              {/* Compact Guarantees */}
-              <div className="grid grid-cols-3 gap-1.5">
-                <div className="bg-blue-50 border border-blue-200 rounded p-1.5 flex items-center gap-1">
-                  <FaTruck className="text-blue-600 text-xs" />
-                  <p className="text-[9px] font-semibold text-gray-800">{product.deliveryDays || 4} days</p>
-                </div>
-                <div className="bg-blue-50 border border-blue-200 rounded p-1.5 flex items-center gap-1">
-                  <FaRedoAlt className="text-blue-600 text-xs" />
-                  <p className="text-[9px] font-semibold text-gray-800">10 Days Return</p>
-                </div>
-                <div className="bg-blue-50 border border-blue-200 rounded p-1.5 flex items-center gap-1">
-                  <FaFileInvoice className="text-blue-600 text-xs" />
-                  <p className="text-[9px] font-semibold text-gray-800">GST invoice</p>
-                </div>
+            {/* Compact Guarantees */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="bg-gray-50 border border-gray-200 rounded p-2 flex items-center gap-1.5">
+                <FaTruck style={{ color: primaryColor }} className="text-sm" />
+                <p className="text-xs font-semibold text-gray-800">{product.deliveryDays || 4} days</p>
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded p-2 flex items-center gap-1.5">
+                <FaRedoAlt style={{ color: primaryColor }} className="text-sm" />
+                <p className="text-xs font-semibold text-gray-800">10 Days Return</p>
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded p-2 flex items-center gap-1.5">
+                <FaFileInvoice style={{ color: primaryColor }} className="text-sm" />
+                <p className="text-xs font-semibold text-gray-800">GST invoice</p>
               </div>
             </div>
 
             {/* Wishlist */}
             <button
               onClick={handleToggleWishlist}
-              className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors pt-1"
+              className="flex items-center gap-2 text-gray-700 hover:text-red-600 transition-colors pt-1"
             >
               <FaHeart className={inWishlist ? "text-red-600 fill-current" : ""} />
-              <span className="text-xs font-medium">ADD TO WISHLIST</span>
+              <span className="text-sm font-medium">ADD TO WISHLIST</span>
             </button>
           </div>
         </div>

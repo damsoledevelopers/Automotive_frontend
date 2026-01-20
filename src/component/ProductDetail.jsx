@@ -60,58 +60,68 @@ const ProductDetail = () => {
 
   // Get product from location state (passed from product cards) or fetch it
   useEffect(() => {
-    const fetchProduct = async () => {
+    // If product data is passed via state, use it immediately (from View Details click)
+    // This should be instant - no delay needed
+    if (location.state?.product) {
       setLoading(true);
+      const productData = location.state.product;
       
-      // If product data is passed via state, use it (from View Details click)
-      if (location.state?.product) {
-        const productData = location.state.product;
-        
-        // Use the exact same image from the product card
-        // If multiple images exist, use them; otherwise use the same image for all thumbnails
-        const mainImage = productData.image || (productData.images && productData.images[0]) || PLACEHOLDER_IMAGE;
-        const productImages =
-          productData.images && productData.images.length > 0
-            ? productData.images
-            : [mainImage, mainImage, mainImage, mainImage]; // Use same image for all thumbnails
-        
-        // Calculate stock (random between 5-30)
-        const stock = Math.floor(Math.random() * 25) + 5;
-        
-        // Calculate replacements price (60-80% of current price)
-        const replacementsPrice = Math.floor(productData.price * (0.6 + Math.random() * 0.2));
-        
-        // Generate description based on product
-        const description = `${productData.name} for CHEVROLET: TAVERA, MAHINDRA: GENIO, IMPERIO, QUANTO, SCORPIO, SCORPIO GETAWAY, XUV 500, XYLO, MARUTI: RITZ - ${productData.partNumber} - ${productData.brand}`;
-        
-        setProduct({
-          ...productData,
-          images: productImages,
-          fullPartNumber: productData.partNumber,
-          mrp: productData.mrp || productData.price * 1.05, // Add 5% if no MRP
-          stock: stock,
-          isCompatible: false,
-          compatibility: "Not compatible with your cars",
-          compatibleVehicles: [],
-          replacementsPrice: replacementsPrice,
-          category: "Maintenance Service Parts",
-          subCategory: productData.class || "Parts",
-          subSubCategory: productData.name,
-          seller: productData.soldBy || "Pune/SWA",
-          fulfilledBySparelo: productData.fulfilledBysparelo || productData.fulfilledByBoodmo || false,
-          spareloChoice: productData.spareloChoice || productData.boodmoChoice || false,
-          deliveryDays: productData.deliveryDays || 2,
-          returnDays: productData.returnDays || 10,
-          description: description,
-          freeDelivery: productData.freeDelivery || false,
-          origin: productData.origin || "Aftermarket",
-          class: productData.class || "Parts",
-        });
-        setLoading(false);
-        return;
-      }
+      // Use the exact same image from the product card
+      // If multiple images exist, use them; otherwise use the same image for all thumbnails
+      const mainImage = productData.image || (productData.images && productData.images[0]) || PLACEHOLDER_IMAGE;
+      const productImages =
+        productData.images && productData.images.length > 0
+          ? productData.images
+          : [mainImage, mainImage, mainImage, mainImage]; // Use same image for all thumbnails
+      
+      // Calculate stock (random between 5-30)
+      const stock = Math.floor(Math.random() * 25) + 5;
+      
+      // Calculate replacements price (60-80% of current price)
+      const replacementsPrice = Math.floor(productData.price * (0.6 + Math.random() * 0.2));
+      
+      // Get category data from location state
+      const categoryData = location.state?.category || { name: "Maintenance Service Parts", slug: "" };
+      
+      // Generate description based on product and category
+      const description = categoryData.name === "Brake System" 
+        ? `${productData.name} for MARUTI SUZUKI, FORD, TATA, HYUNDAI and other vehicles - ${productData.partNumber} - ${productData.brand}`
+        : `${productData.name} for CHEVROLET: TAVERA, MAHINDRA: GENIO, IMPERIO, QUANTO, SCORPIO, SCORPIO GETAWAY, XUV 500, XYLO, MARUTI: RITZ - ${productData.partNumber} - ${productData.brand}`;
+      
+      setProduct({
+        ...productData,
+        // Preserve original name and brand from productData
+        name: productData.name || 'Unknown Product',
+        brand: productData.brand || 'Unknown Brand',
+        images: productImages,
+        fullPartNumber: productData.partNumber || productData.fullPartNumber,
+        mrp: productData.mrp || Math.round(productData.price * 1.05 * 100) / 100, // Add 5% if no MRP, rounded to 2 decimals
+        stock: stock,
+        isCompatible: false,
+        compatibility: "Not compatible with your cars",
+        compatibleVehicles: [],
+        replacementsPrice: productData.replacementsPrice || replacementsPrice,
+        category: categoryData.name || "Maintenance Service Parts",
+        subCategory: productData.class || "Parts",
+        subSubCategory: productData.name,
+        seller: productData.soldBy || "Pune/SWA",
+        fulfilledBySparelo: productData.fulfilledBySparelo || productData.fulfilledBysparelo || productData.fulfilledByBoodmo || false,
+        spareloChoice: productData.spareloChoice || productData.boodmoChoice || false,
+        deliveryDays: productData.deliveryDays || 4,
+        returnDays: productData.returnDays || 10,
+        description: description,
+        freeDelivery: productData.freeDelivery || false,
+        origin: productData.origin || "Aftermarket",
+        class: productData.class || "Parts",
+      });
+      setLoading(false);
+      return;
+    }
 
-      // Otherwise, fetch mock data based on itemId
+    // Otherwise, fetch mock data based on itemId (fallback case)
+    if (itemId) {
+      setLoading(true);
+      // Use minimal delay for fallback data
       setTimeout(() => {
         setProduct({
           id: itemId,
@@ -147,37 +157,37 @@ const ProductDetail = () => {
           compatibleVehicles: [],
         });
         setLoading(false);
-      }, 800);
-    };
-
-    if (itemId) {
-      fetchProduct();
+      }, 50); // Minimal delay for fallback
+    } else if (!location.state?.product) {
+      // No itemId and no product data - show error
+      setLoading(false);
     }
-  }, [itemId, location.state]);
+  }, [itemId, location.state?.product, location.state?.category]);
 
   const handleAddToCart = () => {
     if (product) {
       const cartProduct = {
         id: product.id,
-        name: product.name,
-        brand: product.brand,
+        name: product.name || 'Unknown Product',
+        brand: product.brand || 'Unknown Brand',
         price: product.mrp || product.price,
         discountPrice: product.mrp && product.mrp > product.price ? product.price : null,
         discount: product.mrp && product.mrp > product.price
           ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
           : null,
-        imageUrl: product.images[0],
-        rating: product.rating,
-        reviews: product.reviews,
-        partNumber: product.partNumber,
-        seller: product.seller,
+        imageUrl: product.images && product.images[0] ? product.images[0] : (product.image || PLACEHOLDER_IMAGE),
+        rating: product.rating || 0,
+        reviews: product.reviews || 0,
+        partNumber: product.partNumber || product.fullPartNumber || '',
+        seller: product.seller || 'Unknown Seller',
         quantity: quantity,
       };
-      // Add quantity times
-      for (let i = 0; i < quantity; i++) {
-        addToCart(cartProduct);
-      }
-      alert(`${quantity} x ${product.name} added to cart!`);
+      // Add to cart with the specified quantity (don't loop - addToCart handles quantity)
+      cartProduct.quantity = quantity;
+      addToCart(cartProduct);
+      alert(`${quantity} x ${cartProduct.name} added to cart!`);
+    } else {
+      alert('Product not loaded yet. Please wait...');
     }
   };
 
@@ -205,7 +215,7 @@ const ProductDetail = () => {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#131c36] mx-auto mb-4"></div>
           <p className="text-gray-600">Loading product details...</p>
         </div>
       </div>
@@ -219,7 +229,7 @@ const ProductDetail = () => {
           <p className="text-gray-600 mb-4">Product not found</p>
           <button
             onClick={() => navigate('/')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-[#131c36] text-white px-6 py-2 rounded-lg hover:bg-[#0f1528]"
           >
             Go to Home
           </button>
@@ -269,7 +279,7 @@ const ProductDetail = () => {
                   key={index}
                   onClick={() => setSelectedImage(index)}
                   className={`border-2 rounded-lg overflow-hidden w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 ${
-                    selectedImage === index ? 'border-blue-600' : 'border-gray-200'
+                    selectedImage === index ? 'border-[#131c36]' : 'border-gray-200'
                   }`}
                 >
                   <img
@@ -287,7 +297,7 @@ const ProductDetail = () => {
             {/* Main Image */}
             <div className="flex-1 relative bg-white border border-gray-200 rounded-lg overflow-hidden">
               {product.isOEM && (
-                <div className="absolute top-3 left-3 bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold z-10">
+                <div className="absolute top-3 left-3 bg-[#131c36] text-white px-3 py-1.5 rounded text-xs font-bold z-10">
                   OEM
                 </div>
               )}
@@ -315,20 +325,20 @@ const ProductDetail = () => {
 
             {/* Delivery Info */}
             <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
-              <FaTruck className="text-blue-600" />
+              <FaTruck className="text-[#131c36]" />
               <span>Free Delivery (within {product.deliveryDays || 5} days)</span>
             </div>
 
             {/* Fulfillment Badges */}
             <div className="flex flex-wrap gap-2 mb-4">
               {product.fulfilledBySparelo && (
-                <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                <span className="inline-flex items-center gap-1.5 bg-[#131c36]/10 text-[#131c36] px-3 py-1.5 rounded-full text-xs font-semibold">
                   <FaCheckCircle className="text-green-600" />
                   Fulfilled by b
                 </span>
               )}
               {product.freeDelivery && (
-                <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full text-xs font-semibold">
+                <span className="inline-flex items-center gap-1.5 bg-[#131c36]/10 text-[#131c36] px-3 py-1.5 rounded-full text-xs font-semibold">
                   <FaTruck />
                   Free Delivery
                 </span>
@@ -349,7 +359,7 @@ const ProductDetail = () => {
             {/* Replacements Link */}
             {product.replacementsPrice && (
               <div className="mb-4">
-                <Link to="#" className="text-blue-600 hover:underline text-sm font-medium">
+                <Link to="#" className="text-[#131c36] hover:underline text-sm font-medium">
                   Replacements from ₹{product.replacementsPrice.toLocaleString('en-IN')}
                 </Link>
               </div>
@@ -367,19 +377,19 @@ const ProductDetail = () => {
                   <span className="text-sm text-gray-500 line-through">
                     MRP: ₹{product.mrp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
-                  <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-semibold">
+                  <span className="bg-[#131c36]/10 text-[#131c36] px-2 py-0.5 rounded text-xs font-semibold">
                     -{discount}%
                   </span>
                 </div>
               )}
               <p className="text-xs text-gray-500">Incl. of all taxes</p>
-              <p className="text-sm text-blue-600 mt-2">
+              <p className="text-sm text-[#131c36] mt-2">
                 {product.stock || 6} in stock
               </p>
             </div>
 
             {/* Check Compatibility Button */}
-            <button className="w-full flex items-center justify-center gap-2 bg-white border-2 border-blue-600 text-blue-600 px-4 py-2.5 rounded-lg font-semibold hover:bg-blue-50 transition-colors mb-4">
+            <button className="w-full flex items-center justify-center gap-2 bg-white border-2 border-[#131c36] text-[#131c36] px-4 py-2.5 rounded-lg font-semibold hover:bg-[#131c36]/5 transition-colors mb-4">
               <FaHome className="text-lg" />
               Check Compatibility
             </button>
@@ -408,14 +418,14 @@ const ProductDetail = () => {
 
               {/* Action Links */}
               <div className="flex flex-wrap gap-3 mt-3">
-                <Link to="#" className="text-blue-600 hover:underline text-sm font-medium">
+                <Link to="#" className="text-[#131c36] hover:underline text-sm font-medium">
                   View OEM Catalog
                 </Link>
-                <Link to="#" className="text-blue-600 hover:underline text-sm font-medium">
+                <Link to="#" className="text-[#131c36] hover:underline text-sm font-medium">
                   View Compatibility
                 </Link>
                 {product.replacementsPrice && (
-                  <Link to="#" className="text-blue-600 hover:underline text-sm font-medium">
+                  <Link to="#" className="text-[#131c36] hover:underline text-sm font-medium">
                     View Replacements from ₹{product.replacementsPrice.toLocaleString('en-IN')}
                   </Link>
                 )}
@@ -426,13 +436,13 @@ const ProductDetail = () => {
             <div className="space-y-3">
               <button
                 onClick={handleAddToCart}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+                className="w-full bg-[#131c36] hover:bg-[#0f1528] text-white px-6 py-3 rounded-lg font-semibold transition-colors"
               >
                 Add to cart
               </button>
               <button
                 onClick={handleBuyNow}
-                className="w-full bg-white border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+                className="w-full bg-white border-2 border-[#131c36] text-[#131c36] px-6 py-3 rounded-lg font-semibold hover:bg-[#131c36]/5 transition-colors"
               >
                 Buy now
               </button>
@@ -440,7 +450,7 @@ const ProductDetail = () => {
 
             {/* Delivery Location */}
             <div className="flex items-center gap-2 text-sm text-gray-600 pt-3 border-t border-gray-200">
-              <FaMapMarkerAlt className="text-blue-600" />
+              <FaMapMarkerAlt className="text-[#131c36]" />
               <span>Deliver to {getShippingAddress()}</span>
             </div>
 
@@ -463,28 +473,28 @@ const ProductDetail = () => {
 
         {/* Guarantees/Services Section */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-            <div className="bg-blue-100 rounded-full p-2 sm:p-3 flex-shrink-0">
-              <FaTruck className="text-blue-600 text-lg sm:text-xl" />
+          <div className="bg-[#131c36]/5 border border-[#131c36]/20 rounded-lg p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+            <div className="bg-[#131c36]/10 rounded-full p-2 sm:p-3 flex-shrink-0">
+              <FaTruck className="text-[#131c36] text-lg sm:text-xl" />
             </div>
             <div>
               <p className="text-[10px] sm:text-sm md:text-base font-semibold text-gray-800">Delivery within {product.deliveryDays || 4} days</p>
             </div>
           </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
-            <div className="bg-blue-100 rounded-full p-2 sm:p-3 flex-shrink-0">
-              <FaRedoAlt className="text-blue-600 text-base sm:text-lg md:text-xl" />
+          <div className="bg-[#131c36]/5 border border-[#131c36]/20 rounded-lg p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+            <div className="bg-[#131c36]/10 rounded-full p-2 sm:p-3 flex-shrink-0">
+              <FaRedoAlt className="text-[#131c36] text-base sm:text-lg md:text-xl" />
             </div>
             <div>
               <p className="text-[10px] sm:text-sm md:text-base font-semibold text-gray-800">10 Days Assured Return</p>
-              <button className="text-blue-600 text-[8px] sm:text-xs mt-1">
+              <button className="text-[#131c36] text-[8px] sm:text-xs mt-1">
                 <FaInfoCircle className="inline" />
               </button>
             </div>
           </div>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 flex items-center gap-3 sm:gap-4 sm:col-span-2 lg:col-span-1">
-            <div className="bg-blue-100 rounded-full p-2 sm:p-3 flex-shrink-0">
-              <FaFileInvoice className="text-blue-600 text-base sm:text-lg md:text-xl" />
+          <div className="bg-[#131c36]/5 border border-[#131c36]/20 rounded-lg p-3 sm:p-4 flex items-center gap-3 sm:gap-4 sm:col-span-2 lg:col-span-1">
+            <div className="bg-[#131c36]/10 rounded-full p-2 sm:p-3 flex-shrink-0">
+              <FaFileInvoice className="text-[#131c36] text-base sm:text-lg md:text-xl" />
             </div>
             <div>
               <p className="text-[10px] sm:text-sm md:text-base font-semibold text-gray-800">GST invoice</p>

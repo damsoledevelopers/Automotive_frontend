@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
 const Suspention_Arms = () => {
-  const suspensionCategories = [
+  const suspensionCategoriesBase = [
     {
       name: "Air Suspension Boot",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/05ccea6.jpg",
@@ -93,6 +94,16 @@ const Suspention_Arms = () => {
     },
   ];
 
+  // Generate categories with product data
+  const suspensionCategories = generateCategoryWithProducts(
+    suspensionCategoriesBase.map((item, index) => ({
+      ...item,
+      id: item.id || (index + 1),
+      link: item.link.startsWith('/catalog/part-p-') ? item.link : `/catalog/part-p-${23000 + index + 1}`
+    })),
+    "Suspension and Arms",
+    2000
+  );
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
@@ -118,28 +129,31 @@ const Suspention_Arms = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
-        <div className="mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
-            Suspention and Arms
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600">
-            Explore our wide range of suspension and arm components designed for optimal performance and safety.
-          </p>
+        <div className="mb-4 sm:mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="flex-1">
+            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
+              Suspention and Arms
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600">
+              Explore our wide range of suspension and arm components designed for optimal performance and safety.
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            <SearchFilterBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              sortBy={sortBy}
+              handleSort={handleSort}
+              showFilters={showFilters}
+              setShowFilters={setShowFilters}
+              categoryName="Suspention and Arms"
+            />
+          </div>
         </div>
-
-        <SearchFilterBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          sortBy={sortBy}
-          handleSort={handleSort}
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          categoryName="Suspention and Arms"
-        />
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
           <CatalogueSidebar 
@@ -149,22 +163,26 @@ const Suspention_Arms = () => {
 
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((category, index) => (
                 <Link
-                  key={product.id || index}
-                  to={product.link}
+                  key={category.id || index}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Suspension and Arms", slug: "suspension_arms" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (product.name || 'Part');
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (category.name || 'Part');
                     }}
                   />
                   <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">
-                    {product.name}
+                    {category.name}
                   </span>
                 </Link>
               ))}

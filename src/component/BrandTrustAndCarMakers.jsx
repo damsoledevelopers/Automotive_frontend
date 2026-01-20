@@ -113,7 +113,7 @@ export default function BrandTrustAndCarMakers() {
 
   return (
     <div className="py-6 sm:py-8 md:py-10 bg-gray-50 text-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
         {/* ===================== BRANDS SECTION ===================== */}
         <section className="mb-8 sm:mb-10 md:mb-12">
           <div className="flex flex-row justify-between items-center mb-4 sm:mb-5 md:mb-6 gap-3">

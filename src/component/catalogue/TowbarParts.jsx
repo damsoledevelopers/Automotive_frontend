@@ -3,26 +3,32 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
 const TowbarParts = () => {
-  const towbarCategories = [
+  const towbarCategoriesBase = [
     {
+      id: 1,
       name: "Towbar",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/4957913.jpg",
-      link: "/catalog/4306-towbar/",
+      link: "/catalog/part-p-24001",
     },
     {
+      id: 2,
       name: "Tow Cable",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/096ef7b.jpg",
-      link: "/catalog/5208-tow_cable/",
+      link: "/catalog/part-p-24002",
     },
     {
+      id: 3,
       name: "Towhook Cover",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/98b48d2.jpg",
-      link: "/catalog/4148-cover_towhook/",
+      link: "/catalog/part-p-24003",
     },
   ];
 
+  // Generate categories with product data
+  const towbarCategories = generateCategoryWithProducts(towbarCategoriesBase, "Towbar Parts", 2200);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
@@ -48,28 +54,31 @@ const TowbarParts = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
-        <div className="mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
-            Towbar Parts
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600">
-            Discover a wide range of towbar parts for your vehicle, ensuring safety and reliability on the road.
-          </p>
+        <div className="mb-4 sm:mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="flex-1">
+            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
+              Towbar Parts
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600">
+              Discover a wide range of towbar parts for your vehicle, ensuring safety and reliability on the road.
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            <SearchFilterBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              sortBy={sortBy}
+              handleSort={handleSort}
+              showFilters={showFilters}
+              setShowFilters={setShowFilters}
+              categoryName="Towbar Parts"
+            />
+          </div>
         </div>
-
-        <SearchFilterBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          sortBy={sortBy}
-          handleSort={handleSort}
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          categoryName="Towbar Parts"
-        />
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
           <CatalogueSidebar 
@@ -79,22 +88,26 @@ const TowbarParts = () => {
 
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((category, index) => (
                 <Link
-                  key={product.id || index}
-                  to={product.link}
+                  key={category.id || index}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Towbar Parts", slug: "towbar_parts" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (product.name || 'Part');
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (category.name || 'Part');
                     }}
                   />
                   <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">
-                    {product.name}
+                    {category.name}
                   </span>
                 </Link>
               ))}

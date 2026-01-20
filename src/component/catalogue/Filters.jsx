@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
 // Categories Grid / Products Data
-const catalogCategories = [
+const catalogCategoriesBase = [
   { id: 1, name: "Air Filter", img: "https://boodmo.com/media/cache/catalog_image/images/categories/a16bbf6.jpg", link: "/catalog/3729-air_filter/" },
   { id: 2, name: "Automatic Transmission Filter", img: "https://boodmo.com/media/cache/catalog_image/images/categories/21ce121.jpg", link: "/catalog/4895-automatic_transmission_filter/" },
   { id: 3, name: "Cabin Filter", img: "https://boodmo.com/media/cache/catalog_image/images/categories/5724225.jpg", link: "/catalog/3610-cabin_air_filter/" },
@@ -14,8 +15,11 @@ const catalogCategories = [
   { id: 6, name: "Fuel Filter", img: "https://boodmo.com/media/cache/catalog_image/images/categories/82fc142.jpg", link: "/catalog/3707-fuel_filter/" },
   { id: 7, name: "Fuel Pump Filter", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e4ecb77.jpg", link: "/catalog/4337-filter_fuel_pump/" },
   { id: 8, name: "Oil Filter", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e59eb08.jpg", link: "/catalog/3725-oil_filter/" },
-  { id: 9, name: "Receiver Drier", img: "https://boodmo.com/media/cache/catalog_image/images/categories/db9dad4.jpg", link: "/catalog/4344-receiver_drier/" },
+  { id: 9, name: "Receiver Drier", img: "https://boodmo.com/media/cache/catalog_image/images/categories/db9dad4.jpg", link: "/catalog/part-p-2009" },
 ];
+
+// Generate categories with product data
+const catalogCategories = generateCategoryWithProducts(catalogCategoriesBase, "Filter", 800);
 
 const Filters = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,27 +49,30 @@ const Filters = () => {
 
   return (
     <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
-        <div className="mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">Filter Parts</h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600">
-            This section contains various filters for your vehicle including air filters, oil filters,
-            fuel filters, and more.
-          </p>
+        <div className="mb-4 sm:mb-6 md:mb-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+          <div className="flex-1">
+            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">Filter Parts</h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-600">
+              This section contains various filters for your vehicle including air filters, oil filters,
+              fuel filters, and more.
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            {/* Search and Filter Bar */}
+            <SearchFilterBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              sortBy={sortBy}
+              handleSort={handleSort}
+              showFilters={showFilters}
+              setShowFilters={setShowFilters}
+              categoryName="Filters"
+            />
+          </div>
         </div>
-
-        {/* Search and Filter Bar */}
-        <SearchFilterBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          sortBy={sortBy}
-          handleSort={handleSort}
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          categoryName="Filters"
-        />
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
           <CatalogueSidebar 
@@ -76,28 +83,32 @@ const Filters = () => {
           {/* Categories Grid */}
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product) => (
+              {filteredProducts.map((category) => (
                 <Link
-                  key={product.id}
-                  to={product.link}
+                  key={category.id}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Filters", slug: "filters" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                    <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + product.name;
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + category.name;
                     }}
                   />
-                  <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">{product.name}</span>
+                  <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">{category.name}</span>
                 </Link>
               ))}
             </div>
 
             {/* Content Section */}
 
-            <section class="bg-white text-gray-800 py-10 px-6 max-w-5xl mx-auto">
+            <section class="bg-white text-gray-800 py-10 px-6 w-full">
               <div class="space-y-4">
                 {/* <!-- Section Title --> */}
                 <h2 class="text-2xl md:text-3xl font-bold text-red-700 border-b-2 border-red-300 inline-block pb-2">

@@ -3,13 +3,15 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
 const Interior_Comfort = () => {
-  const interiorCategories = [
+  const interiorCategoriesBase = [
     {
+      id: 1,
       name: "Window Regulator",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/61ed4e0.jpg",
-      link: "/catalog/3582-window_lift/",
+      link: "/catalog/part-p-16001",
     },
     {
       name: "Accelerator Pedal",
@@ -253,6 +255,17 @@ const Interior_Comfort = () => {
     },
   ];
 
+  // Generate categories with product data
+  const interiorCategories = generateCategoryWithProducts(
+    interiorCategoriesBase.map((item, index) => ({
+      ...item,
+      id: item.id || (index + 1),
+      link: item.link.startsWith('/catalog/part-p-') ? item.link : `/catalog/part-p-${16000 + index + 1}`
+    })),
+    "Interior Comfort",
+    1700
+  );
+
   const [expanded, setExpanded] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
@@ -277,8 +290,8 @@ const Interior_Comfort = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
         <div className="mb-4 sm:mb-6 md:mb-8">
@@ -308,29 +321,33 @@ const Interior_Comfort = () => {
 
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((category, index) => (
                 <Link
-                  key={product.id || index}
-                  to={product.link}
+                  key={category.id || index}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Interior Comfort", slug: "interior_comfort" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (product.name || 'Part');
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (category.name || 'Part');
                     }}
                   />
                   <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">
-                    {product.name}
+                    {category.name}
                   </span>
                 </Link>
               ))}
             </div>
 
             {/* ✅ SEO Section */}
-            <section className="bg-white text-gray-800 py-10 px-6 max-w-5xl mx-auto rounded-2xl shadow-md">
+            <section className="bg-white text-gray-800 py-10 px-6 w-full rounded-2xl shadow-md">
               <div className="space-y-4">
                 <h2 className="text-2xl md:text-3xl font-bold text-red-700 border-b-2 border-red-300 inline-block pb-2">
                   {/* About Section Heading */}

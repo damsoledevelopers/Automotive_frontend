@@ -3,55 +3,68 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
 const Belts_Chains_Rollers = () => {
-  const beltchainCategories = [
+  const beltchainCategoriesBase = [
     {
+      id: 1,
       name: "Alternator Pulley",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/c5dd61e.jpg",
-      link: "/catalog/4602-alternator_pulley/",
+      link: "/catalog/part-p-6001",
     },
     {
+      id: 2,
       name: "Belt Pulley",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/929ed3b.jpg",
-      link: "/catalog/4713-belt_pulley/",
+      link: "/catalog/part-p-6002",
     },
     {
+      id: 3,
       name: "Crankshaft Pulley",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/8feca49.jpg",
-      link: "/catalog/4508-crankshaft_pulley/",
+      link: "/catalog/part-p-6003",
     },
     {
+      id: 4,
       name: "Deflection Pulley",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/61df28c.jpg",
-      link: "/catalog/4712-deflection_guide_pulley_timing_belt/",
+      link: "/catalog/part-p-6004",
     },
     {
+      id: 5,
       name: "Timing Belt",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-      link: "/catalog/4390-timing_belt/",
+      link: "/catalog/part-p-6005",
     },
     {
+      id: 6,
       name: "Timing Belt Kit",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/ca3d002.jpg",
-      link: "/catalog/4393-timing_belt_kit/",
+      link: "/catalog/part-p-6006",
     },
     {
+      id: 7,
       name: "Timing Chain",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/9cf64ba.jpg",
-      link: "/catalog/4601-timing_chain/",
+      link: "/catalog/part-p-6007",
     },
     {
+      id: 8,
       name: "Timing Chain Guide",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/bcd5e9d.jpg",
-      link: "/catalog/4811-timing_chain_guide/",
+      link: "/catalog/part-p-6008",
     },
     {
+      id: 9,
       name: "V-belt",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/bd71bdc.jpg",
-      link: "/catalog/3720-v_belt/",
+      link: "/catalog/part-p-6009",
     },
-  ]
+  ];
+
+  // Generate categories with product data
+  const beltchainCategories = generateCategoryWithProducts(beltchainCategoriesBase, "Belts Chains And Rollers", 1200);
 
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -78,8 +91,8 @@ const Belts_Chains_Rollers = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
         <div className="mb-4 sm:mb-6 md:mb-8">
@@ -109,22 +122,26 @@ const Belts_Chains_Rollers = () => {
 
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((category, index) => (
                 <Link
-                  key={product.id || index}
-                  to={product.link}
+                  key={category.id || index}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Belts Chains And Rollers", slug: "belts_chains_rollers" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (product.name || 'Part');
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (category.name || 'Part');
                     }}
                   />
                   <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">
-                    {product.name}
+                    {category.name}
                   </span>
                 </Link>
               ))}

@@ -275,7 +275,7 @@ export const SearchSection = ({ onClose, initialVehicle = null }) => {
   return (
     <>
       <section className="relative bg-gradient-to-br from-gray-50 via-white to-gray-50 pt-12 pb-3 sm:pt-16 md:pt-16 sm:pb-6 md:pb-8">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+        <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
           {/* Title Section - Aligned with Header */}
          
           {/* Vehicle Cards Grid */}

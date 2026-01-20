@@ -3,110 +3,135 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
 const Engine_Cooling_System = () => {
-  const coolingCategories = [
+  const coolingCategoriesBase = [
     {
+      id: 1,
       name: "Coolant",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/12028d8.jpg",
-      link: "/catalog/4723-coolant/",
+      link: "/catalog/part-p-11001",
     },
     {
+      id: 2,
       name: "Coolant Control Valve",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/c8e0d54.jpg",
-      link: "/catalog/4726-control_valve_coolant/",
+      link: "/catalog/part-p-11002",
     },
     {
+      id: 3,
       name: "Coolant Flange",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/ba3a808.jpg",
-      link: "/catalog/4612-coolant_flange/",
+      link: "/catalog/part-p-11003",
     },
     {
+      id: 4,
       name: "Coolant Pipe Seal",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/ae28059.jpg",
-      link: "/catalog/4621-radiator_gasket/",
+      link: "/catalog/part-p-11004",
     },
     {
+      id: 5,
       name: "Coolant Tank",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/c5c03ed.jpg",
-      link: "/catalog/4607-expansion_tank_coolant_tank/",
+      link: "/catalog/part-p-11005",
     },
     {
+      id: 6,
       name: "Coolant Tank Cap",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/43dd618.jpg",
-      link: "/catalog/4608-expansion_tank_cap/",
+      link: "/catalog/part-p-11006",
     },
     {
+      id: 7,
       name: "Coolant Temperature Sensor",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/3da6532.jpg",
-      link: "/catalog/4660-coolant_temperature_sensor/",
+      link: "/catalog/part-p-11007",
     },
     {
+      id: 8,
       name: "Cooling Fan",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/4bd53a9.jpg",
-      link: "/catalog/4615-cooling_fan/",
+      link: "/catalog/part-p-11008",
     },
     {
+      id: 9,
       name: "Fan Clutch",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/06f1747.jpg",
-      link: "/catalog/4619-fan_clutch/",
+      link: "/catalog/part-p-11009",
     },
     {
+      id: 10,
       name: "Radiator",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/a6892f8.jpg",
-      link: "/catalog/4605-radiator/",
+      link: "/catalog/part-p-11010",
     },
     {
+      id: 11,
       name: "Radiator Cap",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/f6152e4.jpg",
-      link: "/catalog/4609-radiator_cap/",
+      link: "/catalog/part-p-11011",
     },
     {
+      id: 12,
       name: "Radiator Fan Cowling",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/18fe9e4.jpg",
-      link: "/catalog/4614-cowling_radiator_fan/",
+      link: "/catalog/part-p-11012",
     },
     {
+      id: 13,
       name: "Radiator Fan Motor",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/5bcc9b3.jpg",
-      link: "/catalog/4617-radiator_fan_motor/",
+      link: "/catalog/part-p-11013",
     },
     {
+      id: 14,
       name: "Radiator Gasket",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/d818dd1.webp",
-      link: "/catalog/5224-radiator_gasket/",
+      link: "/catalog/part-p-11014",
     },
     {
+      id: 15,
       name: "Radiator Hose",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/f02e68a.jpg",
-      link: "/catalog/4606-radiator_hose/",
+      link: "/catalog/part-p-11015",
     },
     {
+      id: 16,
       name: "Radiator Mounting",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/e215fcc.jpg",
-      link: "/catalog/4604-radiator_mounting/",
+      link: "/catalog/part-p-11016",
     },
     {
+      id: 17,
       name: "Thermostat",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/0ec43c0.jpg",
-      link: "/catalog/4610-thermostat/",
+      link: "/catalog/part-p-11017",
     },
     {
+      id: 18,
       name: "Thermostat Gasket",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/872d6e0.jpg",
-      link: "/catalog/4613-thermostat_gasket/",
+      link: "/catalog/part-p-11018",
     },
     {
+      id: 19,
       name: "Water Pump",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/5c2d85e.jpg",
-      link: "/catalog/4611-water_pump/",
+      link: "/catalog/part-p-11019",
     },
     {
+      id: 20,
       name: "Water Pump Gasket",
       img: "https://boodmo.com/media/cache/catalog_image/images/categories/9807081.jpg",
-      link: "/catalog/4620-water_pump_gasket/",
+      link: "/catalog/part-p-11020",
     },
   ];
+
+  // Generate categories with product data
+  const coolingCategories = generateCategoryWithProducts(coolingCategoriesBase, "Engine Cooling System", 1800);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
   const [showFilters, setShowFilters] = useState(false);
@@ -132,8 +157,8 @@ const Engine_Cooling_System = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
         <div className="mb-4 sm:mb-6 md:mb-8">
@@ -164,22 +189,26 @@ const Engine_Cooling_System = () => {
           <div className="flex-1">
             {/* ✅ Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((category, index) => (
                 <Link
-                  key={product.id || index}
-                  to={product.link}
+                  key={category.id || index}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Engine Cooling System", slug: "cooling_system" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + product.name;
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + category.name;
                     }}
                   />
                   <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">
-                    {product.name}
+                    {category.name}
                   </span>
                 </Link>
               ))}

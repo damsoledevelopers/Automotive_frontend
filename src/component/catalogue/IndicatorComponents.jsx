@@ -216,7 +216,7 @@ const IndicatorComponents = () => {
                   onClick={() => setViewMode("grid")}
                   className={`p-1.5 sm:p-2 rounded ${
                     viewMode === "grid"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-[#131c36] text-white"
                       : "text-gray-600 hover:bg-gray-100"
                   }`}
                   aria-label="Grid view"
@@ -227,7 +227,7 @@ const IndicatorComponents = () => {
                   onClick={() => setViewMode("list")}
                   className={`p-1.5 sm:p-2 rounded ${
                     viewMode === "list"
-                      ? "bg-blue-600 text-white"
+                      ? "bg-[#131c36] text-white"
                       : "text-gray-600 hover:bg-gray-100"
                   }`}
                   aria-label="List view"
@@ -287,7 +287,7 @@ const IndicatorComponents = () => {
                 >
                   <div className={`relative ${viewMode === "list" ? "w-48 h-48 flex-shrink-0" : "h-48"} bg-white border border-gray-100 rounded`}>
                     {product.isOEM && (
-                      <div className="absolute top-2 left-2 bg-blue-600 text-white text-[9px] sm:text-xs font-bold px-2 py-1 rounded z-10">
+                      <div className="absolute top-2 left-2 bg-[#131c36] text-white text-[9px] sm:text-xs font-bold px-2 py-1 rounded z-10">
                         OEM
                       </div>
                     )}

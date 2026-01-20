@@ -3,50 +3,62 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
 // Accessories Grid Data (like Sparelo)
-const accessoriesCategories = [
+const accessoriesCategoriesBase = [
   {
+    id: 1,
     name: "Audio System",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/f783c05.webp",
-    link: "/catalog/5238-audio_system/",
+    link: "/catalog/part-p-7001",
   },
   {
+    id: 2,
     name: "Backup Camera",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/acc2e07.jpg",
-    link: "/catalog/4781-backup_camera/",
+    link: "/catalog/part-p-7002",
   },
   {
+    id: 3,
     name: "Car Decal Sticker",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/cd57fbe.jpg",
-    link: "/catalog/4746-sticker/",
+    link: "/catalog/part-p-7003",
   },
   {
+    id: 4,
     name: "Car Exterior Accessories",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/133fe77.jpg",
-    link: "/catalog/5056-car_exterior_accessories/",
+    link: "/catalog/part-p-7004",
   },
   {
+    id: 5,
     name: "Car Interior Accessories",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/ff5c219.jpg",
-    link: "/catalog/5040-car_interior_accessories/",
+    link: "/catalog/part-p-7005",
   },
   {
+    id: 6,
     name: "Emergency Breakdown",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/7a96b35.jpg",
-    link: "/catalog/4310-emergency_breakdown/",
+    link: "/catalog/part-p-7006",
   },
   {
+    id: 7,
     name: "Mobile Holder",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/0596f56.jpg",
-    link: "/catalog/4759-mobile_holder/",
+    link: "/catalog/part-p-7007",
   },
   {
+    id: 8,
     name: "Other Accessories",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/0a482bd.webp",
-    link: "/catalog/4795-other_accessories/",
+    link: "/catalog/part-p-7008",
   },
 ];
+
+// Generate categories with product data
+const accessoriesCategories = generateCategoryWithProducts(accessoriesCategoriesBase, "Car Accessories", 1500);
 
 const Car_Accessories = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,8 +68,8 @@ const Car_Accessories = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
         {/* Header */}
@@ -92,22 +104,26 @@ const Car_Accessories = () => {
           <div className="flex-1">
             <div className="bg-white py-4 sm:py-6 md:py-8 px-3 sm:px-4 rounded-lg shadow-md mb-6 sm:mb-8 md:mb-10">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5">
-                {accessoriesCategories.map((item) => (
+                {accessoriesCategories.map((category) => (
                   <Link
-                    key={item.name}
-                    to={item.link}
+                    key={category.id || category.name}
+                    to={category.link}
+                    state={{ 
+                      product: category.product,
+                      category: { name: "Car Accessories", slug: "car_accessories" }
+                    }}
                     className="flex flex-col items-center bg-gray-50 hover:bg-blue-50 p-2 sm:p-3 md:p-4 rounded-lg shadow-sm hover:shadow-md transition duration-300 transform hover:-translate-y-1"
                   >
                     <img
-                      src={item.img}
-                      alt={item.name}
+                      src={category.img}
+                      alt={category.name}
                       className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2"
                       onError={(e) => {
-                        e.target.src = 'https://via.placeholder.com/100x100?text=' + item.name;
+                        e.target.src = 'https://via.placeholder.com/100x100?text=' + category.name;
                       }}
                     />
                     <span className="text-[9px] sm:text-[10px] md:text-xs lg:text-sm font-medium text-gray-700 hover:text-red-600 text-center line-clamp-2 px-1">
-                      {item.name}
+                      {category.name}
                     </span>
                   </Link>
                 ))}

@@ -21,6 +21,7 @@ import {
   SiRazorpay
 } from "react-icons/si";
 import { useCart } from "../../contexts/CartContext";
+import WorkflowWrapper from "../workflow/WorkflowWrapper";
 
 const Payment = () => {
   const navigate = useNavigate();
@@ -513,7 +514,8 @@ const Payment = () => {
   }, [selectedPayment, paymentData, handleInputChange, handleCardNumberChange, handleExpiryChange, banks, grandTotal]);
 
   // Progress Bar Component
-  const ProgressBar = React.memo(() => (
+  // ProgressBar removed - using WorkflowWrapper instead
+  const _ProgressBar = React.memo(() => (
     <motion.div 
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -662,9 +664,9 @@ const Payment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-6xl mx-auto px-4">
-        <ProgressBar />
+    <WorkflowWrapper currentStep="pay">
+      <div className="min-h-screen bg-gray-50 py-4">
+        <div className="max-w-6xl mx-auto px-4">
 
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -922,7 +924,8 @@ const Payment = () => {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </WorkflowWrapper>
   );
 };
 

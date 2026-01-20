@@ -3,64 +3,68 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
 // ✅ Updated Categories Grid / Products Data
-const controlCableCategories = [
+const controlCableCategoriesBase = [
   {
     id: 1,
     name: "Accelerator Cable",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/0edf63b.webp",
-    link: "/catalog/5118-accelerator_cable/",
+    link: "/catalog/part-p-9001",
   },
   {
     id: 2,
     name: "Bonnet Release cable",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/5344f8a.webp",
-    link: "/catalog/5119-bonnet_release_cable/",
+    link: "/catalog/part-p-9002",
   },
   {
     id: 3,
     name: "Brake Cable",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/4823cf9.webp",
-    link: "/catalog/5117-brake_cable/",
+    link: "/catalog/part-p-9003",
   },
   {
     id: 4,
     name: "Clutch Cable",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/d716a55.webp",
-    link: "/catalog/5115-clutch_cable/",
+    link: "/catalog/part-p-9004",
   },
   {
     id: 5,
     name: "Door Lock Link",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/411146f.webp",
-    link: "/catalog/5120-door_lock_link/",
+    link: "/catalog/part-p-9005",
   },
   {
     id: 6,
     name: "Fuel Lid Cable",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/56b01c7.webp",
-    link: "/catalog/5116-fuel_lid_cable/",
+    link: "/catalog/part-p-9006",
   },
   {
     id: 7,
     name: "Gear Shift Cable",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/85b79c7.webp",
-    link: "/catalog/5121-gear_shift_cable/",
+    link: "/catalog/part-p-9007",
   },
   {
     id: 8,
     name: "Seat Cable",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/d062912.jpg",
-    link: "/catalog/5122-seat_cable/",
+    link: "/catalog/part-p-9008",
   },
   {
     id: 9,
     name: "Temperature Control Cable",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/6e8366a.jpg",
-    link: "/catalog/5123-temperature_control_cable/",
+    link: "/catalog/part-p-9009",
   },
 ];
+
+// Generate categories with product data
+const controlCableCategories = generateCategoryWithProducts(controlCableCategoriesBase, "Control Cables", 800);
 
 export const Control_Cables = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,8 +93,8 @@ export const Control_Cables = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
         <div className="mb-4 sm:mb-6 md:mb-8">
@@ -121,21 +125,25 @@ export const Control_Cables = () => {
           {/* 🧩 Categories Grid */}
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((category, index) => (
                 <Link
-                  key={product.id || index}
-                  to={product.link}
+                  key={category.id || index}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Control Cables", slug: "control_cables" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + product.name;
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + category.name;
                     }}
                   />
-                  <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">{product.name}</span>
+                  <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">{category.name}</span>
                 </Link>
               ))}
             </div>

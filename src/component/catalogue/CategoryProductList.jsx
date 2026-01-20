@@ -1,156 +1,38 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import CatalogueSidebar from "./CatalogueSidebar";
 import { Grid, List, Truck, RotateCcw, FileText, CheckCircle, Info } from "lucide-react";
 
-const TimingBelt = () => {
+/**
+ * Generic Category Product List Component
+ * Reusable for all categories: Belt, Brake, Engine Oil, Filters, Engine, etc.
+ * Accepts category data and displays products
+ */
+const CategoryProductList = ({ 
+  categoryName = "Products",
+  categorySlug = "",
+  products = [],
+  defaultFilters = {}
+}) => {
+  const { category } = useParams();
+  const location = useLocation();
   const [sortBy, setSortBy] = useState("relevance");
   const [viewMode, setViewMode] = useState("list");
   const [selectedOrigin, setSelectedOrigin] = useState([]);
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [fulfilledBySparelo, setFulfilledBySparelo] = useState(false);
   const [freeDelivery, setFreeDelivery] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
-  // Mock products data - matching the image
-  const products = [
-    {
-      id: 1,
-      name: "BELT,TIMING",
-      brand: "MARUTI SUZUKI",
-      partNumber: "127600C20",
-      price: 850.00,
-      mrp: null,
-      discount: 0,
-      isOEM: true,
-      fulfilledBySparelo: true,
-      freeDelivery: false,
-      image: "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-      spareloChoice: true,
-      bestOffer: false,
-      class: "Timing Belt",
-      soldBy: "Bengaluru/BPN",
-      origin: "OEM (genuine)",
-      deliveryDays: 4,
-    },
-    {
-      id: 2,
-      name: "BELT TIMING (1.5L SOHC DI TC I4 DIESEL DV5)",
-      brand: "FORD",
-      partNumber: "AV668B",
-      price: 1487.00,
-      mrp: null,
-      discount: 0,
-      isOEM: true,
-      fulfilledBySparelo: true,
-      freeDelivery: false,
-      image: "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-      spareloChoice: true,
-      bestOffer: false,
-      class: "Timing Belt",
-      soldBy: "Bengaluru/BPN",
-      origin: "OEM (genuine)",
-      deliveryDays: 4,
-    },
-    {
-      id: 3,
-      name: "TIMING BELT",
-      brand: "TATA",
-      partNumber: "278916303",
-      price: 2135.00,
-      mrp: 2178.00,
-      discount: 2,
-      isOEM: true,
-      fulfilledBySparelo: true,
-      freeDelivery: false,
-      image: "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-      spareloChoice: true,
-      bestOffer: false,
-      class: "Timing Belt",
-      soldBy: "Bengaluru/BPN",
-      origin: "OEM (genuine)",
-      deliveryDays: 4,
-    },
-    {
-      id: 4,
-      name: "TOOTHED BELT",
-      brand: "VAG (VW, AUDI, SKODA)",
-      partNumber: "VAG-98765",
-      price: 1500.00,
-      mrp: 2000.00,
-      discount: 25,
-      isOEM: true,
-      fulfilledBySparelo: true,
-      freeDelivery: true,
-      image: "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-      spareloChoice: true,
-      bestOffer: false,
-    },
-    {
-      id: 5,
-      name: "TIMING BELT",
-      brand: "CONTITECH",
-      partNumber: "CT-54321",
-      price: 950.00,
-      mrp: 1200.00,
-      discount: 21,
-      isOEM: false,
-      fulfilledBySparelo: false,
-      freeDelivery: true,
-      image: "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-      spareloChoice: false,
-      bestOffer: false,
-    },
-    {
-      id: 6,
-      name: "BELT,TIMING",
-      brand: "BOSCH",
-      partNumber: "BOSCH-11111",
-      price: 1100.00,
-      mrp: 1400.00,
-      discount: 21,
-      isOEM: false,
-      fulfilledBySparelo: true,
-      freeDelivery: true,
-      image: "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-      spareloChoice: false,
-      bestOffer: false,
-    },
-    {
-      id: 7,
-      name: "TIMING BELT KIT",
-      brand: "BANDO",
-      partNumber: "BANDO-22222",
-      price: 2000.00,
-      mrp: 2500.00,
-      discount: 20,
-      isOEM: false,
-      fulfilledBySparelo: true,
-      freeDelivery: false,
-      image: "https://boodmo.com/media/cache/catalog_image/images/categories/ca3d002.jpg",
-      spareloChoice: true,
-      bestOffer: false,
-    },
-    {
-      id: 8,
-      name: "BELT TIMING",
-      brand: "BMW",
-      partNumber: "BMW-33333",
-      price: 3500.00,
-      mrp: 4000.00,
-      discount: 13,
-      isOEM: true,
-      fulfilledBySparelo: true,
-      freeDelivery: true,
-      image: "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-      spareloChoice: false,
-      bestOffer: false,
-    },
-  ];
+  // Get category data from location state or use defaults
+  const categoryData = location.state?.category || {
+    name: categoryName,
+    slug: categorySlug || category,
+    ...defaultFilters
+  };
 
   const [filteredProducts, setFilteredProducts] = useState(products);
-  const totalParts = 4673; // Total parts count as shown in image
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Filter products based on selected filters
   useEffect(() => {
@@ -183,7 +65,7 @@ const TimingBelt = () => {
     }
 
     setFilteredProducts(filtered);
-  }, [selectedOrigin, selectedBrands, fulfilledBySparelo, freeDelivery]);
+  }, [selectedOrigin, selectedBrands, fulfilledBySparelo, freeDelivery, products]);
 
   const handleOriginChange = (origin) => {
     setSelectedOrigin((prev) =>
@@ -223,6 +105,15 @@ const TimingBelt = () => {
   // Get unique brands
   const uniqueBrands = [...new Set(products.map((p) => p.brand))];
 
+  // Determine product detail route based on category
+  const getProductDetailRoute = (product) => {
+    // Use category-specific detail route if available, otherwise use generic
+    if (categoryData.slug === 'timing_belt' || categoryData.slug === '4390-timing_belt') {
+      return `/catalog/timing-belt/${product.id}`;
+    }
+    return `/catalog/part-p-${product.id}`;
+  };
+
   return (
     <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
       <div className="w-full px-3 sm:px-4 md:px-6">
@@ -232,11 +123,11 @@ const TimingBelt = () => {
         {/* Header */}
         <div className="mb-4 sm:mb-6">
           <h1 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-2 sm:mb-3">
-            Timing Belt Parts
+            {categoryData.name || categoryName} Parts
           </h1>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
             <div className="text-[9px] sm:text-xs md:text-sm text-gray-600">
-              Total {totalParts} part{totalParts !== 1 ? "s" : ""}
+              Total {filteredProducts.length} part{filteredProducts.length !== 1 ? "s" : ""}
             </div>
             <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
               {/* Sort Dropdown */}
@@ -282,9 +173,8 @@ const TimingBelt = () => {
 
         {/* Main Content */}
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-          {/* Left Sidebar - CatalogueSidebar + Additional Filters */}
+          {/* Left Sidebar */}
           <div className="w-full lg:w-64 flex-shrink-0 space-y-4 order-2 lg:order-1">
-            {/* Catalogue Sidebar */}
             <CatalogueSidebar 
               isMobileOpen={isMobileSidebarOpen} 
               setIsMobileOpen={setIsMobileSidebarOpen} 
@@ -292,7 +182,6 @@ const TimingBelt = () => {
             
             {/* Additional Filters */}
             <div className="bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100 sticky top-20">
-              {/* Header */}
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
                 <h3 className="text-[10px] sm:text-sm font-semibold text-gray-800">Filters</h3>
                 <button
@@ -302,7 +191,7 @@ const TimingBelt = () => {
                     setFulfilledBySparelo(false);
                     setFreeDelivery(false);
                   }}
-                  className="text-[9px] sm:text-xs text-[#131c36] hover:text-[#0f1528] font-medium"
+                  className="text-[9px] sm:text-xs text-[#131c36] hover:text-[#131c36]/80 font-medium"
                 >
                   RESET
                 </button>
@@ -317,7 +206,7 @@ const TimingBelt = () => {
                       type="checkbox"
                       checked={selectedOrigin.includes("Aftermarket")}
                       onChange={() => handleOriginChange("Aftermarket")}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-[#131c36] border-gray-300 rounded focus:ring-[#131c36]"
                     />
                     <span className="ml-2 text-[9px] sm:text-xs text-gray-700">
                       Aftermarket ({products.filter((p) => !p.isOEM).length})
@@ -328,7 +217,7 @@ const TimingBelt = () => {
                       type="checkbox"
                       checked={selectedOrigin.includes("OEM")}
                       onChange={() => handleOriginChange("OEM")}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-[#131c36] border-gray-300 rounded focus:ring-[#131c36]"
                     />
                     <span className="ml-2 text-[9px] sm:text-xs text-gray-700">
                       OEM ({products.filter((p) => p.isOEM).length})
@@ -336,9 +225,6 @@ const TimingBelt = () => {
                   </label>
                 </div>
               </div>
-
-              {/* Garage Filter - Already in CatalogueSidebar */}
-              {/* This will be handled by CatalogueSidebar component */}
 
               {/* Fulfilled by sparelo */}
               <div className="mb-4">
@@ -350,7 +236,7 @@ const TimingBelt = () => {
                     type="checkbox"
                     checked={fulfilledBySparelo}
                     onChange={(e) => setFulfilledBySparelo(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-[#131c36] border-gray-300 rounded focus:ring-[#131c36]"
                   />
                   <span className="ml-2 text-[9px] sm:text-xs text-gray-700">
                     Fulfilled by Sparelo ({products.filter((p) => p.fulfilledBySparelo).length})
@@ -366,7 +252,7 @@ const TimingBelt = () => {
                     type="checkbox"
                     checked={freeDelivery}
                     onChange={(e) => setFreeDelivery(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-[#131c36] border-gray-300 rounded focus:ring-[#131c36]"
                   />
                   <span className="ml-2 text-[9px] sm:text-xs text-gray-700">
                     Free Delivery ({products.filter((p) => p.freeDelivery).length})
@@ -386,7 +272,7 @@ const TimingBelt = () => {
                           type="checkbox"
                           checked={selectedBrands.includes(brand)}
                           onChange={() => handleBrandChange(brand)}
-                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-[#131c36] border-gray-300 rounded focus:ring-[#131c36]"
                         />
                         <span className="ml-2 text-[9px] sm:text-xs text-gray-700">
                           {brand} ({count})
@@ -395,7 +281,7 @@ const TimingBelt = () => {
                     );
                   })}
                   {uniqueBrands.length > 5 && (
-                    <button className="text-[9px] sm:text-xs text-blue-600 hover:text-blue-700 mt-2">
+                    <button className="text-[9px] sm:text-xs text-[#131c36] hover:text-[#131c36]/80 mt-2">
                       +{uniqueBrands.length - 5} More
                     </button>
                   )}
@@ -406,7 +292,6 @@ const TimingBelt = () => {
 
           {/* Right Content - Products */}
           <div className="flex-1 order-1 lg:order-2">
-            {/* Products List/Grid */}
             <div
               className={
                 viewMode === "grid"
@@ -433,21 +318,16 @@ const TimingBelt = () => {
                       alt={product.name}
                       className="w-full h-full object-contain p-4"
                       onError={(e) => {
-                        e.target.src =
-                          "https://via.placeholder.com/200x150?text=Timing+Belt";
+                        e.target.src = "https://via.placeholder.com/200x150?text=Product";
                       }}
                     />
-                    {/* Fulfillment & Badge - Overlay on image (list view) */}
-                    {viewMode === "list" && (
+                    {viewMode === "list" && product.fulfilledBySparelo && (
                       <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between z-10">
-                        {product.fulfilledBySparelo && (
-                          <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2 py-1 rounded shadow-sm border border-gray-200">
-                            <CheckCircle className="w-3.5 h-3.5 text-green-600 fill-current" />
-                            <span className="text-[10px] text-gray-700">Fulfilled by</span>
-                            <span className="text-blue-600 font-bold text-xs">S</span>
-                          </div>
-                        )}
-                 
+                        <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2 py-1 rounded shadow-sm border border-gray-200">
+                          <CheckCircle className="w-3.5 h-3.5 text-green-600 fill-current" />
+                          <span className="text-[10px] text-gray-700">Fulfilled by</span>
+                          <span className="text-[#131c36] font-bold text-xs">S</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -456,7 +336,7 @@ const TimingBelt = () => {
                   <div className={`${viewMode === "list" ? "flex-1 flex flex-col" : "p-4"}`}>
                     {viewMode === "list" ? (
                       <>
-                        {/* Top Section - Name, Price */}
+                        {/* List View */}
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1 pr-4">
                             <h3 className="text-[10px] sm:text-sm font-bold text-gray-800 mb-1.5">
@@ -470,56 +350,54 @@ const TimingBelt = () => {
                             <div className="flex flex-wrap gap-1.5 text-[9px] sm:text-xs text-gray-600">
                               <span className="font-medium">{product.brand}</span>
                               <span className="text-gray-400">•</span>
-                              <span>{product.class || "Timing Belt"}</span>
+                              <span>{product.class || categoryData.name}</span>
                               <span className="text-gray-400">•</span>
                               <span>Sold By: {product.soldBy || "Bengaluru/BPN"}</span>
                               <span className="text-gray-400">•</span>
                               <span>{product.origin || "OEM (genuine)"}</span>
                             </div>
                           </div>
-                          {/* Price */}
                           <div className="text-right flex-shrink-0">
-                            <div className="flex flex-col items-end">
-                              <span className="text-sm sm:text-lg font-bold text-gray-900">
-                                ₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </span>
-                              {product.mrp && product.mrp > product.price && (
-                                <div className="flex items-center gap-1.5 mt-1">
-                                  <span className="text-[9px] sm:text-xs text-gray-500 line-through">
-                                    MRP: ₹{product.mrp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                  </span>
-                                  <span className="text-[9px] sm:text-xs font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                                    -{product.discount}%
-                                  </span>
-                                </div>
-                              )}
-                            </div>
+                            <span className="text-sm sm:text-lg font-bold text-gray-900">
+                              ₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            {product.mrp && product.mrp > product.price && (
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <span className="text-[9px] sm:text-xs text-gray-500 line-through">
+                                  MRP: ₹{product.mrp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                                <span className="text-[9px] sm:text-xs font-semibold text-[#131c36] bg-[#131c36]/10 px-1.5 py-0.5 rounded">
+                                  -{product.discount || Math.round(((product.mrp - product.price) / product.mrp) * 100)}%
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 
                         {/* Delivery & Return Info */}
                         <div className="space-y-2 mb-4">
-                          <div className="flex items-center gap-2 text-[9px] sm:text-xs text-blue-600">
-                            <Truck className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
+                          <div className="flex items-center gap-2 text-[9px] sm:text-xs text-[#131c36]">
+                            <Truck className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: '#131c36' }} />
                             <span>Delivery within {product.deliveryDays || 4} days</span>
                           </div>
-                          <div className="flex items-center gap-2 text-[9px] sm:text-xs text-blue-600">
-                            <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
+                          <div className="flex items-center gap-2 text-[9px] sm:text-xs text-[#131c36]">
+                            <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: '#131c36' }} />
                             <span>10 Days Assured Return</span>
-                            <Info className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-blue-400 cursor-help" />
+                            <Info className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 cursor-help" />
                           </div>
-                          <div className="flex items-center gap-2 text-[9px] sm:text-xs text-blue-600">
-                            <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-blue-500" />
+                          <div className="flex items-center gap-2 text-[9px] sm:text-xs text-[#131c36]">
+                            <FileText className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: '#131c36' }} />
                             <span>GST invoice</span>
                           </div>
                         </div>
 
-                        {/* Bottom Section - View Details Button */}
+                        {/* View Details Button */}
                         <div className="flex items-center justify-end mt-auto">
                           <Link
-                            to={`/catalog/timing-belt/${product.id}`}
-                            state={{ product }}
-                            className="bg-blue-100 text-blue-600 text-[9px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:bg-blue-200 transition-colors"
+                            to={getProductDetailRoute(product)}
+                            state={{ product, category: categoryData }}
+                            className="bg-[#131c36]/10 text-[#131c36] text-[9px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:bg-[#131c36]/20 transition-colors"
+                            style={{ backgroundColor: 'rgba(19, 28, 54, 0.1)', color: '#131c36' }}
                           >
                             View Details
                           </Link>
@@ -541,8 +419,8 @@ const TimingBelt = () => {
                                 <span className="text-[9px] sm:text-xs text-gray-500 line-through">
                                   MRP: ₹{product.mrp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
-                                <span className="text-[9px] sm:text-xs font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                                  -{product.discount}%
+                                <span className="text-[9px] sm:text-xs font-semibold text-[#131c36] bg-[#131c36]/10 px-1.5 py-0.5 rounded">
+                                  -{product.discount || Math.round(((product.mrp - product.price) / product.mrp) * 100)}%
                                 </span>
                               </>
                             )}
@@ -555,14 +433,9 @@ const TimingBelt = () => {
                         <div className="space-y-2 mb-3">
                           {product.fulfilledBySparelo && (
                             <div className="flex items-center gap-1.5">
-                              <input
-                                type="checkbox"
-                                checked
-                                readOnly
-                                className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                              />
+                              <CheckCircle className="w-3.5 h-3.5 text-green-600 fill-current" />
                               <span className="text-[9px] sm:text-xs text-gray-700">Fulfilled by</span>
-                              <span className="text-blue-600 font-bold text-[10px] sm:text-sm">S</span>
+                              <span className="text-[#131c36] font-bold text-[10px] sm:text-sm">S</span>
                             </div>
                           )}
                         </div>
@@ -570,9 +443,10 @@ const TimingBelt = () => {
                         {/* View Details Button for Grid View */}
                         <div className="flex items-center justify-end mt-auto">
                           <Link
-                            to={`/catalog/timing-belt/${product.id}`}
-                            state={{ product }}
-                            className="bg-blue-100 text-blue-600 text-[9px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:bg-blue-200 transition-colors"
+                            to={getProductDetailRoute(product)}
+                            state={{ product, category: categoryData }}
+                            className="bg-[#131c36]/10 text-[#131c36] text-[9px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:bg-[#131c36]/20 transition-colors"
+                            style={{ backgroundColor: 'rgba(19, 28, 54, 0.1)', color: '#131c36' }}
                           >
                             View Details
                           </Link>
@@ -597,7 +471,7 @@ const TimingBelt = () => {
                     setFulfilledBySparelo(false);
                     setFreeDelivery(false);
                   }}
-                  className="mt-4 text-blue-600 hover:text-blue-700 underline text-[10px] sm:text-sm"
+                  className="mt-4 text-[#131c36] hover:text-[#131c36]/80 underline text-[10px] sm:text-sm"
                 >
                   Clear all filters
                 </button>
@@ -610,5 +484,5 @@ const TimingBelt = () => {
   );
 };
 
-export default TimingBelt;
+export default CategoryProductList;
 

@@ -3,91 +3,110 @@ import { Link } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import SearchFilterBar from "./SearchFilterBar";
 import CatalogueSidebar from "./CatalogueSidebar";
+import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
 
 const RepairKits = () => {
-  const repairKitCategories = [
+  const repairKitCategoriesBase = [
   {
+    id: 1,
     name: "Accessory Kit Brake Pads",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/5301830.jpg",
-    link: "/catalog/4399-accessory_kit_disc_brake_pads/",
+    link: "/catalog/part-p-20001",
   },
   {
+    id: 2,
     name: "Accessory Kit Brake Shoes",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/7c21f31.jpg",
-    link: "/catalog/4316-accessory_kit_brake_shoes/",
+    link: "/catalog/part-p-20002",
   },
   {
+    id: 3,
     name: "AC Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/c425f85.jpg",
-    link: "/catalog/4673-ac_kits/",
+    link: "/catalog/part-p-20003",
   },
   {
+    id: 4,
     name: "Brake Caliper Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/6fafb90.jpg",
-    link: "/catalog/4317-brake_caliper_repair_kit/",
+    link: "/catalog/part-p-20004",
   },
   {
+    id: 5,
     name: "Brake Master Cylinder Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/f8ce1d4.jpg",
-    link: "/catalog/4325-repair_kit_brake_master_cylinder/",
+    link: "/catalog/part-p-20005",
   },
   {
+    id: 6,
     name: "Carburettor Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/99ad124.jpg",
-    link: "/catalog/4678-repair_kit_carburettor/",
+    link: "/catalog/part-p-20006",
   },
   {
+    id: 7,
     name: "Clutch Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/8a3d983.jpg",
-    link: "/catalog/4676-repair_kit_clutch_slave_cylinder/",
+    link: "/catalog/part-p-20007",
   },
   {
+    id: 8,
     name: "Gear Shifter Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/9df9491.jpg",
-    link: "/catalog/4716-gear_lever_repair_kit/",
+    link: "/catalog/part-p-20008",
   },
   {
+    id: 9,
     name: "Handbrake Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/7428b3e.jpg",
-    link: "/catalog/4960-handbrake_repair_kit/",
+    link: "/catalog/part-p-20009",
   },
   {
+    id: 10,
     name: "Pedal Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/3212040.jpg",
-    link: "/catalog/4963-pedal_repair_kit/",
+    link: "/catalog/part-p-20010",
   },
   {
+    id: 11,
     name: "Power Steering Pump Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/5bc886f.jpg",
-    link: "/catalog/4692-gasket_set_hydraulic_pump/",
+    link: "/catalog/part-p-20011",
   },
   {
+    id: 12,
     name: "Starter Motor Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/d1be8f7.jpg",
-    link: "/catalog/4966-starter_motor_repair_kit/",
+    link: "/catalog/part-p-20012",
   },
   {
+    id: 13,
     name: "Steering Gear Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/a1d8d99.jpg",
-    link: "/catalog/4674-steering_gear_repair_kit/",
+    link: "/catalog/part-p-20013",
   },
   {
+    id: 14,
     name: "Suspension Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/4b9a03a.jpg",
-    link: "/catalog/4401-suspension_kit/",
+    link: "/catalog/part-p-20014",
   },
   {
+    id: 15,
     name: "Timing Belt Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/ca3d002.jpg",
-    link: "/catalog/4675-timing_belt_kit/",
+    link: "/catalog/part-p-20015",
   },
   {
+    id: 16,
     name: "Wheel Brake Cylinder Repair Kit",
     img: "https://boodmo.com/media/cache/catalog_image/images/categories/01ae522.jpg",
-    link: "/catalog/4326-repair_kit_wheel_brake_cylinder/",
+    link: "/catalog/part-p-20016",
   },
 ];
 
+  // Generate categories with product data
+  const repairKitCategories = generateCategoryWithProducts(repairKitCategoriesBase, "Repair Kits", 1300);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState("relevance");
@@ -112,8 +131,8 @@ const RepairKits = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6">
+    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
+      <div className="w-full px-3 sm:px-4 md:px-6">
         <Breadcrumbs />
 
         <div className="mb-4 sm:mb-6 md:mb-8">
@@ -143,22 +162,26 @@ const RepairKits = () => {
 
           <div className="flex-1">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((product, index) => (
+              {filteredProducts.map((category, index) => (
                 <Link
-                  key={product.id || index}
-                  to={product.link}
+                  key={category.id || index}
+                  to={category.link}
+                  state={{ 
+                    product: category.product,
+                    category: { name: "Repair Kits", slug: "repair_kits" }
+                  }}
                   className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
                 >
                   <img
-                    src={product.img}
-                    alt={product.name}
+                    src={category.img}
+                    alt={category.name}
                     className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
                     onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (product.name || 'Part');
+                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (category.name || 'Part');
                     }}
                   />
                   <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">
-                    {product.name}
+                    {category.name}
                   </span>
                 </Link>
               ))}

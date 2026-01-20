@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTrash, FaPlus, FaMinus, FaShoppingCart, FaMapMarkerAlt, FaFileAlt, FaCreditCard, FaCheckCircle } from "react-icons/fa";
 import { useCart } from '../contexts/CartContext';
+import WorkflowWrapper from './workflow/WorkflowWrapper';
 
 const Cart = () => {
   const navigate = useNavigate();
@@ -124,105 +125,8 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Enhanced Progress Bar with Animations */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mt-2 md:mt-4 mb-2 bg-white border border-gray-200 p-2 sm:p-3 md:p-4"                 
-        >
-          <div className="flex items-center justify-between sm:justify-center gap-0.5 sm:gap-1 md:gap-2 lg:gap-3 xl:gap-4 overflow-x-auto pb-1 scrollbar-hide">
-            {/* Cart Step - Active */}
-            <motion.div 
-              className="flex flex-col items-center flex-shrink-0 min-w-[45px] sm:min-w-[50px] md:min-w-[55px]"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <motion.div 
-                className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-gray-900 rounded-full flex items-center justify-center mb-0.5 sm:mb-1 relative overflow-hidden"
-              >
-                <FaShoppingCart className="text-white text-xs sm:text-sm md:text-base relative z-10" />
-              </motion.div>
-              <span className="text-[10px] sm:text-xs text-gray-900 font-semibold whitespace-nowrap">Cart</span>
-            </motion.div>
-            
-            {/* Connector Line */}
-            <motion.div 
-              className="h-0.5 flex-1 sm:flex-none sm:w-6 md:w-8 lg:w-10 xl:w-12 bg-gray-300 rounded-full"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            />
-            
-            {/* Address Step */}
-            <motion.button
-              onClick={() => {
-                const savedAddress = localStorage.getItem('shippingAddress');
-                if (savedAddress) {
-                  navigate('/checkout/address');
-                }
-              }}
-              className="flex flex-col items-center cursor-pointer flex-shrink-0 min-w-[45px] sm:min-w-[50px] md:min-w-[55px] group"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <motion.div 
-                className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-gray-100 rounded-full flex items-center justify-center mb-0.5 sm:mb-1 transition-colors group-hover:bg-gray-200"
-              >
-                <FaMapMarkerAlt className="text-gray-700 text-xs sm:text-sm md:text-base" />
-              </motion.div>
-              <span className="text-[10px] sm:text-xs text-gray-600 font-medium whitespace-nowrap">Address</span>
-            </motion.button>
-            
-            {/* Connector Line */}
-            <div className="h-0.5 flex-1 sm:flex-none sm:w-6 md:w-8 lg:w-10 xl:w-12 bg-gray-300 rounded-full"></div>
-            
-            {/* Review Step */}
-            <motion.button
-              onClick={() => {
-                const savedAddress = localStorage.getItem('shippingAddress');
-                if (savedAddress) {
-                  navigate('/checkout/review');
-                }
-              }}
-              className="flex flex-col items-center cursor-pointer flex-shrink-0 min-w-[45px] sm:min-w-[50px] md:min-w-[55px] group"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <motion.div 
-                className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-gray-100 rounded-full flex items-center justify-center mb-0.5 sm:mb-1 transition-colors group-hover:bg-gray-200"
-              >
-                <FaFileAlt className="text-gray-700 text-xs sm:text-sm md:text-base" />
-              </motion.div>
-              <span className="text-[10px] sm:text-xs text-gray-600 font-medium whitespace-nowrap">Review</span>
-            </motion.button>
-            
-            {/* Connector Line */}
-            <div className="h-0.5 flex-1 sm:flex-none sm:w-6 md:w-8 lg:w-10 xl:w-12 bg-gray-300 rounded-full"></div>
-            
-            {/* Pay Step */}
-            <motion.button
-              onClick={() => {
-                const savedAddress = localStorage.getItem('shippingAddress');
-                if (savedAddress) {
-                  navigate('/checkout/payment');
-                }
-              }}
-              className="flex flex-col items-center cursor-pointer flex-shrink-0 min-w-[45px] sm:min-w-[50px] md:min-w-[55px] group"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <motion.div 
-                className="w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-gray-100 rounded-full flex items-center justify-center mb-0.5 sm:mb-1 transition-colors group-hover:bg-gray-200"
-              >
-                <FaCreditCard className="text-gray-700 text-xs sm:text-sm md:text-base" />
-              </motion.div>
-              <span className="text-[10px] sm:text-xs text-gray-600 font-medium whitespace-nowrap">Pay</span>
-            </motion.button>
-          </div>
-        </motion.div>
+    <WorkflowWrapper currentStep="cart">
+      <div className="py-4">
 
         {/* Enhanced Header */}
         <motion.div 
@@ -297,11 +201,13 @@ const Cart = () => {
                   {cartItems.map((item, index) => {
                     const itemPrice = item.discountPrice || item.price;
                     const itemTotal = itemPrice * item.quantity;
+                    // Use combination of id and partNumber for unique identification
+                    const uniqueKey = item.partNumber ? `${item.id}-${item.partNumber}` : item.id;
                     const isRemoving = removingItemId === item.id;
                     
                     return (
                       <motion.div 
-                        key={item.id}
+                        key={uniqueKey}
                         variants={itemVariants}
                         initial="hidden"
                         animate={isRemoving ? "exit" : "visible"}
@@ -572,7 +478,7 @@ const Cart = () => {
           </motion.div>
         </div>
       </div>
-    </div>
+    </WorkflowWrapper>
   );
 };
 
