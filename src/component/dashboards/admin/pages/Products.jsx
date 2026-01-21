@@ -277,6 +277,81 @@ const Products = () => {
                                 <p className="text-xl font-black text-gray-900">{selectedProduct.stock?.toLocaleString() || '0'} Units</p>
                             </div>
                         </div>
+                        {/* Additional Product Details */}
+                        <div className="grid grid-cols-2 gap-4">
+                            {selectedProduct.brand && (
+                                <div className="p-4 bg-gray-50 rounded-2xl">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase">Brand</p>
+                                    <p className="font-bold text-gray-900">{selectedProduct.brand}</p>
+                                </div>
+                            )}
+                            {selectedProduct.partNumber && (
+                                <div className="p-4 bg-gray-50 rounded-2xl">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase">Part Number</p>
+                                    <p className="font-bold text-gray-900">{selectedProduct.partNumber}</p>
+                                </div>
+                            )}
+                            {selectedProduct.origin && (
+                                <div className="p-4 bg-gray-50 rounded-2xl">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase">Origin</p>
+                                    <p className="font-bold text-gray-900">{selectedProduct.origin}</p>
+                                </div>
+                            )}
+                            {selectedProduct.class && (
+                                <div className="p-4 bg-gray-50 rounded-2xl">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase">Class</p>
+                                    <p className="font-bold text-gray-900">{selectedProduct.class}</p>
+                                </div>
+                            )}
+                            {selectedProduct.mrp && (
+                                <div className="p-4 bg-gray-50 rounded-2xl">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase">MRP</p>
+                                    <p className="font-bold text-gray-900">₹{selectedProduct.mrp.toLocaleString()}</p>
+                                </div>
+                            )}
+                            {selectedProduct.discount && selectedProduct.discount > 0 && (
+                                <div className="p-4 bg-gray-50 rounded-2xl">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase">Discount</p>
+                                    <p className="font-bold text-green-600">-{selectedProduct.discount}%</p>
+                                </div>
+                            )}
+                            {selectedProduct.minOrderQty && (
+                                <div className="p-4 bg-gray-50 rounded-2xl">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase">Min Order Qty</p>
+                                    <p className="font-bold text-gray-900">{selectedProduct.minOrderQty} Units</p>
+                                </div>
+                            )}
+                            {selectedProduct.soldBy && (
+                                <div className="p-4 bg-gray-50 rounded-2xl">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase">Sold By</p>
+                                    <p className="font-bold text-gray-900">{selectedProduct.soldBy}</p>
+                                </div>
+                            )}
+                        </div>
+                        {selectedProduct.vehicleCompatibility && selectedProduct.vehicleCompatibility.length > 0 && (
+                            <div className="p-4 bg-gray-50 rounded-2xl">
+                                <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Vehicle Compatibility</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedProduct.vehicleCompatibility.map((vehicle, index) => (
+                                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-bold">
+                                            {vehicle}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                        {selectedProduct.warranty && (
+                            <div className="p-4 bg-gray-50 rounded-2xl">
+                                <p className="text-[10px] font-black text-gray-400 uppercase">Warranty</p>
+                                <p className="font-bold text-gray-900">{selectedProduct.warranty}</p>
+                            </div>
+                        )}
+                        {selectedProduct.deliveryTime && (
+                            <div className="p-4 bg-gray-50 rounded-2xl">
+                                <p className="text-[10px] font-black text-gray-400 uppercase">Delivery Time</p>
+                                <p className="font-bold text-gray-900">{selectedProduct.deliveryTime}</p>
+                            </div>
+                        )}
                         {selectedProduct.description && (
                             <div className="p-4 bg-gray-50 rounded-2xl">
                                 <p className="text-[10px] font-black text-gray-400 uppercase mb-2">Description</p>
