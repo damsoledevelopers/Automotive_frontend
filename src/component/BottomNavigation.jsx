@@ -13,22 +13,23 @@ import {
   FaSignOutAlt,
 } from 'react-icons/fa';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../auth/AuthContext';
 
 const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { getTotalItems } = useCart();
+  const { user, isAuthenticated, logout } = useAuth();
   const [activeMenu, setActiveMenu] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Mock user state - replace with your actual auth context
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const mockUser = {
-    name: "abc xyz",
-    email: "abc@example.com",
-    avatar: "https://via.placeholder.com/40",
-    role: "Customer"
-  };
+  // Get user data from auth context
+  const currentUser = isAuthenticated && user ? {
+    name: user.name || "User",
+    email: user.email || "",
+    avatar: user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "User")}&background=random`,
+    role: user.role || "Customer"
+  } : null;
 
   // Animation variants for dropdowns
   const dropdownVariants = {
@@ -118,10 +119,10 @@ const BottomNavigation = () => {
 
   // Handle sign out
   const handleSignOut = useCallback(() => {
-    setIsLoggedIn(false);
+    logout();
     setActiveMenu(null);
     navigate('/login');
-  }, [navigate]);
+  }, [logout, navigate]);
 
   // Check if menu item is active
   const isActive = useCallback((item) => {
@@ -211,16 +212,27 @@ const BottomNavigation = () => {
       onClick={(e) => e.stopPropagation()}
     >
       <div className="p-0">
-        {item.showUserInfo && (
+        {item.showUserInfo && currentUser && (
           <div className="bg-gradient-to-r from-blue-50 to-purple-50 flex items-center space-x-3 px-4 py-4 border-b border-gray-200">
             <img
-              src={mockUser.avatar}
-              alt={mockUser.name}
+              src={currentUser.avatar}
+              alt={currentUser.name}
               className="w-12 h-12 rounded-full border-2 border-gray-200"
             />
             <div className="flex-1">
-              <div className="font-bold text-gray-800 text-sm">{mockUser.name}</div>
-              <div className="text-xs text-gray-600">{mockUser.email}</div>
+              <div className="font-bold text-gray-800 text-sm">{currentUser.name}</div>
+              <div className="text-xs text-gray-600">{currentUser.email}</div>
+            </div>
+          </div>
+        )}
+        {item.showUserInfo && !currentUser && (
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 flex items-center space-x-3 px-4 py-4 border-b border-gray-200">
+            <div className="w-12 h-12 rounded-full border-2 border-gray-200 bg-gray-200 flex items-center justify-center">
+              <FaUser className="text-gray-500" />
+            </div>
+            <div className="flex-1">
+              <div className="font-bold text-gray-800 text-sm">Guest User</div>
+              <div className="text-xs text-gray-600">Please login</div>
             </div>
           </div>
         )}
@@ -366,16 +378,27 @@ const BottomNavigation = () => {
               </button>
             </div>
 
-            {item.showUserInfo && (
+            {item.showUserInfo && currentUser && (
               <div className="flex items-center space-x-3 px-4 py-3 mb-3 bg-gray-50 rounded-lg">
                 <img
-                  src={mockUser.avatar}
-                  alt={mockUser.name}
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
                   className="w-12 h-12 rounded-sm"
                 />
                 <div>
-                  <div className="font-semibold text-gray-800">{mockUser.name}</div>
-                  <div className="text-sm text-gray-500">{mockUser.email}</div>
+                  <div className="font-semibold text-gray-800">{currentUser.name}</div>
+                  <div className="text-sm text-gray-500">{currentUser.email}</div>
+                </div>
+              </div>
+            )}
+            {item.showUserInfo && !currentUser && (
+              <div className="flex items-center space-x-3 px-4 py-3 mb-3 bg-gray-50 rounded-lg">
+                <div className="w-12 h-12 rounded-sm bg-gray-200 flex items-center justify-center">
+                  <FaUser className="text-gray-500" />
+                </div>
+                <div>
+                  <div className="font-semibold text-gray-800">Guest User</div>
+                  <div className="text-sm text-gray-500">Please login</div>
                 </div>
               </div>
             )}

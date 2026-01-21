@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTrash, FaPlus, FaMinus, FaShoppingCart, FaMapMarkerAlt, FaFileAlt, FaCreditCard, FaCheckCircle } from "react-icons/fa";
@@ -16,21 +16,43 @@ const Cart = () => {
     getTotalPrice,
     getSubtotal,
     getTotalDiscount,
+    addToCart,
   } = useCart();
   const [removingItemId, setRemovingItemId] = useState(null);
 
-  const handleQuantityChange = (productId, newQuantity) => {
+  // Check for pending Buy Now product after login/signup
+  useEffect(() => {
+    const pendingProduct = localStorage.getItem('pendingBuyNowProduct');
+    if (pendingProduct) {
+      try {
+        const product = JSON.parse(pendingProduct);
+        addToCart(product);
+        localStorage.removeItem('pendingBuyNowProduct');
+      } catch (error) {
+        console.error('Error adding pending product to cart:', error);
+        localStorage.removeItem('pendingBuyNowProduct');
+      }
+    }
+  }, [addToCart]);
+
+  const handleQuantityChange = async (productId, newQuantity, partNumber = null) => {
     if (newQuantity < 1) return;
-    updateQuantity(productId, newQuantity);
+    try {
+      await updateQuantity(productId, newQuantity, partNumber);
+    } catch (error) {
+      console.error('Failed to update quantity:', error);
+    }
   };
 
-  const handleRemoveItem = async (productId) => {
+  const handleRemoveItem = async (productId, partNumber = null) => {
     setRemovingItemId(productId);
-    // Add a small delay for animation
-    setTimeout(() => {
-      removeFromCart(productId);
+    try {
+      await removeFromCart(productId, partNumber);
+    } catch (error) {
+      console.error('Failed to remove item:', error);
+    } finally {
       setRemovingItemId(null);
-    }, 300);
+    }
   };
 
   const shippingCharges = getTotalPrice() > 500 ? 0 : 50;
@@ -251,7 +273,7 @@ const Cart = () => {
                                 <motion.button
                                   whileHover={{ scale: 1.1, rotate: 12 }}
                                   whileTap={{ scale: 0.9, rotate: 0 }}
-                                  onClick={() => handleRemoveItem(item.id)}
+                                  onClick={() => handleRemoveItem(item.id || item.productId, item.partNumber)}
                                   className="p-1.5 sm:p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all flex-shrink-0"
                                   title="Remove item"
                                 >
@@ -296,7 +318,7 @@ const Cart = () => {
                                     <motion.button
                                       whileHover={{ scale: 1.05 }}
                                       whileTap={{ scale: 0.95 }}
-                                      onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                      onClick={() => handleQuantityChange(item.id || item.productId, item.quantity - 1, item.partNumber)}
                                       className="bg-white text-gray-700 rounded-lg w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
                                       disabled={item.quantity <= 1}
                                     >
@@ -314,7 +336,7 @@ const Cart = () => {
                                     <motion.button
                                       whileHover={{ scale: 1.05 }}
                                       whileTap={{ scale: 0.95 }}
-                                      onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                      onClick={() => handleQuantityChange(item.id || item.productId, item.quantity + 1, item.partNumber)}
                                       className="bg-white text-gray-700 rounded-lg w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center hover:bg-gray-100 transition-colors"
                                     >
                                       <FaPlus className="text-[10px] sm:text-xs" />

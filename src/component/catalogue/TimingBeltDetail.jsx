@@ -13,6 +13,7 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import { useCart } from "../../contexts/CartContext";
+import { useAuth } from "../../auth/AuthContext";
 import Breadcrumbs from "./Breadcrumbs";
 
 const PLACEHOLDER_IMAGE =
@@ -23,6 +24,7 @@ const TimingBeltDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { addToCart } = useCart();
+  const { user, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -136,6 +138,41 @@ const TimingBeltDetail = () => {
   };
 
   const handleBuyNow = () => {
+    // Check if user is authenticated
+    if (!isAuthenticated || !user) {
+      // Save current product and cart action to localStorage for after signup
+      if (product) {
+        const cartProduct = {
+          id: product.id,
+          name: product.name || 'Unknown Product',
+          brand: product.brand || 'Unknown Brand',
+          price: product.mrp || product.price,
+          discountPrice: product.mrp && product.mrp > product.price ? product.price : null,
+          discount: product.mrp && product.mrp > product.price
+            ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+            : null,
+          imageUrl: product.images && product.images[0] ? product.images[0] : (product.image || PLACEHOLDER_IMAGE),
+          rating: product.rating || 0,
+          reviews: product.reviews || 0,
+          partNumber: product.partNumber || product.fullPartNumber || '',
+          seller: product.seller || 'Unknown Seller',
+          quantity: quantity,
+        };
+        // Store product in localStorage temporarily
+        localStorage.setItem('pendingBuyNowProduct', JSON.stringify(cartProduct));
+      }
+      // Redirect to signup with return URL
+      navigate('/signup', { 
+        state: { 
+          from: location.pathname,
+          action: 'buyNow',
+          returnTo: '/cart'
+        } 
+      });
+      return;
+    }
+    
+    // User is authenticated, proceed with buy now
     handleAddToCart();
     navigate('/cart');
   };

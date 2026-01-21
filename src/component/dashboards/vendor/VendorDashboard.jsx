@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../../auth/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { productService } from '../../../services/apiService';
+import { toast } from 'react-toastify';
 import Sidebar from './Sidebar';
 import Overview from './pages/Overview';
 import Products from './pages/Products';
@@ -54,6 +56,14 @@ const VendorDashboard = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const [vendorProducts, setVendorProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+
+  // Fetch vendor products
+  useEffect(() => {
+    fetchVendorProducts();
+  }, []);
 
   // Simulate dynamic data updates
   useEffect(() => {
@@ -62,6 +72,39 @@ const VendorDashboard = () => {
     }, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
   }, []);
+
+  const fetchVendorProducts = async () => {
+    try {
+      setProductsLoading(true);
+      const response = await productService.getVendorProducts();
+      const productsData = response.products || response.data?.products || [];
+      
+      // Transform products to match the expected format
+      const transformedProducts = productsData.map(product => ({
+        id: product._id || product.id,
+        _id: product._id || product.id,
+        name: product.name,
+        sku: product.sku || '',
+        stock: product.stock || 0,
+        price: product.price || 0,
+        status: product.approved ? 'Active' : (product.stock > 0 ? 'Pending Approval' : 'Out of Stock'),
+        category: product.category || 'Other',
+        sales: 0, // Can be calculated from orders later
+        rating: 4.5, // Default rating
+        brand: product.brand || '',
+        partNumber: product.partNumber || '',
+        approved: product.approved || false,
+        images: product.images || []
+      }));
+      
+      setVendorProducts(transformedProducts);
+    } catch (error) {
+      console.error('Error fetching vendor products:', error);
+      toast.error('Failed to fetch products');
+    } finally {
+      setProductsLoading(false);
+    }
+  };
 
   // Generate time series data
   const generateTimeSeriesData = (days = 30) => {
@@ -167,27 +210,16 @@ const VendorDashboard = () => {
     ];
   }, [timeSeriesData, refreshKey]);
 
-  // Products data
+  // Products data - use fetched products from API
   const products = useMemo(() => {
-    const allProducts = [
-      { id: 1, name: 'Brake Pad Set - Front', sku: 'BP-F-001', stock: 45, price: 2500, status: 'Active', category: 'Brakes', sales: 123, rating: 4.8 },
-      { id: 2, name: 'Air Filter', sku: 'AF-002', stock: 120, price: 850, status: 'Active', category: 'Filters', sales: 234, rating: 4.6 },
-      { id: 3, name: 'Oil Filter', sku: 'OF-003', stock: 0, price: 350, status: 'Out of Stock', category: 'Filters', sales: 189, rating: 4.7 },
-      { id: 4, name: 'Spark Plug Set', sku: 'SP-004', stock: 78, price: 1200, status: 'Active', category: 'Ignition', sales: 156, rating: 4.9 },
-      { id: 5, name: 'Timing Belt', sku: 'TB-005', stock: 12, price: 3500, status: 'Low Stock', category: 'Engine', sales: 67, rating: 4.5 },
-      { id: 6, name: 'Water Pump', sku: 'WP-006', stock: 34, price: 4500, status: 'Active', category: 'Cooling', sales: 89, rating: 4.4 },
-      { id: 7, name: 'Radiator Cap', sku: 'RC-007', stock: 200, price: 250, status: 'Active', category: 'Cooling', sales: 312, rating: 4.3 },
-      { id: 8, name: 'Fuel Filter', sku: 'FF-008', stock: 56, price: 650, status: 'Active', category: 'Fuel', sales: 145, rating: 4.6 },
-    ];
-
     if (searchTerm) {
-      return allProducts.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.sku.toLowerCase().includes(searchTerm.toLowerCase())
+      return vendorProducts.filter(p =>
+        p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    return allProducts;
-  }, [searchTerm, refreshKey]);
+    return vendorProducts;
+  }, [vendorProducts, searchTerm]);
 
   // Recent orders
   const recentOrders = useMemo(() => {
@@ -227,6 +259,11 @@ const VendorDashboard = () => {
     await logout();
     navigate('/login');
   };
+
+  // Reset avatar error when user changes
+  useEffect(() => {
+    setAvatarError(false);
+  }, [user?.avatar]);
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -285,11 +322,18 @@ const VendorDashboard = () => {
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    <img
-                      src={user?.avatar || 'https://via.placeholder.com/40'}
-                      alt="Profile"
-                      className="w-8 h-8 rounded-full border-2 border-gray-300"
-                    />
+                    {user?.avatar && !avatarError ? (
+                      <img
+                        src={user.avatar}
+                        alt="Profile"
+                        className="w-8 h-8 rounded-full border-2 border-gray-300"
+                        onError={() => setAvatarError(true)}
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full border-2 border-gray-300 bg-blue-500 flex items-center justify-center text-white font-semibold text-sm">
+                        {(user?.name || 'V').charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <span className="hidden md:inline text-sm font-medium text-gray-700">{user?.name || 'Vendor'}</span>
                     <FaChevronDown className="text-xs text-gray-500" />
                   </button>
@@ -298,11 +342,18 @@ const VendorDashboard = () => {
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 z-50">
                       <div className="p-4 border-b border-gray-200">
                         <div className="flex items-center gap-3">
-                          <img
-                            src={user?.avatar || 'https://via.placeholder.com/40'}
-                            alt="Profile"
-                            className="w-10 h-10 rounded-full border-2 border-gray-300"
-                          />
+                          {user?.avatar && !avatarError ? (
+                            <img
+                              src={user.avatar}
+                              alt="Profile"
+                              className="w-10 h-10 rounded-full border-2 border-gray-300"
+                              onError={() => setAvatarError(true)}
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full border-2 border-gray-300 bg-blue-500 flex items-center justify-center text-white font-semibold">
+                              {(user?.name || 'V').charAt(0).toUpperCase()}
+                            </div>
+                          )}
                           <div>
                             <p className="font-semibold text-gray-900 text-sm">{user?.name || 'Vendor'}</p>
                             <p className="text-xs text-gray-600">{user?.email || 'vendor@example.com'}</p>
@@ -399,6 +450,7 @@ const VendorDashboard = () => {
                       products={products}
                       searchTerm={searchTerm}
                       setSearchTerm={setSearchTerm}
+                      onProductAdded={fetchVendorProducts}
                     />
                   )}
                   {currentPage === 'orders' && (

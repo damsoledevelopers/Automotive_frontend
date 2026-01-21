@@ -21,22 +21,74 @@ export const AuthProvider = ({ children }) => {
 
   // Initialize auth state on mount
   useEffect(() => {
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       try {
         const storedUser = localStorage.getItem('user');
         const token = localStorage.getItem('authToken');
         
         if (token && storedUser) {
-          setUser(JSON.parse(storedUser));
+          const userData = JSON.parse(storedUser);
+          // Set user immediately from localStorage for faster initial render
+          setUser(userData);
           setIsAuthenticated(true);
+          
+          // Verify token is still valid by fetching profile (non-blocking)
+          try {
+            const profile = await authService.getProfile();
+            // Handle different response structures
+            let user = null;
+            if (profile.data?.data?.user) {
+              user = profile.data.data.user;
+            } else if (profile.data?.user) {
+              user = profile.data.user;
+            } else if (profile.user) {
+              user = profile.user;
+            } else if (profile.data) {
+              user = profile.data;
+            } else {
+              user = profile;
+            }
+            
+            if (user && (user.role || userData.role)) {
+              // Ensure role is set
+              if (!user.role && userData.role) {
+                user.role = userData.role;
+              }
+              setUser(user);
+              localStorage.setItem('user', JSON.stringify(user));
+              localStorage.setItem('userRole', user.role);
+            } else if (userData.role) {
+              // If profile doesn't have role but localStorage does, keep it
+              userData.role = userData.role;
+              setUser(userData);
+            }
+          } catch (error) {
+            // If profile fetch fails, keep the user from localStorage
+            // Only clear if it's a 401 (unauthorized) error
+            if (error.response?.status === 401 || error.response?.status === 403) {
+              console.error('Token validation failed:', error);
+              localStorage.removeItem('user');
+              localStorage.removeItem('authToken');
+              localStorage.removeItem('userRole');
+              setUser(null);
+              setIsAuthenticated(false);
+            } else {
+              // Network error or other issue - keep user from localStorage
+              console.warn('Profile fetch failed, using cached user:', error);
+            }
+          }
         } else {
           setIsAuthenticated(false);
         }
       } catch (err) {
         console.error('Error initializing auth:', err);
-        localStorage.removeItem('user');
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userRole');
+        // Only clear if there's a critical error
+        if (err.message?.includes('JSON')) {
+          localStorage.removeItem('user');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userRole');
+        }
+        setIsAuthenticated(false);
       } finally {
         setLoading(false);
       }
@@ -58,7 +110,7 @@ export const AuthProvider = ({ children }) => {
   /**
    * Register new user
    */
-  const register = useCallback(async (name, email, password, role) => {
+  const register = useCallback(async (name, email, password, role, vendorDetails = null) => {
     try {
       setLoading(true);
       setError(null);
@@ -71,8 +123,16 @@ export const AuthProvider = ({ children }) => {
         throw new Error('Invalid role selected');
       }
 
+      // Build user data object
+      const userData = { name, email, password, role };
+      
+      // Add vendorDetails if provided (required for vendor role)
+      if (vendorDetails) {
+        userData.vendorDetails = vendorDetails;
+      }
+
       // Call API
-      const result = await authService.register({ name, email, password, role });
+      const result = await authService.register(userData);
       
       setUser(result.user);
       setIsAuthenticated(true);
@@ -101,9 +161,25 @@ export const AuthProvider = ({ children }) => {
       // Call API
       const result = await authService.login(email, password);
       
-      setUser(result.user);
+      // Extract user from result (handle different response structures)
+      const user = result.user || result.data?.user || result;
+      setUser(user);
       setIsAuthenticated(true);
-      return result;
+      
+      // Update localStorage
+      if (result.token) {
+        localStorage.setItem('authToken', result.token);
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('userRole', user.role);
+      }
+      
+      // Notify cart context about auth state change
+      if (typeof window !== 'undefined') {
+        const { notifyAuthStateChange } = require('../contexts/CartContext');
+        notifyAuthStateChange();
+      }
+      
+      return { user, token: result.token };
     } catch (err) {
       const errorMsg = err.message || 'Login failed';
       setError(errorMsg);
@@ -142,13 +218,33 @@ export const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       const result = await authService.getProfile();
-      setUser(result.user);
+      // Extract user from result (handle different response structures)
+      const userData = result.data?.user || result.user || result.data || result;
+      setUser(userData);
+      
+      // Update localStorage
+      if (userData) {
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('userRole', userData.role);
+      }
+      
       return result;
     } catch (err) {
       console.error('Failed to fetch profile:', err);
       throw err;
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  /**
+   * Update user in context (called after profile update)
+   */
+  const updateUser = useCallback((userData) => {
+    setUser(userData);
+    if (userData) {
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('userRole', userData.role);
     }
   }, []);
 
@@ -197,6 +293,7 @@ export const AuthProvider = ({ children }) => {
     googleLogin,
     logout,
     getProfile,
+    updateUser,
     clearError,
     getDashboardPath,
     isAuthenticated,

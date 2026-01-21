@@ -289,22 +289,81 @@ function App() {
                     <Route path="/vendor" element={<VendorPage />} />
                     <Route path="/brands" element={<Brands />} />
                     <Route path="/brands/:brandSlug" element={<BrandDetail />} />
-                    <Route path="/cart" element={<Cart />} />
+                    {/* Protected Routes - Require Authentication */}
+                    <Route 
+                      path="/cart" 
+                      element={
+                        <ProtectedRoute>
+                          <Cart />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/checkout/address" 
+                      element={
+                        <ProtectedRoute>
+                          <ShippingAddress />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/checkout/review" 
+                      element={
+                        <ProtectedRoute>
+                          <Review />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/checkout/payment" 
+                      element={
+                        <ProtectedRoute>
+                          <Payment />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/checkout/confirmation" 
+                      element={
+                        <ProtectedRoute>
+                          <OrderConfirmation />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/myprofile" 
+                      element={
+                        <ProtectedRoute>
+                          <MyProfile />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/myorder" 
+                      element={
+                        <ProtectedRoute>
+                          <MyOrder />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/mywishlist" 
+                      element={
+                        <ProtectedRoute>
+                          <MyWishlist />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    
+                    {/* Other Routes */}
                     <Route path="/wallet" element={<Wallet />} />
                     <Route path="/membership" element={<Membership />} />
                     <Route path="/lucky-draw" element={<LuckyDraw />} />
                     <Route path="/location" element={<Location />} />
                     <Route path="/notifications" element={<Notifications />} />
-                    <Route path="/checkout/address" element={<ShippingAddress />} />
-                    <Route path="/checkout/review" element={<Review />} />
-                    <Route path="/checkout/payment" element={<Payment />} />
-                    <Route path="/checkout/confirmation" element={<OrderConfirmation />} />
                     <Route path="/category" element={<SearchByCategory />} />
                     <Route path="/garage" element={<Garage />} />
                     <Route path="/document" element={<Document />} />
-                    <Route path="/myprofile" element={<MyProfile />} />
-                    <Route path="/myorder" element={<MyOrder />} />
-                    <Route path="/mywishlist" element={<MyWishlist />} />
                     <Route path="/company_gst" element={<Company_GST />} />
                     <Route path="/addresses" element={<Addresses />} />
                     <Route path="/diagnostic" element={<DiagnosticForm />} />

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   FaEye,
   FaEdit,
@@ -17,22 +17,65 @@ import {
   FaShieldAlt,
   FaStar
 } from 'react-icons/fa';
+import { userService } from '../../../../services/apiService';
+import { toast } from 'react-toastify';
 
-const Users = ({ usersData }) => {
+const Users = () => {
   const [view, setView] = useState('list'); // 'list', 'edit', 'view', 'discount'
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
+  const [usersData, setUsersData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '', email: '', role: 'customer', status: 'Active'
   });
 
+  // Fetch live users data from API
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await userService.getAllUsers();
+      // Handle different response structures
+      const users = response.data || response.users || response;
+      // Transform users data to match the component's expected format
+      const transformedUsers = Array.isArray(users) ? users.map(user => ({
+        id: user._id || user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role || 'customer', // Account type (role) from live data
+        status: user.isActive ? 'Active' : 'Inactive', // Convert isActive to status
+        joined: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : 'N/A',
+        orders: 0, // Can be fetched separately if needed
+        rating: null,
+        revenue: null,
+        lastLogin: null,
+        phone: user.phone || '',
+        vendorDetails: user.vendorDetails || null
+      })) : [];
+      setUsersData(transformedUsers);
+    } catch (error) {
+      toast.error(error.message || 'Failed to fetch users');
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAction = (type, user) => {
     setSelectedUser(user);
     if (type === 'edit') {
-      setFormData({ ...user });
+      setFormData({ 
+        ...user,
+        role: user.role || 'customer',
+        status: user.status || 'Active'
+      });
       setView('edit');
     } else if (type === 'view') {
       setView('view');
@@ -40,52 +83,51 @@ const Users = ({ usersData }) => {
       setView('discount');
     } else if (type === 'delete') {
       if (window.confirm(`Delete ${user.name}?`)) {
-        alert('User deleted');
+        handleDeleteUser(user.id);
       }
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    alert(`User "${formData.name}" updated!`);
-    setView('list');
+    try {
+      setLoading(true);
+      // Convert status back to isActive
+      const updateData = {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        isActive: formData.status === 'Active'
+      };
+      
+      await userService.updateUser(selectedUser.id, updateData);
+      toast.success(`User "${formData.name}" updated successfully!`);
+      setView('list');
+      await fetchUsers(); // Refresh users list
+    } catch (error) {
+      toast.error(error.message || 'Failed to update user');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Enhanced users data with vendors, mechanics, and customers
-  const enhancedUsersData = useMemo(() => [
-    ...usersData,
-    {
-      id: usersData.length + 1,
-      name: 'Auto Parts Hub',
-      email: 'vendor@autopartshub.com',
-      role: 'vendor',
-      status: 'Active',
-      orders: 1245,
-      rating: 4.8,
-      revenue: '₹45.2L',
-      registrationDate: '2023-01-15',
-      lastLogin: '2024-01-15 10:30',
-      specialDiscount: null,
-      privileges: ['product_management', 'order_management']
-    },
-    {
-      id: usersData.length + 2,
-      name: 'Rajesh Kumar',
-      email: 'rajesh@mechanic.com',
-      role: 'mechanics',
-      status: 'Active',
-      orders: 89,
-      rating: 4.9,
-      revenue: '₹2.1L',
-      registrationDate: '2023-03-20',
-      lastLogin: '2024-01-15 09:15',
-      specialDiscount: null,
-      privileges: ['job_management', 'service_booking']
-    },
-  ], [usersData]);
+  const handleDeleteUser = async (userId) => {
+    try {
+      setLoading(true);
+      await userService.deleteUser(userId);
+      toast.success('User deleted successfully!');
+      await fetchUsers(); // Refresh users list
+      setSelectedUser(null);
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete user');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Use live users data (no mock data)
   const filteredUsers = useMemo(() => {
-    return enhancedUsersData.filter(user => {
+    return usersData.filter(user => {
       const matchesSearch =
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -93,12 +135,16 @@ const Users = ({ usersData }) => {
       const matchesStatus = statusFilter === 'all' || user.status.toLowerCase() === statusFilter.toLowerCase();
       return matchesSearch && matchesRole && matchesStatus;
     });
-  }, [enhancedUsersData, searchTerm, roleFilter, statusFilter]);
+  }, [usersData, searchTerm, roleFilter, statusFilter]);
 
   const getRoleIcon = (role) => {
     switch (role) {
       case 'vendor': return <FaStore className="text-green-600" />;
       case 'mechanics': return <FaTools className="text-blue-600" />;
+      case 'superadmin':
+      case 'admin': return <FaShieldAlt className="text-red-600" />;
+      case 'garage': return <FaTools className="text-orange-600" />;
+      case 'shipping': return <FaStore className="text-indigo-600" />;
       default: return <FaUser className="text-gray-600" />;
     }
   };
@@ -108,9 +154,26 @@ const Users = ({ usersData }) => {
       vendor: 'bg-green-100 text-green-800',
       mechanics: 'bg-blue-100 text-blue-800',
       customer: 'bg-purple-100 text-purple-800',
-      admin: 'bg-red-100 text-red-800'
+      superadmin: 'bg-red-100 text-red-800',
+      admin: 'bg-red-100 text-red-800',
+      garage: 'bg-orange-100 text-orange-800',
+      shipping: 'bg-indigo-100 text-indigo-800'
     };
     return badges[role] || 'bg-gray-100 text-gray-800';
+  };
+
+  // Format role name for display
+  const formatRoleName = (role) => {
+    const roleMap = {
+      'customer': 'Customer',
+      'vendor': 'Vendor',
+      'mechanics': 'Mechanics',
+      'superadmin': 'Super Admin',
+      'admin': 'Admin',
+      'garage': 'Garage',
+      'shipping': 'Shipping'
+    };
+    return roleMap[role] || role.charAt(0).toUpperCase() + role.slice(1);
   };
 
   if (view === 'view' && selectedUser) {
@@ -136,8 +199,8 @@ const Users = ({ usersData }) => {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="p-4 bg-gray-50 rounded-2xl">
-                <p className="text-[10px] font-black text-gray-400 uppercase">Role</p>
-                <p className="font-bold text-gray-900 uppercase">{selectedUser.role}</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase">Account Type</p>
+                <p className="font-bold text-gray-900">{formatRoleName(selectedUser.role)}</p>
               </div>
               <div className="p-4 bg-gray-50 rounded-2xl">
                 <p className="text-[10px] font-black text-gray-400 uppercase">Status</p>
@@ -184,12 +247,14 @@ const Users = ({ usersData }) => {
               <input required type="email" className="w-full px-5 py-4 bg-gray-50 rounded-2xl font-bold" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Access Role</label>
+              <label className="text-xs font-black text-gray-400 uppercase tracking-widest">Account Type (Role)</label>
               <select className="w-full px-5 py-4 bg-gray-50 rounded-2xl font-bold" value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}>
                 <option value="customer">Customer</option>
                 <option value="vendor">Vendor</option>
-                <option value="mechanics">Mechanic</option>
-                <option value="admin">Administrator</option>
+                <option value="mechanics">Mechanics</option>
+                <option value="garage">Garage</option>
+                <option value="shipping">Shipping</option>
+                <option value="superadmin">Super Admin</option>
               </select>
             </div>
             <div className="space-y-2">
@@ -242,11 +307,13 @@ const Users = ({ usersData }) => {
             onChange={(e) => setRoleFilter(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="all">All Roles</option>
+            <option value="all">All Account Types</option>
             <option value="customer">Customers</option>
             <option value="vendor">Vendors</option>
             <option value="mechanics">Mechanics</option>
-            <option value="admin">Admins</option>
+            <option value="garage">Garages</option>
+            <option value="shipping">Shipping</option>
+            <option value="superadmin">Super Admins</option>
           </select>
           <select
             value={statusFilter}
@@ -260,14 +327,23 @@ const Users = ({ usersData }) => {
           </select>
         </div>
       </div>
+      {/* Loading State */}
+      {loading && (
+        <div className="bg-white rounded-lg shadow-md border border-gray-100 p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading users...</p>
+        </div>
+      )}
+
       {/* Users Table */}
-      <div className="bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      {!loading && (
+        <div className="bg-white rounded-lg shadow-md border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Account Type</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Orders/Jobs</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
@@ -293,8 +369,8 @@ const Users = ({ usersData }) => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       {getRoleIcon(user.role)}
-                      <span className={`px-2 py-1 text-xs rounded-full capitalize ${getRoleBadge(user.role)}`}>
-                        {user.role}
+                      <span className={`px-2 py-1 text-xs rounded-full ${getRoleBadge(user.role)}`}>
+                        {formatRoleName(user.role)}
                       </span>
                     </div>
                   </td>
@@ -349,6 +425,14 @@ const Users = ({ usersData }) => {
           </table>
         </div>
       </div>
+      )}
+
+      {/* Empty State */}
+      {!loading && filteredUsers.length === 0 && (
+        <div className="bg-white rounded-lg shadow-md border border-gray-100 p-8 text-center">
+          <p className="text-gray-600">No users found matching your filters.</p>
+        </div>
+      )}
 
     </div>
   );

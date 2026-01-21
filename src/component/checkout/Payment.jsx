@@ -201,8 +201,8 @@ const Payment = () => {
     return true;
   }, [selectedPayment, paymentData]);
 
-  const processOrder = useCallback(() => {
-    const orderId = `ORD-${Date.now()}`;
+  const processOrder = useCallback(async () => {
+    let orderId = `ORD-${Date.now()}`;
     const orderDate = new Date().toISOString();
     
     // Group items by seller for packages
@@ -263,10 +263,51 @@ const Payment = () => {
       totalItems: getTotalItems(),
     };
 
-    // Save order to localStorage
-    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    existingOrders.unshift(order);
-    localStorage.setItem('orders', JSON.stringify(existingOrders));
+    // Save order to backend
+    try {
+      const orderData = {
+        items: cartItems.map(item => ({
+          productId: item.id || item.productId,
+          name: item.name,
+          brand: item.brand,
+          imageUrl: item.imageUrl,
+          price: item.price,
+          discountPrice: item.discountPrice,
+          quantity: item.quantity,
+          seller: item.seller || "Default Seller",
+          partNumber: item.partNumber || item.id,
+        })),
+        packages: packages,
+        shippingAddress: shippingAddress,
+        paymentMethod: paymentOptions.find(p => p.id === selectedPayment)?.name || selectedPayment,
+        paymentStatus: selectedPayment === 'cod' ? 'Pending' : 'Paid',
+        paymentDetails: selectedPayment === 'cod' || selectedPayment === 'razorpay' 
+          ? null 
+          : { ...paymentData, method: selectedPayment },
+        subtotal: getSubtotal(),
+        deliveryCharge: totalDeliveryCharge,
+        platformFee: platformFee,
+        total: grandTotal,
+        totalItems: getTotalItems(),
+        status: selectedPayment === 'cod' ? 'Pending Payment' : 'Confirmed',
+      };
+
+      const { orderService } = await import('../../services/apiService');
+      const response = await orderService.createOrder(orderData);
+      
+      // Update orderId from response if available
+      if (response.data?.order?.orderId) {
+        orderId = response.data.order.orderId;
+      } else if (response.order?.orderId) {
+        orderId = response.order.orderId;
+      }
+    } catch (error) {
+      console.error('Failed to save order:', error);
+      // Fallback to localStorage if backend fails
+      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+      existingOrders.unshift(order);
+      localStorage.setItem('orders', JSON.stringify(existingOrders));
+    }
 
     // Clear cart
     clearCart();

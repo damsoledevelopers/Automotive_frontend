@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth, USER_ROLES } from "../auth/AuthContext";
 import createAccountOffice from "../assets/img/create-account-office.jpeg";
 import createAccountOfficeDark from "../assets/img/create-account-office-dark.jpeg";
@@ -7,7 +7,8 @@ import { FaBuilding, FaCreditCard, FaStore, FaBox, FaChevronLeft, FaChevronRight
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { register, loading, error } = useAuth();
+  const location = useLocation();
+  const { register, loading, error, getDashboardPath } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
@@ -170,7 +171,7 @@ const Signup = () => {
         };
       }
 
-      const user = await register(userData.name, userData.email, userData.password, userData.role);
+      const user = await register(userData.name, userData.email, userData.password, userData.role, userData.vendorDetails);
       
       // Store vendor details in localStorage if vendor
       if (isVendor && userData.vendorDetails) {
@@ -180,6 +181,14 @@ const Signup = () => {
           users[userIndex].vendorDetails = userData.vendorDetails;
           localStorage.setItem('users', JSON.stringify(users));
         }
+      }
+      
+      // Handle redirect after signup
+      const redirectState = location.state;
+      if (redirectState?.action === 'buyNow' && redirectState?.returnTo) {
+        // If user came from Buy Now, redirect to cart and add pending product
+        navigate(redirectState.returnTo);
+        return;
       }
       
       // Navigate to appropriate dashboard based on role

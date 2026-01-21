@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import styled from "styled-components";
 import AOS from "aos";
@@ -9,6 +9,7 @@ import loginImage from "../assets/img/login-office1.jpg";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, loading, error, getDashboardPath } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -29,7 +30,59 @@ const Login = () => {
     }
 
     try {
-      const user = await login(email, password);
+      const result = await login(email, password);
+      const user = result.user || result;
+      
+      // Check for pending cart product
+      const pendingProduct = localStorage.getItem('pendingCartProduct');
+      if (pendingProduct) {
+        try {
+          const product = JSON.parse(pendingProduct);
+          // Add to cart after login
+          const { cartService } = await import('../services/apiService');
+          await cartService.addItem({
+            productId: product.id,
+            name: product.name,
+            brand: product.brand,
+            imageUrl: product.imageUrl,
+            price: product.price,
+            discountPrice: product.discountPrice,
+            quantity: product.quantity || 1,
+            seller: product.seller,
+            partNumber: product.partNumber
+          });
+          localStorage.removeItem('pendingCartProduct');
+          navigate('/cart');
+          return;
+        } catch (error) {
+          console.error('Error adding pending product:', error);
+          localStorage.removeItem('pendingCartProduct');
+        }
+      }
+      
+      // Handle redirect after login
+      const redirectState = location.state;
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectParam = urlParams.get('redirect');
+      
+      if (redirectState?.action === 'buyNow' && redirectState?.returnTo) {
+        // If user came from Buy Now, redirect to cart
+        navigate(redirectState.returnTo);
+        return;
+      }
+      
+      if (redirectParam === 'cart') {
+        navigate('/cart');
+        return;
+      }
+      
+      // If there's a 'from' location, redirect there
+      if (redirectState?.from) {
+        navigate(redirectState.from);
+        return;
+      }
+      
+      // Otherwise, navigate to appropriate dashboard based on role
       const dashboardPath = getDashboardPath(user.role);
       navigate(dashboardPath);
     } catch (err) {

@@ -31,9 +31,43 @@ export const MyOrder = () => {
   const tabs = ["In-Progress", "Delivered", "Returned", "Cancelled"];
 
   useEffect(() => {
-    // Load orders from localStorage
-    const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    setOrders(savedOrders);
+    const loadOrders = async () => {
+      try {
+        const { orderService } = await import('../services/apiService');
+        const response = await orderService.getOrders();
+        // Backend returns { orders: [...] } from the service
+        const orders = response.orders || response.data?.orders || [];
+        
+        // Transform backend orders to match frontend format
+        const transformedOrders = orders.map(order => ({
+          id: order.orderId || order._id,
+          date: order.createdAt || new Date().toISOString(),
+          status: order.status,
+          items: order.items || [],
+          packages: order.packages || [],
+          shippingAddress: order.shippingAddress,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus,
+          paymentDetails: order.paymentDetails,
+          subtotal: order.subtotal,
+          deliveryCharge: order.deliveryCharge,
+          platformFee: order.platformFee,
+          total: order.total,
+          totalItems: order.totalItems,
+          cancellationReason: order.cancellationReason,
+          cancelledDate: order.cancelledDate,
+        }));
+        
+        setOrders(transformedOrders);
+      } catch (error) {
+        console.error('Failed to load orders:', error);
+        // Fallback to localStorage
+        const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+        setOrders(savedOrders);
+      }
+    };
+
+    loadOrders();
   }, []);
 
   // Toggle order details expansion
@@ -63,22 +97,43 @@ export const MyOrder = () => {
     setShowCancelModal(true);
   };
 
-  const confirmCancelOrder = () => {
+  const confirmCancelOrder = async () => {
     if (orderToCancel && cancellationReason) {
       const reason = cancellationReason === 'other' ? customReason : cancellationReasons.find(r => r.value === cancellationReason)?.label || cancellationReason;
       
-      const updatedOrders = orders.map(order => 
-        order.id === orderToCancel.id 
-          ? { 
-              ...order, 
-              status: 'Cancelled', 
-              cancelledDate: new Date().toISOString(),
-              cancellationReason: reason
-            }
-          : order
-      );
-      setOrders(updatedOrders);
-      localStorage.setItem('orders', JSON.stringify(updatedOrders));
+      try {
+        const { orderService } = await import('../services/apiService');
+        await orderService.updateOrderStatus(orderToCancel.id, 'Cancelled', reason);
+        
+        // Update local state
+        const updatedOrders = orders.map(order => 
+          order.id === orderToCancel.id 
+            ? { 
+                ...order, 
+                status: 'Cancelled', 
+                cancelledDate: new Date().toISOString(),
+                cancellationReason: reason
+              }
+            : order
+        );
+        setOrders(updatedOrders);
+      } catch (error) {
+        console.error('Failed to cancel order:', error);
+        // Fallback to local update
+        const updatedOrders = orders.map(order => 
+          order.id === orderToCancel.id 
+            ? { 
+                ...order, 
+                status: 'Cancelled', 
+                cancelledDate: new Date().toISOString(),
+                cancellationReason: reason
+              }
+            : order
+        );
+        setOrders(updatedOrders);
+        localStorage.setItem('orders', JSON.stringify(updatedOrders));
+      }
+      
       setShowCancelModal(false);
       setOrderToCancel(null);
       setCancellationReason('');

@@ -1,6 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { cartService } from '../services/apiService';
+import { authService } from '../services/apiService';
 
 const CartContext = createContext();
+
+// Global listener for auth state changes
+let authStateListeners = [];
+export const notifyAuthStateChange = () => {
+  authStateListeners.forEach(listener => listener());
+};
 
 export const useCart = () => {
   const context = useContext(CartContext);
@@ -11,60 +19,138 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState(() => {
-    const saved = localStorage.getItem('cartItems');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    return authService.isAuthenticated();
+  };
+
+  // Load cart from backend on mount and when auth state changes
   useEffect(() => {
-    localStorage.setItem('cartItems', JSON.stringify(cartItems));
-  }, [cartItems]);
-
-  const addToCart = (product) => {
-    setCartItems(prevItems => {
-      // Use a combination of id and partNumber to create unique cart item identifier
-      // This ensures different products (even with same id) are treated as separate items
-      const uniqueKey = product.partNumber ? `${product.id}-${product.partNumber}` : product.id;
-      const existingItem = prevItems.find(item => {
-        const itemKey = item.partNumber ? `${item.id}-${item.partNumber}` : item.id;
-        return itemKey === uniqueKey;
-      });
-
-      if (existingItem) {
-        // If item already exists, increment quantity
-        return prevItems.map(item => {
-          const itemKey = item.partNumber ? `${item.id}-${item.partNumber}` : item.id;
-          if (itemKey === uniqueKey) {
-            return { ...item, quantity: item.quantity + (product.quantity || 1) };
-          }
-          return item;
-        });
+    const loadCart = async () => {
+      if (isAuthenticated()) {
+        try {
+          setLoading(true);
+          const response = await cartService.getCart();
+          setCartItems(response.cart?.items || []);
+        } catch (error) {
+          console.error('Failed to load cart:', error);
+          setCartItems([]);
+        } finally {
+          setLoading(false);
+        }
       } else {
-        // Add new item with quantity from product or default to 1
-        return [...prevItems, { ...product, quantity: product.quantity || 1 }];
+        // If not authenticated, use empty cart
+        setCartItems([]);
+        setLoading(false);
       }
-    });
+    };
+
+    loadCart();
+    
+    // Listen for auth state changes
+    const handleAuthChange = () => {
+      loadCart();
+    };
+    
+    authStateListeners.push(handleAuthChange);
+    
+    return () => {
+      authStateListeners = authStateListeners.filter(l => l !== handleAuthChange);
+    };
+  }, []);
+
+  // Sync cart to backend when items change (if authenticated)
+  useEffect(() => {
+    if (!loading && isAuthenticated() && cartItems.length >= 0) {
+      // Cart is synced via API calls, not on every state change
+      // This prevents infinite loops
+    }
+  }, [cartItems, loading]);
+
+  const addToCart = async (product, redirectToLogin = true) => {
+    if (!isAuthenticated()) {
+      // Store product temporarily for after login
+      if (product) {
+        localStorage.setItem('pendingCartProduct', JSON.stringify(product));
+      }
+      // Redirect to login if requested
+      if (redirectToLogin && typeof window !== 'undefined') {
+        window.location.href = '/login?redirect=cart';
+        return;
+      }
+      throw new Error('Please login to add items to cart');
+    }
+
+    try {
+      const cartItem = {
+        productId: product.id,
+        name: product.name,
+        brand: product.brand,
+        imageUrl: product.imageUrl,
+        price: product.price,
+        discountPrice: product.discountPrice,
+        quantity: product.quantity || 1,
+        seller: product.seller,
+        partNumber: product.partNumber
+      };
+
+      const response = await cartService.addItem(cartItem);
+      setCartItems(response.cart?.items || []);
+    } catch (error) {
+      console.error('Failed to add item to cart:', error);
+      throw error;
+    }
   };
 
-  const removeFromCart = (productId) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
-  };
-
-  const updateQuantity = (productId, quantity) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
+  const removeFromCart = async (productId, partNumber = null) => {
+    if (!isAuthenticated()) {
       return;
     }
 
-    setCartItems(prevItems =>
-      prevItems.map(item =>
-        item.id === productId ? { ...item, quantity } : item
-      )
-    );
+    try {
+      const response = await cartService.removeItem(productId, partNumber);
+      setCartItems(response.cart?.items || []);
+    } catch (error) {
+      console.error('Failed to remove item from cart:', error);
+      throw error;
+    }
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  const updateQuantity = async (productId, quantity, partNumber = null) => {
+    if (!isAuthenticated()) {
+      return;
+    }
+
+    if (quantity <= 0) {
+      await removeFromCart(productId, partNumber);
+      return;
+    }
+
+    try {
+      const response = await cartService.updateItem(productId, quantity, partNumber);
+      setCartItems(response.cart?.items || []);
+    } catch (error) {
+      console.error('Failed to update cart item:', error);
+      throw error;
+    }
+  };
+
+  const clearCart = async () => {
+    if (!isAuthenticated()) {
+      setCartItems([]);
+      return;
+    }
+
+    try {
+      await cartService.clearCart();
+      setCartItems([]);
+    } catch (error) {
+      console.error('Failed to clear cart:', error);
+      throw error;
+    }
   };
 
   const getTotalItems = () => {
@@ -95,6 +181,7 @@ export const CartProvider = ({ children }) => {
 
   const value = {
     cartItems,
+    loading,
     addToCart,
     removeFromCart,
     updateQuantity,

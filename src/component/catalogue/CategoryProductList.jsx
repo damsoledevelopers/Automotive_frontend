@@ -3,6 +3,7 @@ import { Link, useParams, useLocation } from "react-router-dom";
 import Breadcrumbs from "./Breadcrumbs";
 import CatalogueSidebar from "./CatalogueSidebar";
 import { Grid, List, Truck, RotateCcw, FileText, CheckCircle, Info } from "lucide-react";
+import { productService } from "../../services/apiService";
 
 /**
  * Generic Category Product List Component
@@ -33,10 +34,150 @@ const CategoryProductList = ({
   };
 
   const [filteredProducts, setFilteredProducts] = useState(products);
+  const [loading, setLoading] = useState(false);
+  const [apiProducts, setApiProducts] = useState([]);
+
+  // Map backend product to frontend format
+  const mapProductToFrontend = (product) => {
+    return {
+      id: product._id || product.id,
+      name: product.name,
+      brand: product.brand || 'Unknown',
+      partNumber: product.partNumber || product.sku || 'N/A',
+      price: product.price || 0,
+      mrp: product.mrp || null,
+      discount: product.discount || 0,
+      image: product.images && product.images.length > 0 ? product.images[0] : product.imageUrl || 'https://via.placeholder.com/200x150?text=Product',
+      images: product.images || (product.imageUrl ? [product.imageUrl] : []),
+      isOEM: product.origin === 'OEM',
+      origin: product.origin || 'Aftermarket',
+      class: product.class || 'Universal',
+      soldBy: product.soldBy || 'Mumbai/MUM',
+      deliveryDays: product.deliveryTime ? parseInt(product.deliveryTime) || 4 : 4,
+      fulfilledBySparelo: true, // Default for approved products
+      freeDelivery: false, // Can be added to product model later
+      stock: product.stock || 0,
+      category: product.category,
+      description: product.description,
+      vehicleCompatibility: product.vehicleCompatibility || []
+    };
+  };
+
+  // Fetch products from API if no products provided
+  useEffect(() => {
+    const fetchProducts = async () => {
+      // If products are passed as prop, use them (for backward compatibility)
+      if (products && products.length > 0) {
+        setApiProducts(products);
+        return;
+      }
+
+      // Otherwise, fetch from API based on category
+      const categorySlug = categoryData.slug || category;
+      if (!categorySlug) {
+        // If no category, fetch all products
+        try {
+          setLoading(true);
+          const result = await productService.getUserProducts({ limit: 100 });
+          const fetchedProducts = result.products || result.data?.products || [];
+          setApiProducts(fetchedProducts.map(mapProductToFrontend));
+        } catch (error) {
+          console.error('Failed to fetch products:', error);
+          setApiProducts([]);
+        } finally {
+          setLoading(false);
+        }
+        return;
+      }
+
+      // Map category slug to category name for API
+      // This mapping covers common category slugs to their database category names
+      const categoryMap = {
+        'brakes': 'Brakes',
+        'brake': 'Brakes',
+        'filters': 'Filters',
+        'filter': 'Filters',
+        'engine': 'Engine',
+        'lighting': 'Lighting',
+        'suspension': 'Suspension',
+        'cooling': 'Cooling',
+        'cooling_system': 'Cooling',
+        'electrical': 'Electrical',
+        'electrical_components': 'Electrical',
+        'electric_components': 'Electrical',
+        'body': 'Body',
+        'interior': 'Interior',
+        'exhaust': 'Exhaust',
+        'exhaust_system': 'Exhaust',
+        'other': 'Other',
+        'air_conditioning': 'Air Conditioning',
+        'bearings': 'Bearings',
+        'belts_chains_rollers': 'Belts Chains And Rollers',
+        'belts': 'Belts Chains And Rollers',
+        'car_accessories': 'Car Accessories',
+        'clutch': 'Clutch',
+        'control_cables': 'Control Cables',
+        'fuel_system': 'Fuel Supply System',
+        'fuelsystem': 'Fuel Supply System',
+        'gaskets_sealingrings': 'Gaskets & Seals',
+        'ignition_glowplug': 'Ignition & Glowplug',
+        'interior_comfort': 'Interior Comfort',
+        'oilsfluids': 'Oils & Fluids',
+        'pipes_hoses': 'Pipes & Hoses',
+        'repair_kits': 'Repair Kits',
+        'sensors_control_units': 'Sensors & Control Units',
+        'steering': 'Steering',
+        'towbar': 'Towbar Parts',
+        'trims': 'Trims',
+        'tyres_and_alloys': 'Tyres and Alloys',
+        'transmission': 'Transmission',
+        'universal': 'Universal',
+        'wheels': 'Wheels',
+        'windscreen_cleaning_system': 'Windscreen Cleaning System'
+      };
+
+      // Try to extract category name from slug
+      let categoryName = categoryMap[categorySlug.toLowerCase()];
+      if (!categoryName) {
+        // Try to extract from slug format like "4079-accessory_kit_disc_brake_pads"
+        const slugWithoutNumbers = categorySlug.replace(/^\d+-/, '').replace(/_/g, ' ');
+        // Try to match with category map first
+        const normalizedSlug = slugWithoutNumbers.toLowerCase().replace(/\s+/g, '_');
+        categoryName = categoryMap[normalizedSlug];
+        
+        // If still not found, convert to title case
+        if (!categoryName) {
+          categoryName = slugWithoutNumbers.split(' ').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' ');
+        }
+      }
+
+      try {
+        setLoading(true);
+        const result = await productService.getUserProducts({
+          category: categoryName,
+          limit: 100
+        });
+        const fetchedProducts = result.products || result.data?.products || [];
+        setApiProducts(fetchedProducts.map(mapProductToFrontend));
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        setApiProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [category, categoryData.slug, products]);
+
+  // Use API products if available, otherwise use prop products
+  const allProducts = apiProducts.length > 0 ? apiProducts : products;
 
   // Filter products based on selected filters
   useEffect(() => {
-    let filtered = [...products];
+    let filtered = [...allProducts];
 
     // Filter by origin
     if (selectedOrigin.length > 0) {
@@ -65,7 +206,7 @@ const CategoryProductList = ({
     }
 
     setFilteredProducts(filtered);
-  }, [selectedOrigin, selectedBrands, fulfilledBySparelo, freeDelivery, products]);
+  }, [selectedOrigin, selectedBrands, fulfilledBySparelo, freeDelivery, allProducts]);
 
   const handleOriginChange = (origin) => {
     setSelectedOrigin((prev) =>
@@ -103,7 +244,7 @@ const CategoryProductList = ({
   };
 
   // Get unique brands
-  const uniqueBrands = [...new Set(products.map((p) => p.brand))];
+  const uniqueBrands = [...new Set(allProducts.map((p) => p.brand))];
 
   // Determine product detail route based on category
   const getProductDetailRoute = (product) => {
@@ -209,7 +350,7 @@ const CategoryProductList = ({
                       className="w-4 h-4 text-[#131c36] border-gray-300 rounded focus:ring-[#131c36]"
                     />
                     <span className="ml-2 text-[9px] sm:text-xs text-gray-700">
-                      Aftermarket ({products.filter((p) => !p.isOEM).length})
+                      Aftermarket ({allProducts.filter((p) => !p.isOEM).length})
                     </span>
                   </label>
                   <label className="flex items-center cursor-pointer">
@@ -220,7 +361,7 @@ const CategoryProductList = ({
                       className="w-4 h-4 text-[#131c36] border-gray-300 rounded focus:ring-[#131c36]"
                     />
                     <span className="ml-2 text-[9px] sm:text-xs text-gray-700">
-                      OEM ({products.filter((p) => p.isOEM).length})
+                      OEM ({allProducts.filter((p) => p.isOEM).length})
                     </span>
                   </label>
                 </div>
@@ -239,7 +380,7 @@ const CategoryProductList = ({
                     className="w-4 h-4 text-[#131c36] border-gray-300 rounded focus:ring-[#131c36]"
                   />
                   <span className="ml-2 text-[9px] sm:text-xs text-gray-700">
-                    Fulfilled by Sparelo ({products.filter((p) => p.fulfilledBySparelo).length})
+                    Fulfilled by Sparelo ({allProducts.filter((p) => p.fulfilledBySparelo).length})
                   </span>
                 </label>
               </div>
@@ -255,7 +396,7 @@ const CategoryProductList = ({
                     className="w-4 h-4 text-[#131c36] border-gray-300 rounded focus:ring-[#131c36]"
                   />
                   <span className="ml-2 text-[9px] sm:text-xs text-gray-700">
-                    Free Delivery ({products.filter((p) => p.freeDelivery).length})
+                    Free Delivery ({allProducts.filter((p) => p.freeDelivery).length})
                   </span>
                 </label>
               </div>
@@ -265,7 +406,7 @@ const CategoryProductList = ({
                 <h4 className="font-semibold text-[9px] sm:text-xs text-gray-800 mb-2">Brand</h4>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {uniqueBrands.slice(0, 5).map((brand) => {
-                    const count = products.filter((p) => p.brand === brand).length;
+                    const count = allProducts.filter((p) => p.brand === brand).length;
                     return (
                       <label key={brand} className="flex items-center cursor-pointer">
                         <input
@@ -292,14 +433,20 @@ const CategoryProductList = ({
 
           {/* Right Content - Products */}
           <div className="flex-1 order-1 lg:order-2">
-            <div
-              className={
-                viewMode === "grid"
-                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-                  : "space-y-4"
-              }
-            >
-              {filteredProducts.map((product) => (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#131c36] mx-auto mb-4"></div>
+                <p className="text-gray-500 text-sm">Loading products...</p>
+              </div>
+            ) : (
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                    : "space-y-4"
+                }
+              >
+                {filteredProducts.map((product) => (
                 <div
                   key={product.id}
                   className={`bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200 ${
@@ -456,10 +603,11 @@ const CategoryProductList = ({
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
 
             {/* No Results */}
-            {filteredProducts.length === 0 && (
+            {!loading && filteredProducts.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-gray-500 text-xs sm:text-base md:text-lg">
                   No products found matching your filters.

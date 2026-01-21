@@ -440,7 +440,7 @@ const SuperAdminDashboard = () => {
                     />
                   )}
                   {currentPage === 'users' && (
-                    <Users usersData={usersData} />
+                    <Users />
                   )}
                   {currentPage === 'orders' && (
                     <Orders ordersData={ordersData} />

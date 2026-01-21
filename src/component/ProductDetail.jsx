@@ -16,6 +16,8 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import { useCart } from "../contexts/CartContext";
+import { useAuth } from "../auth/AuthContext";
+import { productService } from "../services/apiService";
 import Breadcrumbs from "./catalogue/Breadcrumbs";
 
 const PLACEHOLDER_IMAGE =
@@ -41,6 +43,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { addToCart } = useCart();
+  const { user, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -118,80 +121,199 @@ const ProductDetail = () => {
       return;
     }
 
-    // Otherwise, fetch mock data based on itemId (fallback case)
+    // Otherwise, fetch from API based on itemId
     if (itemId) {
       setLoading(true);
-      // Use minimal delay for fallback data
-      setTimeout(() => {
-        setProduct({
-          id: itemId,
-          name: "BELT,TIMING",
-          partNumber: "127600C20",
-          fullPartNumber: "127600C20",
-          brand: "MARUTI SUZUKI",
-          seller: "Bengaluru/BPN",
-          price: 850.00,
-          mrp: 850.00,
-          category: "Maintenance Service Parts",
-          subCategory: "Belt",
-          subSubCategory: "Timing Belt",
-          rating: 4.5,
-          reviews: 23,
-          images: [
-            "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-            "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-            "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-            "https://boodmo.com/media/cache/catalog_image/images/categories/92bef24.jpg",
-          ],
-          compatibility: "Not compatible with your cars",
-          isCompatible: false,
-          stock: 9,
-          isOEM: true,
-          origin: "OEM",
-          class: "Timing Belt",
-          fulfilledBySparelo: true,
-          spareloChoice: true,
-          deliveryDays: 4,
-          replacementsPrice: 316,
-          description: "Timing Belt for MARUTI EECO, ESTEEM, GYPSY, SUPER CARRY, SWIFT, SWIFT DZIRE, VERSA, ZEN - 127600C20 - MARUTI SUZUKI",
-          compatibleVehicles: [],
-        });
-        setLoading(false);
-      }, 50); // Minimal delay for fallback
+      const fetchProduct = async () => {
+        try {
+          // itemId is already the product ID (route: /catalog/part-p-:itemId)
+          const productId = itemId;
+          const result = await productService.getProductById(productId);
+          const productData = result.product || result.data?.product || result;
+          
+          if (productData) {
+            // Map backend product to frontend format
+            const mainImage = productData.images && productData.images.length > 0 
+              ? productData.images[0] 
+              : productData.imageUrl || PLACEHOLDER_IMAGE;
+            const productImages = productData.images && productData.images.length > 0
+              ? productData.images
+              : [mainImage, mainImage, mainImage, mainImage];
+            
+            const categoryData = location.state?.category || { name: productData.category || "Maintenance Service Parts", slug: "" };
+            
+            setProduct({
+              id: productData._id || productData.id || productId,
+              name: productData.name || 'Unknown Product',
+              brand: productData.brand || 'Unknown Brand',
+              partNumber: productData.partNumber || productData.sku || 'N/A',
+              fullPartNumber: productData.partNumber || productData.sku || 'N/A',
+              images: productImages,
+              price: productData.price || 0,
+              mrp: productData.mrp || productData.price || 0,
+              discount: productData.discount || 0,
+              stock: productData.stock || 0,
+              isCompatible: false,
+              compatibility: productData.vehicleCompatibility && productData.vehicleCompatibility.length > 0
+                ? productData.vehicleCompatibility.join(', ')
+                : "Not compatible with your cars",
+              compatibleVehicles: productData.vehicleCompatibility || [],
+              replacementsPrice: productData.mrp ? Math.floor(productData.mrp * 0.7) : Math.floor(productData.price * 0.7),
+              category: categoryData.name || productData.category || "Maintenance Service Parts",
+              subCategory: productData.class || "Parts",
+              subSubCategory: productData.name,
+              seller: productData.soldBy || "Mumbai/MUM",
+              fulfilledBySparelo: true,
+              spareloChoice: true,
+              deliveryDays: productData.deliveryTime ? parseInt(productData.deliveryTime) || 4 : 4,
+              returnDays: 10,
+              description: productData.description || `${productData.name} - ${productData.partNumber} - ${productData.brand}`,
+              freeDelivery: false,
+              origin: productData.origin || "Aftermarket",
+              class: productData.class || "Universal",
+              isOEM: productData.origin === 'OEM',
+              rating: 4.5,
+              reviews: 0,
+            });
+          } else {
+            // Product not found
+            console.error('Product not found');
+          }
+        } catch (error) {
+          console.error('Failed to fetch product:', error);
+          // Fallback to mock data if API fails
+          setProduct({
+            id: itemId,
+            name: "Product Not Found",
+            partNumber: "N/A",
+            fullPartNumber: "N/A",
+            brand: "Unknown",
+            seller: "N/A",
+            price: 0,
+            mrp: 0,
+            category: "Maintenance Service Parts",
+            subCategory: "Parts",
+            subSubCategory: "Unknown",
+            rating: 0,
+            reviews: 0,
+            images: [PLACEHOLDER_IMAGE],
+            compatibility: "Product not available",
+            isCompatible: false,
+            stock: 0,
+            isOEM: false,
+            origin: "Aftermarket",
+            class: "Unknown",
+            fulfilledBySparelo: false,
+            spareloChoice: false,
+            deliveryDays: 0,
+            replacementsPrice: 0,
+            description: "Product not found or not available.",
+            compatibleVehicles: [],
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      fetchProduct();
     } else if (!location.state?.product) {
       // No itemId and no product data - show error
       setLoading(false);
     }
   }, [itemId, location.state?.product, location.state?.category]);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
+    if (!isAuthenticated || !user) {
+      // Store product and redirect to login
+      if (product) {
+        const cartProduct = {
+          id: product.id,
+          name: product.name || 'Unknown Product',
+          brand: product.brand || 'Unknown Brand',
+          price: product.mrp || product.price,
+          discountPrice: product.mrp && product.mrp > product.price ? product.price : null,
+          discount: product.mrp && product.mrp > product.price
+            ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+            : null,
+          imageUrl: product.images && product.images[0] ? product.images[0] : (product.image || PLACEHOLDER_IMAGE),
+          rating: product.rating || 0,
+          reviews: product.reviews || 0,
+          partNumber: product.partNumber || product.fullPartNumber || '',
+          seller: product.seller || 'Unknown Seller',
+          quantity: quantity,
+        };
+        localStorage.setItem('pendingCartProduct', JSON.stringify(cartProduct));
+      }
+      navigate('/login?redirect=cart');
+      return;
+    }
+
     if (product) {
-      const cartProduct = {
-        id: product.id,
-        name: product.name || 'Unknown Product',
-        brand: product.brand || 'Unknown Brand',
-        price: product.mrp || product.price,
-        discountPrice: product.mrp && product.mrp > product.price ? product.price : null,
-        discount: product.mrp && product.mrp > product.price
-          ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
-          : null,
-        imageUrl: product.images && product.images[0] ? product.images[0] : (product.image || PLACEHOLDER_IMAGE),
-        rating: product.rating || 0,
-        reviews: product.reviews || 0,
-        partNumber: product.partNumber || product.fullPartNumber || '',
-        seller: product.seller || 'Unknown Seller',
-        quantity: quantity,
-      };
-      // Add to cart with the specified quantity (don't loop - addToCart handles quantity)
-      cartProduct.quantity = quantity;
-      addToCart(cartProduct);
-      alert(`${quantity} x ${cartProduct.name} added to cart!`);
+      try {
+        const cartProduct = {
+          id: product.id,
+          name: product.name || 'Unknown Product',
+          brand: product.brand || 'Unknown Brand',
+          price: product.mrp || product.price,
+          discountPrice: product.mrp && product.mrp > product.price ? product.price : null,
+          discount: product.mrp && product.mrp > product.price
+            ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+            : null,
+          imageUrl: product.images && product.images[0] ? product.images[0] : (product.image || PLACEHOLDER_IMAGE),
+          rating: product.rating || 0,
+          reviews: product.reviews || 0,
+          partNumber: product.partNumber || product.fullPartNumber || '',
+          seller: product.seller || 'Unknown Seller',
+          quantity: quantity,
+        };
+        // Add to cart with the specified quantity
+        cartProduct.quantity = quantity;
+        await addToCart(cartProduct, false);
+        alert(`${quantity} x ${cartProduct.name} added to cart!`);
+      } catch (error) {
+        alert('Failed to add to cart. Please try again.');
+      }
     } else {
       alert('Product not loaded yet. Please wait...');
     }
   };
 
   const handleBuyNow = () => {
+    // Check if user is authenticated
+    if (!isAuthenticated || !user) {
+      // Save current product and cart action to localStorage for after signup
+      if (product) {
+        const cartProduct = {
+          id: product.id,
+          name: product.name || 'Unknown Product',
+          brand: product.brand || 'Unknown Brand',
+          price: product.mrp || product.price,
+          discountPrice: product.mrp && product.mrp > product.price ? product.price : null,
+          discount: product.mrp && product.mrp > product.price
+            ? Math.round(((product.mrp - product.price) / product.mrp) * 100)
+            : null,
+          imageUrl: product.images && product.images[0] ? product.images[0] : (product.image || PLACEHOLDER_IMAGE),
+          rating: product.rating || 0,
+          reviews: product.reviews || 0,
+          partNumber: product.partNumber || product.fullPartNumber || '',
+          seller: product.seller || 'Unknown Seller',
+          quantity: quantity,
+        };
+        // Store product in localStorage temporarily
+        localStorage.setItem('pendingBuyNowProduct', JSON.stringify(cartProduct));
+      }
+      // Redirect to signup with return URL
+      navigate('/signup', { 
+        state: { 
+          from: location.pathname,
+          action: 'buyNow',
+          returnTo: '/cart'
+        } 
+      });
+      return;
+    }
+    
+    // User is authenticated, proceed with buy now
     handleAddToCart();
     navigate('/cart');
   };
