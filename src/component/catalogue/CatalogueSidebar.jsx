@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useVehicle } from "../../contexts/VehicleContext";
 import { getVehicleImageUrl } from "../../data/vehicleData";
-import { FaTimes, FaFilter } from "react-icons/fa";
+import { FaTimes, FaFilter, FaSpinner } from "react-icons/fa";
+import { categoryService } from "../../services/apiService";
 
 const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const { vehicles } = useVehicle();
   const [selectedMaker, setSelectedMaker] = useState("");
   const [isOpen, setIsOpen] = useState(true);
+  const [categories, setCategories] = useState([]); // Only show categories from backend
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const location = useLocation();
   
   // Auto-expand Maintenance Service Parts if on Belt or Timing Belt page
@@ -16,6 +19,82 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const [expandedCategories, setExpandedCategories] = useState({
     "Maintenance Service Parts": isBeltPage || isTimingBeltPage ? true : false
   });
+
+  // Fetch categories from API
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      // Use getAllActiveCategoriesFlat to get ALL categories (same as ReplacementParts.jsx)
+      // This ensures both pages show the same categories created by admin
+      const result = await categoryService.getAllActiveCategoriesFlat();
+      
+      // Handle response structure:
+      // Backend returns: { success: true, data: { categories: [...] } }
+      // apiService.getAllActiveCategoriesFlat() returns: response.data.data which is { categories: [...] }
+      // So: result = { categories: [...] }
+      // Extract: result.categories to get the array
+      let categoriesData = [];
+      
+      if (result && result.categories && Array.isArray(result.categories)) {
+        categoriesData = result.categories;
+      } else if (Array.isArray(result)) {
+        categoriesData = result;
+      } else if (result && result.data && Array.isArray(result.data.categories)) {
+        categoriesData = result.data.categories;
+      } else if (result && result.data && Array.isArray(result.data)) {
+        categoriesData = result.data;
+      }
+      
+      // If no categories found in database, show empty state
+      if (!categoriesData || categoriesData.length === 0) {
+        setCategories([]);
+        setLoadingCategories(false);
+        return;
+      }
+      
+      // Transform API data to match existing structure
+      // Handle both string arrays and object arrays
+      const transformedCategories = categoriesData.map(cat => {
+        // If category is a string, convert it to an object
+        let categoryName, categorySlug, categoryLink;
+        
+        if (typeof cat === 'string') {
+          // Handle string format: "Clutch", "Cooling", etc.
+          categoryName = cat;
+          categorySlug = cat.toLowerCase().replace(/\s+/g, '_').replace(/&/g, '').replace(/\//g, '');
+          categoryLink = `/catalog/${categorySlug}/`;
+        } else if (cat && cat.name) {
+          // Handle object format: { name: "Clutch", slug: "clutch", ... }
+          categoryName = cat.name;
+          categorySlug = cat.slug || cat.name.toLowerCase().replace(/\s+/g, '_').replace(/&/g, '').replace(/\//g, '');
+          categoryLink = `/catalog/${categorySlug}/`;
+        } else {
+          return null; // Skip invalid categories
+        }
+        
+        const categoryObj = {
+          name: categoryName,
+          link: categoryLink,
+          subCategories: [] // Flat list doesn't have subcategories structure
+        };
+        
+        return categoryObj;
+      }).filter(cat => cat !== null); // Remove null entries
+      
+      // Set categories from API (same categories as ReplacementParts page)
+      setCategories(transformedCategories);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      // Don't use fallback - show empty state if API fails
+      setCategories([]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   // Get car image from vehicle data
   const getCarImage = (make, model) => {
@@ -37,63 +116,7 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
     "TATA", "TATA COMMERCIAL", "TOYOTA", "VOLVO", "VW",
   ];
 
-  // Categories with sub-categories structure
-  const categories = [
-    { 
-      name: "Maintenance Service Parts", 
-      link: "/catalog/maintenance_service_parts/",
-      subCategories: [
-        {
-          name: "Belt",
-          link: "/catalog/4032-belts/",
-          subItems: [
-            { name: "Timing Belt", link: "/catalog/4390-timing_belt/" },
-            { name: "Time Belt", link: "/catalog/4033-time_belt/" },
-            { name: "Timing Belt Kit", link: "/catalog/4393-timing_belt_kit/" },
-            { name: "V-belt", link: "/catalog/3720-v_belt/" },
-          ]
-        },
-        { name: "Brake", link: "/catalog/3713-brakes/" },
-        { name: "Catalogue Service Manual", link: "/catalog/4054-catalogues_service_manuals/" },
-        { name: "Clutch", link: "/catalog/4027-clutch/" },
-        { name: "Engine Oil", link: "/catalog/5193-engine_oil/" },
-        { name: "Filter", link: "/catalog/3625-filters/" },
-        { name: "Glow Plug", link: "/catalog/4385-glow_plug/" },
-      ]
-    },
-    { name: "Brake", link: "/catalog/brakes/" },
-    { name: "Air Conditioning", link: "/catalog/air_conditioning/" },
-    { name: "Body", link: "/catalog/body/" },
-    { name: "Bearings", link: "/catalog/bearings/" },
-    { name: "Belts Chains And Rollers", link: "/catalog/drive_belts/" },
-    { name: "Break System", link: "/catalog/brakes/" },
-    { name: "Car Accessories", link: "/catalog/car_accessories/" },
-    { name: "Clutch", link: "/catalog/clutch/" },
-    { name: "Control Cables", link: "/catalog/control_cables/" },
-    { name: "Electrical Components", link: "/catalog/electric_components/" },
-    { name: "Engine", link: "/catalog/engine/" },
-    { name: "Engine Cooling System", link: "/catalog/cooling_system/" },
-    { name: "Exhaust System", link: "/catalog/exhaust/" },
-    { name: "Filters", link: "/catalog/filters/" },
-    { name: "Fuel Supply System", link: "/catalog/fuelsystem/" },
-    { name: "Gaskets & Seals", link: "/catalog/Gasket_SealingRings/" },
-    { name: "Ignition & Glowplug System", link: "/catalog/ignition_glowplug/" },
-    { name: "Interior Comfort", link: "/catalog/interior_comfort/" },
-    { name: "Lighting", link: "/catalog/lighting/" },
-    { name: "Oils & Fluids", link: "/catalog/oilsfluids/" },
-    { name: "Pipes & Hoses", link: "/catalog/pipes_hoses/" },
-    { name: "Repair Kits", link: "/catalog/repair_kits/" },
-    { name: "Sensors Relay and Control Units", link: "/catalog/sensors_control_units/" },
-    { name: "Steering", link: "/catalog/steering/" },
-    { name: "Suspension and Arms", link: "/catalog/suspension/" },
-    { name: "Towbar Parts", link: "/catalog/towbar/" },
-    { name: "Trims", link: "/catalog/trims/" },
-    { name: "Tyres and Alloys", link: "/catalog/tyres_and_alloys/" },
-    { name: "Transmission", link: "/catalog/transmission/" },
-    { name: "Universal", link: "/catalog/universal/" },
-    { name: "Wheels", link: "/catalog/wheels/" },
-    { name: "Windscreen Cleaning System", link: "/catalog/windscreen_cleaning_system/" },
-  ];
+  // Categories are now fetched from API (see useEffect above)
 
   const toggleCategory = (categoryName) => {
     setExpandedCategories(prev => ({
@@ -221,8 +244,19 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
           <h4 className="font-semibold text-xs sm:text-sm text-gray-800 dark:text-gray-300 mb-3">
             Category
           </h4>
-          <div className="space-y-1 max-h-96 overflow-y-auto">
-            {categories.map((category) => (
+          {loadingCategories ? (
+            <div className="text-center py-4">
+              <FaSpinner className="animate-spin text-blue-600 mx-auto mb-2" />
+              <p className="text-xs text-gray-500">Loading categories...</p>
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="text-center py-4">
+              <p className="text-xs text-gray-500">No categories available</p>
+              <p className="text-[10px] text-gray-400 mt-1">Please add categories from admin panel</p>
+            </div>
+          ) : (
+            <div className="space-y-1 max-h-96 overflow-y-auto">
+              {categories.map((category) => (
               <div key={category.name}>
                 <div className="flex items-center justify-between">
                   <Link
@@ -235,16 +269,17 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
                   >
                     {category.name}
                   </Link>
-                  {category.subCategories && (
+                  {category.subCategories && category.subCategories.length > 0 && (
                     <button
                       onClick={() => toggleCategory(category.name)}
                       className="text-gray-500 hover:text-gray-700 px-1 text-xs"
+                      aria-label={expandedCategories[category.name] ? "Collapse" : "Expand"}
                     >
                       {expandedCategories[category.name] ? "−" : "+"}
                     </button>
                   )}
                 </div>
-                {category.subCategories && expandedCategories[category.name] && (
+                {category.subCategories && category.subCategories.length > 0 && expandedCategories[category.name] && (
                   <div className="ml-4 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
                     {category.subCategories.map((subCat) => (
                       <div key={subCat.name || subCat.link}>
@@ -295,8 +330,9 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
                   </div>
                 )}
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Brand Section */}

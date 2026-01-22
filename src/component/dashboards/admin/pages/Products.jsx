@@ -17,7 +17,7 @@ import {
     FaClock,
     FaSpinner
 } from 'react-icons/fa';
-import { productService } from '../../../../services/apiService';
+import { productService, categoryService } from '../../../../services/apiService';
 import { toast } from 'react-toastify';
 
 const Products = () => {
@@ -29,6 +29,7 @@ const Products = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [categories, setCategories] = useState([]);
+    const [loadingCategories, setLoadingCategories] = useState(false);
     const [stats, setStats] = useState({
         total: 0,
         pending: 0,
@@ -54,9 +55,7 @@ const Products = () => {
             const fetchedProducts = response.products || [];
             setProducts(fetchedProducts);
 
-            // Extract unique categories
-            const uniqueCategories = [...new Set(fetchedProducts.map(p => p.category).filter(Boolean))];
-            setCategories(uniqueCategories.sort());
+            // Don't update categories from products - use backend categories instead
 
             // Calculate stats - always fetch fresh counts in parallel for better performance
             const [totalResult, pendingResult, approvedResult, rejectedResult] = await Promise.all([
@@ -79,6 +78,32 @@ const Products = () => {
             setLoading(false);
         }
     };
+
+    // Fetch categories from backend
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                setLoadingCategories(true);
+                const result = await categoryService.getAllActiveCategoriesFlat();
+                const categoriesData = result.categories || result || [];
+                const categoryNames = categoriesData
+                    .map(cat => cat.name)
+                    .filter(name => name && name.trim() !== '')
+                    .sort();
+                setCategories(categoryNames);
+            } catch (error) {
+                console.error('Failed to fetch categories:', error);
+                // Fallback: extract from products if API fails
+                if (products.length > 0) {
+                    const uniqueCategories = [...new Set(products.map(p => p.category).filter(Boolean))];
+                    setCategories(uniqueCategories.sort());
+                }
+            } finally {
+                setLoadingCategories(false);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     // Fetch products when status or category filter changes
     useEffect(() => {
@@ -489,10 +514,18 @@ const Products = () => {
                             value={categoryFilter}
                             onChange={(e) => setCategoryFilter(e.target.value)}
                             className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-xl font-bold appearance-none transition"
+                            disabled={loadingCategories}
                         >
                             <option value="all">All Categories</option>
-                            {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                            {loadingCategories ? (
+                                <option disabled>Loading categories...</option>
+                            ) : (
+                                categories.map(cat => <option key={cat} value={cat}>{cat}</option>)
+                            )}
                         </select>
+                        {loadingCategories && (
+                            <FaSpinner className="absolute right-8 top-1/2 -translate-y-1/2 text-gray-400 animate-spin" />
+                        )}
                     </div>
                 </div>
             </div>

@@ -1,5 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useJob } from '../../../../contexts/JobContext';
+import { analyticsService } from '../../../../services/apiService';
+import { toast } from 'react-toastify';
 import {
   FaChartLine,
   FaChartBar,
@@ -12,31 +14,177 @@ import {
   FaStar,
   FaEye,
   FaHeart,
-  FaShare
+  FaShare,
+  FaSpinner
 } from 'react-icons/fa';
 
 const Overview = ({ timeSeriesData, dateRange, stats, topVendors, recentActivities }) => {
-  // Best-selling products data
-  const bestSellingProducts = useMemo(() => [
-    { id: 1, name: 'Brake Pad Set - Front', category: 'Brake System', sales: 1245, revenue: 4357500, growth: 12.5 },
-    { id: 2, name: 'Engine Oil - 5W-30', category: 'Lubricants', sales: 2100, revenue: 3150000, growth: 8.3 },
-    { id: 3, name: 'Air Filter', category: 'Filters', sales: 1890, revenue: 850500, growth: 15.2 },
-    { id: 4, name: 'Spark Plugs Set', category: 'Ignition', sales: 1567, revenue: 1253600, growth: -3.1 },
-    { id: 5, name: 'Battery - 12V', category: 'Electrical', sales: 980, revenue: 2940000, growth: 22.4 },
-  ], []);
+  const [bestSellingProducts, setBestSellingProducts] = useState([]);
+  const [engagementMetrics, setEngagementMetrics] = useState({
+    avgSessionDuration: '0m 0s',
+    bounceRate: '0%',
+    pageViews: 0,
+    returningCustomers: 0,
+    customerSatisfaction: 0,
+    socialShares: 0,
+    productViews: 0,
+    addToCartRate: 0,
+    conversionRate: 0
+  });
+  const [systemHealth, setSystemHealth] = useState({
+    apiStatus: 'Unknown',
+    database: 'Unknown',
+    serverLoad: 0,
+    uptime: '0%'
+  });
+  const [activeSessions, setActiveSessions] = useState({
+    activeSessions: 0,
+    activeUsers: 0,
+    activeVendors: 0,
+    activeMechanics: 0
+  });
+  const [loading, setLoading] = useState(false);
 
-  // Customer engagement metrics
-  const engagementMetrics = useMemo(() => ({
-    avgSessionDuration: '4m 32s',
-    bounceRate: '32.5%',
-    pageViews: 125000,
-    returningCustomers: 68.5,
-    customerSatisfaction: 4.6,
-    socialShares: 3450,
-    productViews: 89000,
-    addToCartRate: 12.8,
-    conversionRate: 3.2
-  }), []);
+  // Fetch real-time data
+  useEffect(() => {
+    fetchRealTimeData();
+    // Refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchRealTimeData();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [dateRange]);
+
+  const fetchRealTimeData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch all data in parallel
+      const [products, engagement, health, sessions] = await Promise.all([
+        analyticsService.getBestSellingProducts({ dateRange, limit: 5 }),
+        analyticsService.getCustomerEngagementMetrics({ dateRange }),
+        analyticsService.getSystemHealth(),
+        analyticsService.getActiveSessions()
+      ]);
+
+      setBestSellingProducts(Array.isArray(products) ? products : []);
+      setEngagementMetrics(engagement || {});
+      setSystemHealth(health || {});
+      setActiveSessions(sessions || {});
+    } catch (error) {
+      console.error('Failed to fetch real-time data:', error);
+      toast.error('Failed to load real-time data: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Export report functionality
+  const handleExportReport = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch comprehensive data for export
+      const [exportData, products, engagement, health, sessions] = await Promise.all([
+        analyticsService.exportData({ dateRange, type: 'dashboard' }),
+        analyticsService.getBestSellingProducts({ dateRange, limit: 100 }),
+        analyticsService.getCustomerEngagementMetrics({ dateRange }),
+        analyticsService.getSystemHealth(),
+        analyticsService.getActiveSessions()
+      ]);
+
+      // Generate CSV content
+      let csvContent = 'System Overview Report\n';
+      csvContent += `Generated: ${new Date().toLocaleString()}\n`;
+      csvContent += `Date Range: ${dateRange}\n\n`;
+
+      // Summary Statistics
+      csvContent += '=== SUMMARY STATISTICS ===\n';
+      if (stats && stats.length > 0) {
+        stats.forEach(stat => {
+          csvContent += `${stat.label},${stat.value},${stat.change}\n`;
+        });
+      }
+      csvContent += '\n';
+
+      // Revenue Trend
+      csvContent += '=== REVENUE TREND ===\n';
+      csvContent += 'Date,Revenue,Orders\n';
+      if (timeSeriesData && timeSeriesData.length > 0) {
+        timeSeriesData.forEach(data => {
+          csvContent += `${data.date},${data.revenue},${data.orders}\n`;
+        });
+      }
+      csvContent += '\n';
+
+      // Best Selling Products
+      csvContent += '=== BEST SELLING PRODUCTS ===\n';
+      csvContent += 'Rank,Product Name,Category,Sales,Revenue,Growth\n';
+      if (Array.isArray(products) && products.length > 0) {
+        products.forEach((product, idx) => {
+          csvContent += `${idx + 1},${product.name || 'N/A'},${product.category || 'N/A'},${product.sales || 0},${product.revenue || 0},${product.growth || 0}%\n`;
+        });
+      }
+      csvContent += '\n';
+
+      // Customer Engagement Metrics
+      csvContent += '=== CUSTOMER ENGAGEMENT METRICS ===\n';
+      csvContent += `Average Session Duration,${engagement.avgSessionDuration || 'N/A'}\n`;
+      csvContent += `Bounce Rate,${engagement.bounceRate || '0%'}\n`;
+      csvContent += `Page Views,${engagement.pageViews || 0}\n`;
+      csvContent += `Returning Customers,${engagement.returningCustomers || 0}%\n`;
+      csvContent += `Customer Satisfaction,${engagement.customerSatisfaction || 0}/5\n`;
+      csvContent += `Social Shares,${engagement.socialShares || 0}\n`;
+      csvContent += `Product Views,${engagement.productViews || 0}\n`;
+      csvContent += `Add to Cart Rate,${engagement.addToCartRate || 0}%\n`;
+      csvContent += `Conversion Rate,${engagement.conversionRate || 0}%\n`;
+      csvContent += '\n';
+
+      // System Health
+      csvContent += '=== SYSTEM HEALTH ===\n';
+      csvContent += `API Status,${health.apiStatus || 'Unknown'}\n`;
+      csvContent += `Database,${health.database || 'Unknown'}\n`;
+      csvContent += `Server Load,${health.serverLoad || 0}%\n`;
+      csvContent += `Uptime,${health.uptime || '0%'}\n`;
+      csvContent += '\n';
+
+      // Active Sessions
+      csvContent += '=== ACTIVE SESSIONS ===\n';
+      csvContent += `Total Active Sessions,${sessions.activeSessions || 0}\n`;
+      csvContent += `Active Users,${sessions.activeUsers || 0}\n`;
+      csvContent += `Active Vendors,${sessions.activeVendors || 0}\n`;
+      csvContent += `Active Mechanics,${sessions.activeMechanics || 0}\n`;
+      csvContent += '\n';
+
+      // Top Vendors
+      csvContent += '=== TOP PERFORMING VENDORS ===\n';
+      csvContent += 'Rank,Vendor Name,Orders,Revenue,Rating,Status\n';
+      if (Array.isArray(topVendors) && topVendors.length > 0) {
+        topVendors.forEach((vendor, idx) => {
+          csvContent += `${idx + 1},${vendor.name || 'N/A'},${vendor.orders || 0},${vendor.revenue || 'N/A'},${vendor.rating || 0},${vendor.status || 'N/A'}\n`;
+        });
+      }
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `system_overview_report_${dateRange}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success('Report downloaded successfully!');
+    } catch (error) {
+      console.error('Failed to export report:', error);
+      toast.error('Failed to export report: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Revenue Chart component
   const RevenueChart = () => {
@@ -89,8 +237,12 @@ const Overview = ({ timeSeriesData, dateRange, stats, topVendors, recentActiviti
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-bold text-gray-900">System Overview</h3>
-        <button className="btn-outline flex items-center gap-2 text-sm">
-          <FaDownload /> Export Report
+        <button 
+          onClick={handleExportReport}
+          disabled={loading}
+          className="btn-outline flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50 transition-colors"
+        >
+          {loading ? <FaSpinner className="animate-spin" /> : <FaDownload />} Export Report
         </button>
       </div>
 
@@ -128,20 +280,73 @@ const Overview = ({ timeSeriesData, dateRange, stats, topVendors, recentActiviti
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <h4 className="font-semibold text-gray-900 mb-2">System Health</h4>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="flex-1 bg-gray-200 rounded-full h-3">
-              <div className="bg-green-600 h-3 rounded-full" style={{ width: '95%' }}></div>
+          {loading ? (
+            <div className="flex items-center justify-center py-4">
+              <FaSpinner className="animate-spin text-blue-600" />
             </div>
-            <span className="text-sm font-semibold text-gray-900">95%</span>
-          </div>
-          <p className="text-xs text-gray-600">All systems operational</p>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex-1 bg-gray-200 rounded-full h-3">
+                  <div 
+                    className={`h-3 rounded-full ${
+                      systemHealth.serverLoad < 50 ? 'bg-green-600' :
+                      systemHealth.serverLoad < 80 ? 'bg-yellow-600' : 'bg-red-600'
+                    }`}
+                    style={{ width: `${systemHealth.serverLoad || 0}%` }}
+                  ></div>
+                </div>
+                <span className="text-sm font-semibold text-gray-900">{systemHealth.serverLoad || 0}%</span>
+              </div>
+              <p className="text-xs text-gray-600">
+                {systemHealth.apiStatus === 'Operational' ? 'All systems operational' : 
+                 systemHealth.apiStatus === 'Degraded' ? 'System degraded' : 'Checking...'}
+              </p>
+              <div className="mt-2 space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Database:</span>
+                  <span className={`font-semibold ${
+                    systemHealth.database === 'Healthy' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {systemHealth.database || 'Unknown'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Uptime:</span>
+                  <span className="font-semibold text-gray-900">{systemHealth.uptime || '0%'}</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
         <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <h4 className="font-semibold text-gray-900 mb-2">Active Sessions</h4>
-          <p className="text-2xl font-bold text-gray-900 mb-1">
-            {Math.floor(Math.random() * 500) + 1000}
-          </p>
-          <p className="text-xs text-gray-600">Users online now</p>
+          {loading ? (
+            <div className="flex items-center justify-center py-4">
+              <FaSpinner className="animate-spin text-blue-600" />
+            </div>
+          ) : (
+            <>
+              <p className="text-2xl font-bold text-gray-900 mb-1">
+                {activeSessions.activeSessions || 0}
+              </p>
+              <p className="text-xs text-gray-600">Users online now</p>
+              <div className="mt-2 space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Users:</span>
+                  <span className="font-semibold text-gray-900">{activeSessions.activeUsers || 0}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Vendors:</span>
+                  <span className="font-semibold text-gray-900">{activeSessions.activeVendors || 0}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">Mechanics:</span>
+                  <span className="font-semibold text-gray-900">{activeSessions.activeMechanics || 0}</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -151,8 +356,15 @@ const Overview = ({ timeSeriesData, dateRange, stats, topVendors, recentActiviti
           <h4 className="font-semibold text-gray-900">Best-Selling Products</h4>
           <button className="text-sm text-blue-600 hover:text-blue-700">View All</button>
         </div>
-        <div className="space-y-3">
-          {bestSellingProducts.map((product, idx) => (
+        {loading && bestSellingProducts.length === 0 ? (
+          <div className="flex items-center justify-center py-8">
+            <FaSpinner className="animate-spin text-blue-600 text-2xl" />
+          </div>
+        ) : bestSellingProducts.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">No product data available</div>
+        ) : (
+          <div className="space-y-3">
+            {bestSellingProducts.map((product, idx) => (
             <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
               <div className="flex items-center gap-4 flex-1">
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
@@ -164,30 +376,46 @@ const Overview = ({ timeSeriesData, dateRange, stats, topVendors, recentActiviti
                 </div>
               </div>
               <div className="text-right mr-4">
-                <p className="font-bold text-gray-900">₹{(product.revenue / 100000).toFixed(1)}L</p>
+                <p className="font-bold text-gray-900">
+                  {product.revenue >= 1000000 
+                    ? `₹${(product.revenue / 1000000).toFixed(1)}M`
+                    : product.revenue >= 100000
+                    ? `₹${(product.revenue / 100000).toFixed(1)}L`
+                    : product.revenue >= 1000
+                    ? `₹${(product.revenue / 1000).toFixed(0)}K`
+                    : `₹${product.revenue || 0}`}
+                </p>
                 <div className="flex items-center gap-1 text-xs">
                   {product.growth > 0 ? (
                     <>
                       <FaArrowUp className="text-green-600" />
-                      <span className="text-green-600">+{product.growth}%</span>
+                      <span className="text-green-600">+{product.growth.toFixed(1)}%</span>
                     </>
-                  ) : (
+                  ) : product.growth < 0 ? (
                     <>
                       <FaArrowDown className="text-red-600" />
-                      <span className="text-red-600">{product.growth}%</span>
+                      <span className="text-red-600">{product.growth.toFixed(1)}%</span>
                     </>
+                  ) : (
+                    <span className="text-gray-600">0%</span>
                   )}
                 </div>
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Customer Engagement Metrics */}
       <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 border border-purple-100">
         <h4 className="font-semibold text-gray-900 mb-4">Customer Engagement Metrics</h4>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <FaSpinner className="animate-spin text-blue-600 text-2xl" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <div className="bg-white rounded-lg p-4 border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
               <FaUsers className="text-blue-600" />
@@ -221,9 +449,10 @@ const Overview = ({ timeSeriesData, dateRange, stats, topVendors, recentActiviti
               <FaShoppingCart className="text-orange-600" />
               <p className="text-xs text-gray-600">Conversion</p>
             </div>
-            <p className="text-lg font-bold text-gray-900">{engagementMetrics.conversionRate}%</p>
+            <p className="text-lg font-bold text-gray-900">{engagementMetrics.conversionRate || 0}%</p>
           </div>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Top Vendors */}

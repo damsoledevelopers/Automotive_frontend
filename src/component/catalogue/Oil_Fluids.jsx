@@ -1,158 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import Breadcrumbs from "./Breadcrumbs";
-import SearchFilterBar from "./SearchFilterBar";
-import CatalogueSidebar from "./CatalogueSidebar";
-import { generateCategoryWithProducts } from "../../utils/productDataGenerator";
+import React, { useMemo } from "react";
+import CategoryProductList from "./CategoryProductList";
 
 const Oil_Fluids = () => {
-  const fluidCategoriesBase = [
-  {
-    id: 1,
-    name: "AC Compressor Oil",
-    img: "https://boodmo.com/media/cache/catalog_image/images/categories/2224a28.jpg",
-    link: "/catalog/part-p-18001",
-  },
-  {
-    id: 2,
-    name: "Additives",
-    img: "https://boodmo.com/media/cache/catalog_image/images/categories/2f6c6b5.jpg",
-    link: "/catalog/part-p-18002",
-  },
-  {
-    id: 3,
-    name: "Brake Fluid",
-    img: "https://boodmo.com/media/cache/catalog_image/images/categories/3de286d.jpg",
-    link: "/catalog/part-p-18003",
-  },
-  {
-    id: 4,
-    name: "Coolant",
-    img: "https://boodmo.com/media/cache/catalog_image/images/categories/12028d8.jpg",
-    link: "/catalog/part-p-18004",
-  },
-  {
-    id: 5,
-    name: "Engine Oil",
-    img: "https://boodmo.com/media/cache/catalog_image/images/categories/eb8ece2.jpg",
-    link: "/catalog/part-p-18005",
-  },
-  {
-    id: 6,
-    name: "Exhaust Fluid",
-    img: "https://boodmo.com/media/cache/catalog_image/images/categories/922f615.webp",
-    link: "/catalog/part-p-18006",
-  },
-  {
-    id: 7,
-    name: "Steering Oil",
-    img: "https://boodmo.com/media/cache/catalog_image/images/categories/316834f.jpg",
-    link: "/catalog/part-p-18007",
-  },
-  {
-    id: 8,
-    name: "Transmission Oil",
-    img: "https://boodmo.com/media/cache/catalog_image/images/categories/fd37652.jpg",
-    link: "/catalog/part-p-18008",
-  },
-  {
-    id: 9,
-    name: "Windshield Washer Fluid",
-    img: "https://boodmo.com/media/cache/catalog_image/images/categories/7ecbe41.jpg",
-    link: "/catalog/part-p-18009",
-  },
-];
+  const description = useMemo(() => (
+    <p>
+      Explore our extensive range of oil and fluids designed to keep your engine running smoothly and efficiently.
+    </p>
+  ), []);
 
-  // Generate categories with product data
-  const fluidCategories = generateCategoryWithProducts(fluidCategoriesBase, "Oils & Fluids", 600);
-
-  const [expanded, setExpanded] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("relevance");
-  const [showFilters, setShowFilters] = useState(false);
-  const [filteredProducts, setFilteredProducts] = useState(fluidCategories);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    const filtered = fluidCategories.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredProducts(filtered);
-  }, [searchTerm]);
-
-  const handleSort = (value) => {
-    setSortBy(value);
-    let sorted = [...filteredProducts];
-    if (value === "name") {
-      sorted.sort((a, b) => a.name.localeCompare(b.name));
-    }
-    setFilteredProducts(sorted);
-  };
-
-  return (
-    <div className="min-h-screen bg-white py-4 sm:py-6 md:py-8 w-full">
-      <div className="w-full px-3 sm:px-4 md:px-6">
-        <Breadcrumbs />
-
-        <div className="mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">
-           Oil and Fluids
-          </h1>
-          <p className="text-xs sm:text-sm md:text-base text-gray-600">
-            Explore our extensive range of oil and fluids designed to keep your engine running smoothly and efficiently.
-          </p>
-        </div>
-
-        <SearchFilterBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          sortBy={sortBy}
-          handleSort={handleSort}
-          showFilters={showFilters}
-          setShowFilters={setShowFilters}
-          categoryName="Oil_Fluids"
-        />
-
-        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
-          <CatalogueSidebar 
-            isMobileOpen={isMobileSidebarOpen} 
-            setIsMobileOpen={setIsMobileSidebarOpen} 
-          />
-
-          <div className="flex-1">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5 my-4 sm:my-6 md:my-8">
-              {filteredProducts.map((category, index) => (
-                <Link
-                  key={category.id || index}
-                  to={category.link}
-                  state={{ 
-                    product: category.product,
-                    category: { name: "Oils & Fluids", slug: "oils_fluids" }
-                  }}
-                  className="bg-white p-2 sm:p-3 md:p-4 rounded-lg shadow hover:shadow-lg transition-all duration-200 flex flex-col items-center text-center"
-                >
-                  <img
-                    src={category.img}
-                    alt={category.name}
-                    className="w-10 h-10 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-cover rounded-md mb-2 mx-auto"
-                    onError={(e) => {
-                      e.target.src = 'https://via.placeholder.com/100x100?text=' + (category.name || 'Part');
-                    }}
-                  />
-                  <span className="text-gray-800 font-medium text-[9px] sm:text-[10px] md:text-xs lg:text-sm line-clamp-2 px-1">
-                    {category.name}
-                  </span>
-                </Link>
-              ))}
-            </div>
-
-            {/* ✅ SEO Section */}
-           <section className="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 md:p-6 rounded-2xl shadow-md transition-all duration-300 my-10">
-      <div
-        className={`space-y-4 overflow-hidden transition-all duration-500 ${
-          expanded ? "max-h-full" : "max-h-[400px]"
-        }`}
-      >
+  const footerContent = useMemo(() => (
+    <section className="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 p-4 md:p-6 rounded-2xl shadow-md transition-all duration-300 my-10">
+      <div className="space-y-4">
         <h2 className="text-2xl font-bold text-red-600">About Automobile Lubricants</h2>
 
         <p>
@@ -176,10 +34,10 @@ const Oil_Fluids = () => {
         </h3>
 
         <p>
-          There’s no universal standard for changing lubricants since it depends on car make and
+          There's no universal standard for changing lubricants since it depends on car make and
           model. On average, it should be replaced every 3,000 miles or three months. For newer cars,
-          the interval may be longer. Always follow the manufacturer’s guide. You may also notice
-          signs indicating it’s time for an oil change:
+          the interval may be longer. Always follow the manufacturer's guide. You may also notice
+          signs indicating it's time for an oil change:
         </p>
 
         <ol className="list-decimal list-inside space-y-2 pl-4">
@@ -204,7 +62,7 @@ const Oil_Fluids = () => {
         <h3 className="text-xl font-semibold text-red-600">Our Advantages</h3>
 
         <p>
-          Enjoy shopping with <strong>boodmo</strong> — India’s largest online marketplace for car
+          Enjoy shopping with <strong>boodmo</strong> — India's largest online marketplace for car
           spare parts and accessories. We offer numerous brands and manufacturers to meet your
           personal requirements, along with convenient user experience features:
         </p>
@@ -231,21 +89,16 @@ const Oil_Fluids = () => {
           high-quality lubricants with easy navigation and advanced search options.
         </p>
       </div>
-
-      {/* View More / View Less Button */}
-      <div className="seo-text__action mt-6 text-center">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-all duration-300"
-        >
-          {expanded ? "View Less" : "View More"}
-        </button>
-      </div>
     </section>
-          </div>
-        </div>
-      </div>
-    </div>
+  ), []);
+
+  return (
+    <CategoryProductList
+      categoryName="Oils & Fluids"
+      categorySlug="oilsfluids"
+      description={description}
+      footerContent={footerContent}
+    />
   );
 };
 

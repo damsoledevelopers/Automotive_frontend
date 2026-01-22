@@ -1,48 +1,126 @@
-import React, { useState } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaBox } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaBox, FaSpinner } from 'react-icons/fa';
+import { categoryService } from '../../../../services/apiService';
 
 const Categories = () => {
-  const [view, setView] = useState('list'); // 'list' or 'add'
+  const [view, setView] = useState('list'); // 'list', 'add', or 'edit'
   const [searchTerm, setSearchTerm] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     parentCategory: 'none',
     description: '',
     icon: '',
+    link: '',
     attributes: []
   });
+
+  // Fetch categories from API
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      const filters = {};
+      if (searchTerm) {
+        filters.search = searchTerm;
+      }
+      const result = await categoryService.getAdminCategories(filters);
+      const categoriesData = result.categories || result || [];
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      alert('Failed to load categories: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Refetch when search term changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (view === 'list') {
+        fetchCategories();
+      }
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const handleAction = (type, category) => {
     if (type === 'edit') {
       setFormData({
         name: category.name,
-        parentCategory: 'none',
-        description: 'Existing category managed by system.',
-        icon: '',
-        attributes: []
+        parentCategory: category.parentCategory?._id ? category.parentCategory.name : (category.parentCategory || 'none'),
+        description: category.description || '',
+        icon: category.icon || '',
+        link: category.link || '',
+        attributes: category.attributes || []
       });
+      setEditingCategoryId(category._id || category.id);
       setView('edit');
     } else if (type === 'delete') {
-      if (window.confirm(`Delete ${category.name} and its subcategories?`)) {
-        alert('Category deleted');
+      if (window.confirm(`Delete ${category.name}? This will also delete all subcategories.`)) {
+        handleDelete(category._id || category.id);
       }
     }
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    alert(`Category "${formData.name}" ${view === 'edit' ? 'updated' : 'added'} successfully!`);
-    setView('list');
-    setFormData({ name: '', parentCategory: 'none', description: '', icon: '', attributes: [] });
+  const handleDelete = async (categoryId) => {
+    try {
+      setLoading(true);
+      await categoryService.deleteCategory(categoryId);
+      alert('Category deleted successfully!');
+      fetchCategories();
+    } catch (error) {
+      console.error('Failed to delete category:', error);
+      alert('Failed to delete category: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const categories = [
-    { id: 1, name: 'Brake System', products: 245, subcategories: 12 },
-    { id: 2, name: 'Engine Parts', products: 189, subcategories: 8 },
-    { id: 3, name: 'Filters', products: 156, subcategories: 5 },
-    { id: 4, name: 'Suspension', products: 134, subcategories: 6 },
-    { id: 5, name: 'Electrical', products: 298, subcategories: 15 },
-  ];
+  const handleSave = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      const categoryData = {
+        name: formData.name,
+        description: formData.description,
+        icon: formData.icon,
+        link: formData.link,
+        attributes: formData.attributes
+      };
+
+      if (formData.parentCategory && formData.parentCategory !== 'none') {
+        categoryData.parentCategory = formData.parentCategory;
+      } else {
+        categoryData.parentCategory = null;
+      }
+
+      if (view === 'edit' && editingCategoryId) {
+        await categoryService.updateCategory(editingCategoryId, categoryData);
+        alert('Category updated successfully!');
+      } else {
+        await categoryService.createCategory(categoryData);
+        alert('Category created successfully!');
+      }
+
+      setView('list');
+      setFormData({ name: '', parentCategory: 'none', description: '', icon: '', link: '', attributes: [] });
+      setEditingCategoryId(null);
+      fetchCategories();
+    } catch (error) {
+      console.error('Failed to save category:', error);
+      alert('Failed to save category: ' + error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const filteredCategories = categories.filter(cat =>
     !searchTerm || cat.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -88,8 +166,8 @@ const Categories = () => {
                       onChange={(e) => setFormData({ ...formData, parentCategory: e.target.value })}
                     >
                       <option value="none">None (Root Category)</option>
-                      {categories.map(cat => (
-                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                      {categories.filter(cat => !cat.parentCategory || cat.parentCategory === null).map(cat => (
+                        <option key={cat._id || cat.id} value={cat.name}>{cat.name}</option>
                       ))}
                     </select>
                   </div>
@@ -139,8 +217,10 @@ const Categories = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-10 py-4 bg-blue-600 text-white font-black rounded-2xl uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 transition active:scale-95"
+                  disabled={saving}
+                  className="px-10 py-4 bg-blue-600 text-white font-black rounded-2xl uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
+                  {saving && <FaSpinner className="animate-spin" />}
                   {view === 'edit' ? 'Update Category' : 'Save Category'}
                 </button>
               </div>
@@ -212,9 +292,21 @@ const Categories = () => {
         </div>
       </div>
 
+      {loading && (
+        <div className="flex justify-center items-center py-12">
+          <FaSpinner className="animate-spin text-blue-600 text-3xl" />
+        </div>
+      )}
+
+      {!loading && filteredCategories.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 font-semibold">No categories found</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCategories.map((category) => (
-          <div key={category.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 hover:shadow-xl transition-all group border-b-4 border-b-transparent hover:border-b-blue-500">
+        {!loading && filteredCategories.map((category) => (
+          <div key={category._id || category.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 hover:shadow-xl transition-all group border-b-4 border-b-transparent hover:border-b-blue-500">
             <div className="flex items-center justify-between mb-6">
               <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300 shadow-sm group-hover:shadow-lg group-hover:shadow-blue-500/20">
                 <FaBox size={24} />
@@ -228,7 +320,8 @@ const Categories = () => {
                 </button>
                 <button
                   onClick={() => handleAction('delete', category)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition border border-transparent hover:border-red-100"
+                  disabled={loading}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition border border-transparent hover:border-red-100 disabled:opacity-50"
                 >
                   <FaTrash />
                 </button>
@@ -238,12 +331,12 @@ const Categories = () => {
             <div className="flex items-center gap-4 border-t border-gray-50 pt-4 mt-4">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">Products</span>
-                <span className="text-sm font-bold text-gray-900">{category.products}</span>
+                <span className="text-sm font-bold text-gray-900">{category.products || category.productCount || 0}</span>
               </div>
               <div className="w-px h-8 bg-gray-100" />
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">Subcategories</span>
-                <span className="text-sm font-bold text-gray-900">{category.subcategories}</span>
+                <span className="text-sm font-bold text-gray-900">{category.subcategories || category.subCategoryCount || 0}</span>
               </div>
             </div>
           </div>
@@ -254,4 +347,5 @@ const Categories = () => {
 };
 
 export default Categories;
+
 

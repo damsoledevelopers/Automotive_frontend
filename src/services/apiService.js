@@ -472,6 +472,7 @@ export const productService = {
     try {
       const params = new URLSearchParams();
       if (filters.category) params.append('category', filters.category);
+      if (filters.subCategory) params.append('subCategory', filters.subCategory);
       if (filters.search) params.append('search', filters.search);
       if (filters.brand) params.append('brand', filters.brand);
       if (filters.minPrice) params.append('minPrice', filters.minPrice);
@@ -499,6 +500,47 @@ export const productService = {
       return response.data.data || response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch product');
+    }
+  },
+
+  /**
+   * Get all categories
+   * @returns {Promise}
+   */
+  getCategories: async () => {
+    try {
+      const response = await api.get('/categories');
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch categories');
+    }
+  },
+
+  /**
+   * Get subcategories for a category
+   * @param {string} category
+   * @returns {Promise}
+   */
+  getSubCategories: async (category) => {
+    try {
+      const response = await api.get(`/categories/${encodeURIComponent(category)}/subcategories`);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch subcategories');
+    }
+  },
+
+  /**
+   * Get category with subcategories and sample products
+   * @param {string} category
+   * @returns {Promise}
+   */
+  getCategoryWithSubCategories: async (category) => {
+    try {
+      const response = await api.get(`/categories/${encodeURIComponent(category)}/with-subcategories`);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch category with subcategories');
     }
   },
 
@@ -570,6 +612,503 @@ export const productService = {
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to delete product');
+    }
+  },
+};
+
+/**
+ * Category Service - Handles all category-related API calls
+ */
+export const categoryService = {
+  /**
+   * ADMIN: Create new category
+   * @param {Object} categoryData - Category data
+   * @returns {Promise}
+   */
+  createCategory: async (categoryData) => {
+    try {
+      const response = await api.post('/admin/categories', categoryData);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to create category');
+    }
+  },
+
+  /**
+   * ADMIN: Get all categories
+   * @param {Object} filters - Optional filters
+   * @returns {Promise}
+   */
+  getAdminCategories: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.search) params.append('search', filters.search);
+      if (filters.parentCategory !== undefined) params.append('parentCategory', filters.parentCategory);
+      if (filters.isActive !== undefined) params.append('isActive', filters.isActive);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/categories?${queryString}` : '/admin/categories';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch categories');
+    }
+  },
+
+  /**
+   * ADMIN: Get category by ID
+   * @param {string} categoryId
+   * @returns {Promise}
+   */
+  getCategoryById: async (categoryId) => {
+    try {
+      const response = await api.get(`/admin/categories/${categoryId}`);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch category');
+    }
+  },
+
+  /**
+   * ADMIN: Update category
+   * @param {string} categoryId
+   * @param {Object} categoryData
+   * @returns {Promise}
+   */
+  updateCategory: async (categoryId, categoryData) => {
+    try {
+      const response = await api.put(`/admin/categories/${categoryId}`, categoryData);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to update category');
+    }
+  },
+
+  /**
+   * ADMIN: Delete category
+   * @param {string} categoryId
+   * @returns {Promise}
+   */
+  deleteCategory: async (categoryId) => {
+    try {
+      const response = await api.delete(`/admin/categories/${categoryId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to delete category');
+    }
+  },
+
+  /**
+   * PUBLIC: Get all active categories (for frontend)
+   * @returns {Promise}
+   */
+  getActiveCategories: async () => {
+    try {
+      const response = await api.get('/categories');
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch categories');
+    }
+  },
+
+  /**
+   * PUBLIC: Get all active categories as flat list (for vendor forms, filters)
+   * @returns {Promise}
+   */
+  getAllActiveCategoriesFlat: async () => {
+    try {
+      const response = await api.get('/categories/flat');
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch all active categories (flat)');
+    }
+  },
+};
+
+/**
+ * Mechanic & Garage Service - Handles all mechanic and garage-related API calls
+ */
+export const mechanicGarageService = {
+  /**
+   * ADMIN: Create a new mechanic
+   * @param {Object} mechanicData - { name, email, specialization, location, phone, status }
+   * @returns {Promise}
+   */
+  createMechanic: async (mechanicData) => {
+    try {
+      const response = await api.post('/admin/mechanics', mechanicData);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to create mechanic');
+    }
+  },
+
+  /**
+   * ADMIN: Get all mechanics
+   * @param {Object} filters - Optional filters
+   * @returns {Promise}
+   */
+  getAllMechanics: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.search) params.append('search', filters.search);
+      if (filters.status) params.append('status', filters.status);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/mechanics?${queryString}` : '/admin/mechanics';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch mechanics');
+    }
+  },
+
+  /**
+   * ADMIN: Get mechanic by ID
+   * @param {string} mechanicId
+   * @returns {Promise}
+   */
+  getMechanicById: async (mechanicId) => {
+    try {
+      const response = await api.get(`/admin/mechanics/${mechanicId}`);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch mechanic');
+    }
+  },
+
+  /**
+   * ADMIN: Update mechanic
+   * @param {string} mechanicId
+   * @param {Object} mechanicData
+   * @returns {Promise}
+   */
+  updateMechanic: async (mechanicId, mechanicData) => {
+    try {
+      const response = await api.put(`/admin/mechanics/${mechanicId}`, mechanicData);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to update mechanic');
+    }
+  },
+
+  /**
+   * ADMIN: Delete mechanic
+   * @param {string} mechanicId
+   * @returns {Promise}
+   */
+  deleteMechanic: async (mechanicId) => {
+    try {
+      const response = await api.delete(`/admin/mechanics/${mechanicId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to delete mechanic');
+    }
+  },
+
+  /**
+   * ADMIN: Create a new garage
+   * @param {Object} garageData - { name, email, location, phone, status }
+   * @returns {Promise}
+   */
+  createGarage: async (garageData) => {
+    try {
+      const response = await api.post('/admin/garages', garageData);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to create garage');
+    }
+  },
+
+  /**
+   * ADMIN: Get all garages
+   * @param {Object} filters - Optional filters
+   * @returns {Promise}
+   */
+  getAllGarages: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.search) params.append('search', filters.search);
+      if (filters.status) params.append('status', filters.status);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/garages?${queryString}` : '/admin/garages';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch garages');
+    }
+  },
+
+  /**
+   * ADMIN: Get garage by ID
+   * @param {string} garageId
+   * @returns {Promise}
+   */
+  getGarageById: async (garageId) => {
+    try {
+      const response = await api.get(`/admin/garages/${garageId}`);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch garage');
+    }
+  },
+
+  /**
+   * ADMIN: Update garage
+   * @param {string} garageId
+   * @param {Object} garageData
+   * @returns {Promise}
+   */
+  updateGarage: async (garageId, garageData) => {
+    try {
+      const response = await api.put(`/admin/garages/${garageId}`, garageData);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to update garage');
+    }
+  },
+
+  /**
+   * ADMIN: Delete garage
+   * @param {string} garageId
+   * @returns {Promise}
+   */
+  deleteGarage: async (garageId) => {
+    try {
+      const response = await api.delete(`/admin/garages/${garageId}`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to delete garage');
+    }
+  },
+
+  /**
+   * ADMIN: Reset password for mechanic/garage
+   * @param {string} id
+   * @param {string} type - 'mechanics' or 'garages'
+   * @returns {Promise}
+   */
+  resetPassword: async (id, type) => {
+    try {
+      const response = await api.post(`/admin/${type}/${id}/reset-password`);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to reset password');
+    }
+  },
+};
+
+/**
+ * Analytics Service - Handles all analytics-related API calls
+ */
+export const analyticsService = {
+  /**
+   * ADMIN: Get real-time dashboard data
+   * @param {Object} filters - dateRange, location, etc.
+   * @returns {Promise}
+   */
+  getRealTimeDashboard: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.location) params.append('location', filters.location);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/analytics/dashboard?${queryString}` : '/admin/analytics/dashboard';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch dashboard data');
+    }
+  },
+
+  /**
+   * ADMIN: Get revenue and commission data
+   * @param {Object} filters - dateRange, groupBy
+   * @returns {Promise}
+   */
+  getRevenueData: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.groupBy) params.append('groupBy', filters.groupBy);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/analytics/revenue?${queryString}` : '/admin/analytics/revenue';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch revenue data');
+    }
+  },
+
+  /**
+   * ADMIN: Get predictive analytics data
+   * @returns {Promise}
+   */
+  getPredictiveAnalytics: async () => {
+    try {
+      const response = await api.get('/admin/analytics/predictive');
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch predictive analytics');
+    }
+  },
+
+  /**
+   * ADMIN: Get quality control data
+   * @returns {Promise}
+   */
+  getQualityControlData: async () => {
+    try {
+      const response = await api.get('/admin/analytics/quality-control');
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch quality control data');
+    }
+  },
+
+  /**
+   * ADMIN: Get overall statistics
+   * @param {Object} filters - dateRange
+   * @returns {Promise}
+   */
+  getOverallStats: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/analytics/stats?${queryString}` : '/admin/analytics/stats';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch overall statistics');
+    }
+  },
+
+  /**
+   * ADMIN: Get recent activities
+   * @param {Object} filters - limit
+   * @returns {Promise}
+   */
+  getRecentActivities: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.limit) params.append('limit', filters.limit);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/analytics/recent-activities?${queryString}` : '/admin/analytics/recent-activities';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch recent activities');
+    }
+  },
+
+  /**
+   * ADMIN: Get best selling products
+   * @param {Object} filters - dateRange, limit
+   * @returns {Promise}
+   */
+  getBestSellingProducts: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.limit) params.append('limit', filters.limit);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/analytics/best-selling?${queryString}` : '/admin/analytics/best-selling';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch best selling products');
+    }
+  },
+
+  /**
+   * ADMIN: Get customer engagement metrics
+   * @param {Object} filters - dateRange
+   * @returns {Promise}
+   */
+  getCustomerEngagementMetrics: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/analytics/engagement?${queryString}` : '/admin/analytics/engagement';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch customer engagement metrics');
+    }
+  },
+
+  /**
+   * ADMIN: Get system health
+   * @returns {Promise}
+   */
+  getSystemHealth: async () => {
+    try {
+      const response = await api.get('/admin/analytics/system-health');
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch system health');
+    }
+  },
+
+  /**
+   * ADMIN: Get active sessions
+   * @returns {Promise}
+   */
+  getActiveSessions: async () => {
+    try {
+      const response = await api.get('/admin/analytics/active-sessions');
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch active sessions');
+    }
+  },
+
+  /**
+   * ADMIN: Get top performing vendors
+   * @param {Object} filters - dateRange, limit
+   * @returns {Promise}
+   */
+  getTopVendors: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.limit) params.append('limit', filters.limit);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/analytics/top-vendors?${queryString}` : '/admin/analytics/top-vendors';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch top vendors');
+    }
+  },
+
+  /**
+   * ADMIN: Export analytics data
+   * @param {Object} filters - dateRange, type
+   * @returns {Promise}
+   */
+  exportData: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      if (filters.type) params.append('type', filters.type);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/admin/analytics/export?${queryString}` : '/admin/analytics/export';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to export data');
     }
   },
 };

@@ -3,11 +3,13 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation } from "swiper/modules";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaTimes } from "react-icons/fa";
+import { FaTimes, FaSpinner } from "react-icons/fa";
+import { categoryService } from "../services/apiService";
 import "swiper/css";
 import "swiper/css/navigation";
- 
-export const categories = [
+
+// Fallback categories (used if API fails)
+const fallbackCategories = [
   { title: "Air Conditioning", href: "/catalog/air_conditioning/", img:"https://boodmo.com/media/cache/catalog_image/images/categories/db9dad4.jpg"}, // Receiver Drier
   { title: "Bearings", href: "/catalog/bearings/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/40e95ca.jpg" }, // Big End Bearing
   { title: "Belts Chains And Rollers", href: "/catalog/drive_belts/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/ddbeb81.jpg" }, // Belt
@@ -38,6 +40,60 @@ export const categories = [
   { title: "Wheels", href: "/catalog/wheels/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/430177a.jpg" }, // Spare Wheel Carrier
   { title: "Windscreen Cleaning System", href: "/catalog/windscreen_cleaning_system/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/1053d82.jpg" }, // Wiper Blade
 ];
+
+// Helper function to map category name to slug and image
+const mapCategoryToDisplay = (categoryName) => {
+  const categoryMap = {
+    "Air Conditioning": { slug: "air_conditioning", img: "https://boodmo.com/media/cache/catalog_image/images/categories/db9dad4.jpg" },
+    "Bearings": { slug: "bearings", img: "https://boodmo.com/media/cache/catalog_image/images/categories/40e95ca.jpg" },
+    "Belts Chains And Rollers": { slug: "drive_belts", img: "https://boodmo.com/media/cache/catalog_image/images/categories/ddbeb81.jpg" },
+    "Body": { slug: "body", img: "https://boodmo.com/media/cache/catalog_image/images/categories/40e6a4c.jpg" },
+    "Brake System": { slug: "brakes", img: "https://boodmo.com/media/cache/catalog_image/images/categories/5301830.jpg" },
+    "Car Accessories": { slug: "car_accessories", img: "https://boodmo.com/media/cache/catalog_image/images/categories/ab143a7.webp" },
+    "Clutch": { slug: "clutch", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e8cb288.jpg" },
+    "Control Cables": { slug: "control_cables", img: "https://boodmo.com/media/cache/catalog_image/images/categories/7455b44.jpg" },
+    "Electrical Components": { slug: "electric_components", img: "https://boodmo.com/media/cache/catalog_image/images/categories/d5b3ac7.jpg" },
+    "Engine": { slug: "engine", img: "https://boodmo.com/media/cache/catalog_image/images/categories/8fea232.jpg" },
+    "Engine Cooling System": { slug: "cooling_system", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e215fcc.jpg" },
+    "Exhaust System": { slug: "exhaust", img: "https://boodmo.com/media/cache/catalog_image/images/categories/d1e33d6.jpg" },
+    "Filters": { slug: "filters", img: "https://boodmo.com/media/cache/catalog_image/images/categories/a16bbf6.jpg" },
+    "Fuel Supply System": { slug: "fuelsystem", img: "https://boodmo.com/media/cache/catalog_image/images/categories/49ed220.jpg" },
+    "Gaskets & Seals": { slug: "Gasket_SealingRings", img: "https://boodmo.com/media/cache/catalog_image/images/categories/14b8753.jpg" },
+    "Interior Comfort": { slug: "interior_comfort", img: "https://boodmo.com/media/cache/catalog_image/images/categories/05a2b84.jpg" },
+    "Lighting": { slug: "lighting", img: "https://boodmo.com/media/cache/catalog_image/images/categories/53380d3.webp" },
+    "Maintenance Service Parts": { slug: "maintenance_service_parts", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e8cb288.jpg" },
+    "Oils & Fluids": { slug: "oilsfluids", img: "https://boodmo.com/media/cache/catalog_image/images/categories/4614ecf.webp" },
+    "Pipes & Hoses": { slug: "pipes_hoses", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e0b2a63.jpg" },
+    "Sensors Relay and Control Units": { slug: "sensors_control_units", img: "https://boodmo.com/media/cache/catalog_image/images/categories/2676bd2.jpg" },
+    "Steering": { slug: "steering", img: "https://boodmo.com/media/cache/catalog_image/images/categories/72fb97b.jpg" },
+    "Suspension and Arms": { slug: "suspension", img: "https://boodmo.com/media/cache/catalog_image/images/categories/f26073e.jpg" },
+    "Towbar Parts": { slug: "towbar", img: "https://boodmo.com/media/cache/catalog_image/images/categories/98b48d2.jpg" },
+    "Transmission": { slug: "transmission", img: "https://boodmo.com/media/cache/catalog_image/images/categories/21ce121.jpg" },
+    "Trims": { slug: "trims", img: "https://boodmo.com/media/cache/catalog_image/images/categories/beccd06.jpg" },
+    "Universal": { slug: "universal", img: "https://boodmo.com/media/cache/catalog_image/images/categories/af8d099.jpg" },
+    "Wheels": { slug: "wheels", img: "https://boodmo.com/media/cache/catalog_image/images/categories/430177a.jpg" },
+    "Windscreen Cleaning System": { slug: "windscreen_cleaning_system", img: "https://boodmo.com/media/cache/catalog_image/images/categories/1053d82.jpg" },
+  };
+
+  const mapped = categoryMap[categoryName];
+  if (mapped) {
+    return {
+      title: categoryName,
+      href: `/catalog/${mapped.slug}/`,
+      img: mapped.img
+    };
+  }
+  
+  // Default mapping if not found
+  const slug = categoryName.toLowerCase().replace(/\s+/g, '_').replace(/&/g, '');
+  return {
+    title: categoryName,
+    href: `/catalog/${slug}/`,
+    img: `https://via.placeholder.com/80x80/9ca3af/ffffff?text=${categoryName.substring(0, 2)}`
+  };
+};
+
+export let categories = fallbackCategories;
 
 // Category Card Component
 const CategoryCard = React.memo(({ category, index, isGrid = false }) => {
@@ -84,6 +140,39 @@ export default function SearchByCategory() {
   
   // Show all categories by default on /category route
   const [showAll, setShowAll] = useState(isCategoryPage);
+  const [categories, setCategories] = useState(fallbackCategories);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Fetch categories from backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoadingCategories(true);
+        const result = await categoryService.getAllActiveCategoriesFlat();
+        const categoriesData = result.categories || result || [];
+        
+        // Map backend categories to display format
+        const mappedCategories = categoriesData
+          .map(cat => mapCategoryToDisplay(cat.name))
+          .filter(cat => cat && cat.title);
+        
+        if (mappedCategories.length > 0) {
+          setCategories(mappedCategories);
+        } else {
+          // Use fallback if no categories found
+          setCategories(fallbackCategories);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        // Use fallback on error
+        setCategories(fallbackCategories);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     // Update showAll state when route changes
@@ -186,7 +275,11 @@ export default function SearchByCategory() {
         </div>
 
         {/* Categories Display - Grid for Mobile, Swiper for Desktop */}
-        {showAll || isCategoryPage ? (
+        {loadingCategories ? (
+          <div className="flex justify-center items-center py-12">
+            <FaSpinner className="animate-spin text-4xl text-blue-600" />
+          </div>
+        ) : showAll || isCategoryPage ? (
           /* All Categories Grid - 4 columns mobile, 6 columns desktop */
           <div className="grid grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5">
             {categories.map((cat, index) => (

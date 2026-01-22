@@ -5,16 +5,21 @@ import CatalogueSidebar from "./CatalogueSidebar";
 import { Grid, List, Truck, RotateCcw, FileText, CheckCircle, Info } from "lucide-react";
 import { productService } from "../../services/apiService";
 
+const EMPTY_ARRAY = [];
+const EMPTY_OBJECT = {};
+
 /**
  * Generic Category Product List Component
  * Reusable for all categories: Belt, Brake, Engine Oil, Filters, Engine, etc.
  * Accepts category data and displays products
  */
-const CategoryProductList = ({ 
+const CategoryProductList = ({
   categoryName = "Products",
   categorySlug = "",
-  products = [],
-  defaultFilters = {}
+  products = EMPTY_ARRAY,
+  defaultFilters = EMPTY_OBJECT,
+  description = null,
+  footerContent = null
 }) => {
   const { category } = useParams();
   const location = useLocation();
@@ -27,18 +32,18 @@ const CategoryProductList = ({
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Get category data from location state or use defaults
-  const categoryData = location.state?.category || {
+  const categoryData = React.useMemo(() => location.state?.category || {
     name: categoryName,
     slug: categorySlug || category,
     ...defaultFilters
-  };
+  }, [location.state?.category, categoryName, categorySlug, category, defaultFilters]);
 
   const [filteredProducts, setFilteredProducts] = useState(products);
   const [loading, setLoading] = useState(false);
   const [apiProducts, setApiProducts] = useState([]);
 
   // Map backend product to frontend format
-  const mapProductToFrontend = (product) => {
+  const mapProductToFrontend = React.useCallback((product) => {
     return {
       id: product._id || product.id,
       name: product.name,
@@ -61,7 +66,7 @@ const CategoryProductList = ({
       description: product.description,
       vehicleCompatibility: product.vehicleCompatibility || []
     };
-  };
+  }, []);
 
   // Fetch products from API if no products provided
   useEffect(() => {
@@ -93,41 +98,49 @@ const CategoryProductList = ({
       // Map category slug to category name for API
       // This mapping covers common category slugs to their database category names
       const categoryMap = {
-        'brakes': 'Brakes',
-        'brake': 'Brakes',
+        'maintenance_service_parts': 'Maintenance Service Parts',
+        'brakes': 'Brake System', // Try both variations
+        'brake': 'Brake System',
+        'brake_system': 'Brake System',
+        'break_system': 'Brake System',
         'filters': 'Filters',
         'filter': 'Filters',
         'engine': 'Engine',
         'lighting': 'Lighting',
-        'suspension': 'Suspension',
-        'cooling': 'Cooling',
-        'cooling_system': 'Cooling',
-        'electrical': 'Electrical',
-        'electrical_components': 'Electrical',
-        'electric_components': 'Electrical',
+        'suspension': 'Suspension and Arms',
+        'suspension_arms': 'Suspension and Arms',
+        'cooling': 'Engine Cooling System',
+        'cooling_system': 'Engine Cooling System',
+        'electrical': 'Electrical Components',
+        'electrical_components': 'Electrical Components',
+        'electric_components': 'Electrical Components',
         'body': 'Body',
-        'interior': 'Interior',
-        'exhaust': 'Exhaust',
-        'exhaust_system': 'Exhaust',
+        'interior': 'Interior Comfort',
+        'interior_comfort': 'Interior Comfort',
+        'exhaust': 'Exhaust System',
+        'exhaust_system': 'Exhaust System',
         'other': 'Other',
         'air_conditioning': 'Air Conditioning',
         'bearings': 'Bearings',
         'belts_chains_rollers': 'Belts Chains And Rollers',
         'belts': 'Belts Chains And Rollers',
+        'drive_belts': 'Belts Chains And Rollers',
         'car_accessories': 'Car Accessories',
         'clutch': 'Clutch',
         'control_cables': 'Control Cables',
         'fuel_system': 'Fuel Supply System',
         'fuelsystem': 'Fuel Supply System',
         'gaskets_sealingrings': 'Gaskets & Seals',
-        'ignition_glowplug': 'Ignition & Glowplug',
-        'interior_comfort': 'Interior Comfort',
+        'gaskets_seals': 'Gaskets & Seals',
+        'ignition_glowplug': 'Ignition & Glowplug System',
         'oilsfluids': 'Oils & Fluids',
+        'oils_fluids': 'Oils & Fluids',
         'pipes_hoses': 'Pipes & Hoses',
         'repair_kits': 'Repair Kits',
-        'sensors_control_units': 'Sensors & Control Units',
+        'sensors_control_units': 'Sensors Relay and Control Units',
         'steering': 'Steering',
         'towbar': 'Towbar Parts',
+        'towbar_parts': 'Towbar Parts',
         'trims': 'Trims',
         'tyres_and_alloys': 'Tyres and Alloys',
         'transmission': 'Transmission',
@@ -138,28 +151,83 @@ const CategoryProductList = ({
 
       // Try to extract category name from slug
       let categoryName = categoryMap[categorySlug.toLowerCase()];
+      let subCategoryName = null;
+
       if (!categoryName) {
         // Try to extract from slug format like "4079-accessory_kit_disc_brake_pads"
         const slugWithoutNumbers = categorySlug.replace(/^\d+-/, '').replace(/_/g, ' ');
         // Try to match with category map first
         const normalizedSlug = slugWithoutNumbers.toLowerCase().replace(/\s+/g, '_');
         categoryName = categoryMap[normalizedSlug];
-        
-        // If still not found, convert to title case
+
+        // If still not found, this might be a subcategory slug
         if (!categoryName) {
-          categoryName = slugWithoutNumbers.split(' ').map(word => 
+          // Convert underscore slug to title case (e.g., "bulb" or "fog_lamp" -> "Bulb" or "Fog Lamp")
+          subCategoryName = slugWithoutNumbers.split(' ').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)
           ).join(' ');
         }
       }
 
+      // If we have a parent category from location state, use that
+      const parentCategory = location.state?.category?.name;
+
       try {
         setLoading(true);
-        const result = await productService.getUserProducts({
-          category: categoryName,
-          limit: 100
-        });
-        const fetchedProducts = result.products || result.data?.products || [];
+        let result;
+
+        if (parentCategory && subCategoryName) {
+          // Fetch products for specific category + subcategory
+          console.log(`Fetching products for ${parentCategory} > ${subCategoryName}`);
+          result = await productService.getUserProducts({
+            category: parentCategory,
+            subCategory: subCategoryName,
+            limit: 100
+          });
+        } else if (categoryName) {
+          // Fetch products for the category
+          console.log(`Fetching products for category: ${categoryName}`);
+          result = await productService.getUserProducts({
+            category: categoryName,
+            limit: 100
+          });
+          
+          // If no products found, try alternative category name variations
+          const fetchedProducts = result.products || result.data?.products || [];
+          if (fetchedProducts.length === 0) {
+            console.log(`No products found for "${categoryName}", trying alternative names...`);
+            // Try common variations
+            const alternatives = [
+              categoryName.replace('System', '').trim(),
+              categoryName + ' System',
+              categoryName.replace(' and ', ' & '),
+              categoryName.replace(' & ', ' and ')
+            ];
+            
+            for (const altName of alternatives) {
+              if (altName !== categoryName) {
+                console.log(`Trying alternative: ${altName}`);
+                const altResult = await productService.getUserProducts({
+                  category: altName,
+                  limit: 100
+                });
+                const altProducts = altResult.products || altResult.data?.products || [];
+                if (altProducts.length > 0) {
+                  console.log(`Found ${altProducts.length} products with alternative name: ${altName}`);
+                  result = altResult;
+                  break;
+                }
+              }
+            }
+          }
+        } else {
+          // Fallback: fetch all approved products
+          console.log('Fetching all approved products');
+          result = await productService.getUserProducts({ limit: 100 });
+        }
+
+        const fetchedProducts = result.products || result.data?.products || result.data || [];
+        console.log(`Received ${fetchedProducts.length} products`);
         setApiProducts(fetchedProducts.map(mapProductToFrontend));
       } catch (error) {
         console.error('Failed to fetch products:', error);
@@ -170,18 +238,18 @@ const CategoryProductList = ({
     };
 
     fetchProducts();
-  }, [category, categoryData.slug, products]);
+  }, [category, categoryData.slug, products?.length, mapProductToFrontend]);
 
   // Use API products if available, otherwise use prop products
   const allProducts = apiProducts.length > 0 ? apiProducts : products;
 
-  // Filter products based on selected filters
+  // Filter and Sort products based on selected options
   useEffect(() => {
-    let filtered = [...allProducts];
+    let result = [...allProducts];
 
     // Filter by origin
     if (selectedOrigin.length > 0) {
-      filtered = filtered.filter((product) => {
+      result = result.filter((product) => {
         if (selectedOrigin.includes("OEM") && product.isOEM) return true;
         if (selectedOrigin.includes("Aftermarket") && !product.isOEM) return true;
         return false;
@@ -190,23 +258,39 @@ const CategoryProductList = ({
 
     // Filter by brands
     if (selectedBrands.length > 0) {
-      filtered = filtered.filter((product) =>
+      result = result.filter((product) =>
         selectedBrands.includes(product.brand)
       );
     }
 
     // Filter by fulfilled by sparelo
     if (fulfilledBySparelo) {
-      filtered = filtered.filter((product) => product.fulfilledBySparelo);
+      result = result.filter((product) => product.fulfilledBySparelo);
     }
 
     // Filter by free delivery
     if (freeDelivery) {
-      filtered = filtered.filter((product) => product.freeDelivery);
+      result = result.filter((product) => product.freeDelivery);
     }
 
-    setFilteredProducts(filtered);
-  }, [selectedOrigin, selectedBrands, fulfilledBySparelo, freeDelivery, allProducts]);
+    // Apply Sorting
+    switch (sortBy) {
+      case "price-low":
+        result.sort((a, b) => a.price - b.price);
+        break;
+      case "price-high":
+        result.sort((a, b) => b.price - a.price);
+        break;
+      case "name":
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      default:
+        // Already sorted by relevance/createdAt in API or stays in default order
+        break;
+    }
+
+    setFilteredProducts(result);
+  }, [selectedOrigin, selectedBrands, fulfilledBySparelo, freeDelivery, allProducts, sortBy]);
 
   const handleOriginChange = (origin) => {
     setSelectedOrigin((prev) =>
@@ -226,21 +310,6 @@ const CategoryProductList = ({
 
   const handleSort = (value) => {
     setSortBy(value);
-    let sorted = [...filteredProducts];
-    switch (value) {
-      case "price-low":
-        sorted.sort((a, b) => a.price - b.price);
-        break;
-      case "price-high":
-        sorted.sort((a, b) => b.price - a.price);
-        break;
-      case "name":
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      default:
-        break;
-    }
-    setFilteredProducts(sorted);
   };
 
   // Get unique brands
@@ -262,52 +331,49 @@ const CategoryProductList = ({
         <Breadcrumbs />
 
         {/* Header */}
-        <div className="mb-4 sm:mb-6">
-          <h1 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-2 sm:mb-3">
-            {categoryData.name || categoryName} Parts
-          </h1>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-            <div className="text-[9px] sm:text-xs md:text-sm text-gray-600">
+        <div className="mb-6 sm:mb-8">
+          <div className="text-center max-w-2xl mx-auto mb-6">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+              {categoryData.name || categoryName} Parts
+            </h1>
+            {description && (
+              <div className="text-gray-600 text-sm sm:text-base">
+                {description}
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-gray-100 pb-4">
+            <div className="text-xs sm:text-sm text-gray-500 font-medium order-2 md:order-1">
               Total {filteredProducts.length} part{filteredProducts.length !== 1 ? "s" : ""}
             </div>
-            <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
+
+            <div className="flex items-center gap-3 w-full md:w-auto order-1 md:order-2">
+              {/* Search Bar - Matching Image */}
+              <div className="relative flex-1 md:w-64">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder={`Search ${categoryData.name.toLowerCase()} parts...`}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#131c36] focus:border-transparent text-sm bg-gray-50/50 transition-all"
+                />
+              </div>
+
               {/* Sort Dropdown */}
               <select
                 value={sortBy}
                 onChange={(e) => handleSort(e.target.value)}
-                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#131c36] focus:border-transparent text-[9px] sm:text-xs md:text-sm bg-white"
+                className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#131c36] focus:border-transparent text-sm bg-white cursor-pointer"
               >
                 <option value="relevance">Best match</option>
                 <option value="name">Name</option>
                 <option value="price-low">Price: Low to High</option>
                 <option value="price-high">Price: High to Low</option>
               </select>
-
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 sm:gap-2 border border-gray-300 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-1.5 sm:p-2 rounded ${
-                    viewMode === "grid"
-                      ? "bg-[#131c36] text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                  aria-label="Grid view"
-                >
-                  <Grid className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode("list")}
-                  className={`p-1.5 sm:p-2 rounded ${
-                    viewMode === "list"
-                      ? "bg-[#131c36] text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                  aria-label="List view"
-                >
-                  <List className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -316,11 +382,11 @@ const CategoryProductList = ({
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
           {/* Left Sidebar */}
           <div className="w-full lg:w-64 flex-shrink-0 space-y-4 order-2 lg:order-1">
-            <CatalogueSidebar 
-              isMobileOpen={isMobileSidebarOpen} 
-              setIsMobileOpen={setIsMobileSidebarOpen} 
+            <CatalogueSidebar
+              isMobileOpen={isMobileSidebarOpen}
+              setIsMobileOpen={setIsMobileSidebarOpen}
             />
-            
+
             {/* Additional Filters */}
             <div className="bg-white p-4 sm:p-5 rounded-lg shadow-sm border border-gray-100 sticky top-20">
               <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
@@ -440,169 +506,35 @@ const CategoryProductList = ({
               </div>
             ) : (
               <div
-                className={
-                  viewMode === "grid"
-                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-                    : "space-y-4"
-                }
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
               >
                 {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className={`bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-200 ${
-                    viewMode === "list" ? "flex gap-4 p-4 items-start" : ""
-                  }`}
-                >
-                  {/* Product Image */}
-                  <div className={`relative ${viewMode === "list" ? "w-48 h-48 flex-shrink-0" : "h-48"} bg-white border border-gray-100 rounded`}>
-                    {product.isOEM && (
-                      <div className="absolute top-2 left-2 bg-[#131c36] text-white text-[9px] sm:text-xs font-bold px-2 py-1 rounded z-10">
-                        OEM
-                      </div>
-                    )}
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-contain p-4"
-                      onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/200x150?text=Product";
-                      }}
-                    />
-                    {viewMode === "list" && product.fulfilledBySparelo && (
-                      <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between z-10">
-                        <div className="flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2 py-1 rounded shadow-sm border border-gray-200">
-                          <CheckCircle className="w-3.5 h-3.5 text-green-600 fill-current" />
-                          <span className="text-[10px] text-gray-700">Fulfilled by</span>
-                          <span className="text-[#131c36] font-bold text-xs">S</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <Link
+                    key={product.id}
+                    to={getProductDetailRoute(product)}
+                    state={{ product, category: categoryData }}
+                    className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center p-4 sm:p-6 group"
+                  >
+                    {/* Product Image */}
+                    <div className="w-full aspect-square max-h-32 sm:max-h-40 flex items-center justify-center mb-4 overflow-hidden">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="max-w-full max-h-full object-contain transform group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          e.target.src = "https://via.placeholder.com/200x150?text=Product";
+                        }}
+                      />
+                    </div>
 
-                  {/* Product Info */}
-                  <div className={`${viewMode === "list" ? "flex-1 flex flex-col" : "p-4"}`}>
-                    {viewMode === "list" ? (
-                      <>
-                        {/* List View */}
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1 pr-4">
-                            <h3 className="text-[10px] sm:text-sm font-bold text-gray-800 mb-1.5">
-                              {product.name}
-                            </h3>
-                            <p className="text-[9px] sm:text-xs text-gray-500 font-mono mb-2">
-                              {product.partNumber.length > 8 
-                                ? `${product.partNumber.substring(0, 4)}...${product.partNumber.substring(product.partNumber.length - 4)}`
-                                : product.partNumber}
-                            </p>
-                            <div className="flex flex-wrap gap-1.5 text-[9px] sm:text-xs text-gray-600">
-                              <span className="font-medium">{product.brand}</span>
-                              <span className="text-gray-400">•</span>
-                              <span>{product.class || categoryData.name}</span>
-                              <span className="text-gray-400">•</span>
-                              <span>Sold By: {product.soldBy || "Bengaluru/BPN"}</span>
-                              <span className="text-gray-400">•</span>
-                              <span>{product.origin || "OEM (genuine)"}</span>
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <span className="text-sm sm:text-lg font-bold text-gray-900">
-                              ₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                            {product.mrp && product.mrp > product.price && (
-                              <div className="flex items-center gap-1.5 mt-1">
-                                <span className="text-[9px] sm:text-xs text-gray-500 line-through">
-                                  MRP: ₹{product.mrp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                                <span className="text-[9px] sm:text-xs font-semibold text-[#131c36] bg-[#131c36]/10 px-1.5 py-0.5 rounded">
-                                  -{product.discount || Math.round(((product.mrp - product.price) / product.mrp) * 100)}%
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Delivery & Return Info */}
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center gap-2 text-[9px] sm:text-xs text-[#131c36]">
-                            <Truck className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: '#131c36' }} />
-                            <span>Delivery within {product.deliveryDays || 4} days</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[9px] sm:text-xs text-[#131c36]">
-                            <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: '#131c36' }} />
-                            <span>10 Days Assured Return</span>
-                            <Info className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 cursor-help" />
-                          </div>
-                          <div className="flex items-center gap-2 text-[9px] sm:text-xs text-[#131c36]">
-                            <FileText className="w-3 h-3 sm:w-4 sm:h-4" style={{ color: '#131c36' }} />
-                            <span>GST invoice</span>
-                          </div>
-                        </div>
-
-                        {/* View Details Button */}
-                        <div className="flex items-center justify-end mt-auto">
-                          <Link
-                            to={getProductDetailRoute(product)}
-                            state={{ product, category: categoryData }}
-                            className="bg-[#131c36]/10 text-[#131c36] text-[9px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:bg-[#131c36]/20 transition-colors"
-                            style={{ backgroundColor: 'rgba(19, 28, 54, 0.1)', color: '#131c36' }}
-                          >
-                            View Details
-                          </Link>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        {/* Grid View */}
-                        <h3 className="text-[10px] sm:text-sm font-bold text-gray-800 mb-2 line-clamp-2 min-h-[2.5rem]">
-                          {product.name}
-                        </h3>
-                        <div className="mb-2">
-                          <div className="flex items-baseline gap-2 flex-wrap">
-                            <span className="text-xs sm:text-base font-bold text-gray-900">
-                              ₹{product.price.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                            </span>
-                            {product.mrp && product.mrp > product.price && (
-                              <>
-                                <span className="text-[9px] sm:text-xs text-gray-500 line-through">
-                                  MRP: ₹{product.mrp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </span>
-                                <span className="text-[9px] sm:text-xs font-semibold text-[#131c36] bg-[#131c36]/10 px-1.5 py-0.5 rounded">
-                                  -{product.discount || Math.round(((product.mrp - product.price) / product.mrp) * 100)}%
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-[9px] sm:text-xs text-gray-600 mb-1 font-medium">{product.brand}</p>
-                        <p className="text-[9px] sm:text-xs text-gray-500 font-mono mb-3 truncate">
-                          {product.partNumber}
-                        </p>
-                        <div className="space-y-2 mb-3">
-                          {product.fulfilledBySparelo && (
-                            <div className="flex items-center gap-1.5">
-                              <CheckCircle className="w-3.5 h-3.5 text-green-600 fill-current" />
-                              <span className="text-[9px] sm:text-xs text-gray-700">Fulfilled by</span>
-                              <span className="text-[#131c36] font-bold text-[10px] sm:text-sm">S</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* View Details Button for Grid View */}
-                        <div className="flex items-center justify-end mt-auto">
-                          <Link
-                            to={getProductDetailRoute(product)}
-                            state={{ product, category: categoryData }}
-                            className="bg-[#131c36]/10 text-[#131c36] text-[9px] sm:text-xs font-semibold px-3 sm:px-4 py-1.5 sm:py-2 rounded hover:bg-[#131c36]/20 transition-colors"
-                            style={{ backgroundColor: 'rgba(19, 28, 54, 0.1)', color: '#131c36' }}
-                          >
-                            View Details
-                          </Link>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
+                    {/* Product Info */}
+                    <div className="w-full text-center mt-auto">
+                      <h3 className="text-xs sm:text-sm md:text-base font-bold text-gray-800 line-clamp-2">
+                        {product.name}
+                      </h3>
+                    </div>
+                  </Link>
+                ))}
               </div>
             )}
 
@@ -628,6 +560,13 @@ const CategoryProductList = ({
           </div>
         </div>
       </div>
+
+      {/* Footer Content */}
+      {footerContent && (
+        <div className="mt-8 px-3 sm:px-4 md:px-6">
+          {footerContent}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   FaPlus, 
   FaEdit, 
@@ -14,9 +14,10 @@ import {
   FaTimes,
   FaBox,
   FaUpload,
-  FaCloudUploadAlt
+  FaCloudUploadAlt,
+  FaSpinner
 } from 'react-icons/fa';
-import { productService } from '../../../../services/apiService';
+import { productService, categoryService } from '../../../../services/apiService';
 import { toast } from 'react-toastify';
 
 const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
@@ -25,6 +26,8 @@ const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
@@ -47,11 +50,99 @@ const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
   });
   const [vehicleInput, setVehicleInput] = useState('');
 
-  const categories = [
-    'Brakes', 'Engine', 'Filters', 'Suspension', 'Electrical', 
-    'Cooling', 'Body', 'Interior', 'Lighting', 'Exhaust', 'Other'
-  ];
+  // Fetch categories from backend
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      // Use flat categories endpoint which returns all categories created by admin from superadmin panel
+      const result = await categoryService.getAllActiveCategoriesFlat();
+      
+      // Handle response structure:
+      // Backend returns: { success: true, data: { categories: [...] } }
+      // apiService.getAllActiveCategoriesFlat() returns: response.data.data which is { categories: [...] }
+      // So: result = { categories: [...] }
+      // Extract: result.categories to get the array
+      let categoriesData = [];
+      
+      if (result && result.categories && Array.isArray(result.categories)) {
+        categoriesData = result.categories;
+      } else if (Array.isArray(result)) {
+        categoriesData = result;
+      } else if (result && result.data && Array.isArray(result.data.categories)) {
+        categoriesData = result.data.categories;
+      } else if (result && result.data && Array.isArray(result.data)) {
+        categoriesData = result.data;
+      }
+      
+      // Extract category names from the flat list (categories created by admin)
+      const categoryNames = categoriesData
+        .map(cat => {
+          // Handle both string and object formats
+          if (typeof cat === 'string') {
+            return cat;
+          } else if (cat && cat.name) {
+            return cat.name;
+          }
+          return null;
+        })
+        .filter(name => name && name.trim() !== '') // Filter out empty names
+        .sort(); // Sort alphabetically
+      
+      // If no categories found in database (created by admin), show empty or use fallback
+      if (categoryNames.length === 0) {
+        console.warn('No categories found in database (created by admin), using fallback categories');
+        // Only use fallback if absolutely necessary - admin should create categories
+        const fallbackCategories = [
+          'Maintenance Service Parts',
+          'Brake System',
+          'Air Conditioning',
+          'Body',
+          'Bearings',
+          'Belts Chains And Rollers',
+          'Car Accessories',
+          'Clutch',
+          'Control Cables',
+          'Electrical Components',
+          'Engine',
+          'Engine Cooling System',
+          'Exhaust System',
+          'Filters',
+          'Fuel Supply System',
+          'Gaskets & Seals',
+          'Ignition & Glowplug System',
+          'Interior Comfort',
+          'Lighting',
+          'Oils & Fluids',
+          'Pipes & Hoses',
+          'Repair Kits',
+          'Sensors Relay and Control Units',
+          'Steering',
+          'Suspension and Arms',
+          'Towbar Parts',
+          'Trims',
+          'Tyres and Alloys',
+          'Transmission',
+          'Universal',
+          'Wheels',
+        ];
+        setCategories(fallbackCategories);
+      } else {
+        // Use categories created by admin from superadmin panel
+        setCategories(categoryNames);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories from admin panel:', error);
+      toast.error('Failed to load categories. Please ensure categories are created in admin panel.');
+      // Don't use fallback - show empty or let admin create categories
+      setCategories([]);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
   const origins = ['Aftermarket', 'OEM'];
   const productClasses = ['Universal', 'Vehicle-specific'];
 
@@ -416,12 +507,20 @@ const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+              disabled={loadingCategories}
             >
               <option value="all">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
+              {loadingCategories ? (
+                <option disabled>Loading categories...</option>
+              ) : (
+                categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))
+              )}
             </select>
+            {loadingCategories && (
+              <FaSpinner className="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-400 animate-spin" />
+            )}
           </div>
           <div className="relative">
             <select
@@ -582,25 +681,26 @@ const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
       {/* Add/Edit Product Modal */}
       {(showAddModal || showEditModal) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {showAddModal ? 'Add New Product' : 'Edit Product'}
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowAddModal(false);
-                    setShowEditModal(false);
-                    setSelectedProduct(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <FaTimes className="text-xl" />
-                </button>
-              </div>
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full flex flex-col" style={{ maxHeight: '90vh' }}>
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+              <h3 className="text-2xl font-bold text-gray-900">
+                {showAddModal ? 'Add New Product' : 'Edit Product'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setShowEditModal(false);
+                  setSelectedProduct(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <FaTimes className="text-xl" />
+              </button>
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="overflow-y-auto flex-1" style={{ overflowX: 'visible' }}>
+              <div className="p-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Product Images Upload */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -677,7 +777,7 @@ const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
                       placeholder="e.g., BP-F-001"
                     />
                   </div>
-                  <div>
+                  <div className="relative">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Category *
                     </label>
@@ -685,13 +785,22 @@ const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
                       required
                       value={formData.category}
                       onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                      style={{ zIndex: 1 }}
+                      disabled={loadingCategories}
                     >
                       <option value="">Select Category</option>
-                      {categories.map(cat => (
-                        <option key={cat} value={cat}>{cat}</option>
-                      ))}
+                      {loadingCategories ? (
+                        <option disabled>Loading categories...</option>
+                      ) : (
+                        categories.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))
+                      )}
                     </select>
+                    {loadingCategories && (
+                      <FaSpinner className="absolute right-3 top-9 text-gray-400 animate-spin" />
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -937,7 +1046,8 @@ const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
                     {showAddModal ? 'Add Product' : 'Update Product'}
                   </button>
                 </div>
-              </form>
+                </form>
+              </div>
             </div>
           </div>
         </div>

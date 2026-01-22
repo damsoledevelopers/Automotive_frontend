@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../../auth/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useJob } from '../../../contexts/JobContext';
+import { analyticsService } from '../../../services/apiService';
+import { toast } from 'react-toastify';
 import Sidebar from './Sidebar';
 import Overview from './pages/Overview';
 import Users from './pages/Users';
@@ -64,27 +66,90 @@ const SuperAdminDashboard = () => {
   const [dateRange, setDateRange] = useState('30d');
   const [refreshKey, setRefreshKey] = useState(0);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [overallStats, setOverallStats] = useState(null);
+  const [previousStats, setPreviousStats] = useState(null);
+  const [realTimeData, setRealTimeData] = useState(null);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [systemStatus, setSystemStatus] = useState({
+    apiStatus: 'Unknown',
+    database: 'Unknown',
+    serverLoad: 0,
+    uptime: '0%'
+  });
+  const [topVendorsData, setTopVendorsData] = useState([]);
 
-  // Simulate dynamic data updates
+  // Fetch real-time data from backend
   useEffect(() => {
+    fetchDashboardData();
+    fetchAdditionalData();
+    // Refresh every 30 seconds
     const interval = setInterval(() => {
-      setRefreshKey(prev => prev + 1);
-    }, 30000); // Refresh every 30 seconds
+      fetchDashboardData();
+      fetchAdditionalData();
+    }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [dateRange]);
 
-  // Dynamic data generation based on date range
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch current period stats (includes changes from backend)
+      const currentStats = await analyticsService.getOverallStats({ dateRange });
+      setOverallStats(currentStats);
+      
+      // Fetch real-time dashboard data
+      const dashboardData = await analyticsService.getRealTimeDashboard({ dateRange });
+      setRealTimeData(dashboardData);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      toast.error('Failed to load dashboard data: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAdditionalData = async () => {
+    try {
+      // Fetch recent activities, system status, and top vendors in parallel
+      const [activities, health, vendors] = await Promise.all([
+        analyticsService.getRecentActivities({ limit: 6 }),
+        analyticsService.getSystemHealth(),
+        analyticsService.getTopVendors({ dateRange, limit: 5 })
+      ]);
+
+      setRecentActivities(Array.isArray(activities) ? activities : []);
+      setSystemStatus(health || {});
+      setTopVendorsData(Array.isArray(vendors) ? vendors : []);
+    } catch (error) {
+      console.error('Failed to fetch additional data:', error);
+      // Don't show toast for these as they're background updates
+    }
+  };
+
+  // Generate time series data from orders (if we have order data)
+  // For now, we'll generate placeholder data but structure it for real data
   const generateTimeSeriesData = (days = 30) => {
     const data = [];
     const today = new Date();
+    const totalRevenue = overallStats?.totalRevenue || 0;
+    const totalOrders = overallStats?.totalOrders || 0;
+    
+    // Distribute total revenue and orders across days
+    const avgDailyRevenue = totalRevenue / days;
+    const avgDailyOrders = totalOrders / days;
+    
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
+      // Add some variation to make it look realistic
+      const variation = 0.8 + Math.random() * 0.4; // 80% to 120% of average
       data.push({
         date: date.toISOString().split('T')[0],
-        orders: Math.floor(Math.random() * 200) + 50,
-        revenue: Math.floor(Math.random() * 50000) + 10000,
-        users: Math.floor(Math.random() * 50) + 10,
+        orders: Math.round(avgDailyOrders * variation),
+        revenue: Math.round(avgDailyRevenue * variation),
+        users: Math.floor(Math.random() * 10) + 5,
       });
     }
     return data;
@@ -92,27 +157,27 @@ const SuperAdminDashboard = () => {
 
   const timeSeriesData = useMemo(() => generateTimeSeriesData(
     dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90
-  ), [dateRange, refreshKey]);
+  ), [dateRange, overallStats, refreshKey]);
 
   const stats = useMemo(() => {
-    // Calculate dynamic stats from actual data
-    const totalUsers = Math.floor(Math.random() * 5000) + 10000;
-    const totalVendors = Math.floor(Math.random() * 200) + 1000;
-    const totalMechanics = Math.floor(Math.random() * 200) + 500;
-    const totalOrders = timeSeriesData.reduce((sum, d) => sum + d.orders, 0);
-    const totalRevenue = timeSeriesData.reduce((sum, d) => sum + d.revenue, 0);
-    const totalProducts = Math.floor(Math.random() * 10000) + 80000;
-    const activeJobs = jobs.filter(j => j.status !== 'completed' && j.status !== 'cancelled').length;
-    const completedJobs = jobs.filter(j => j.status === 'completed').length;
+    // Use real data from backend if available, otherwise use defaults
+    const totalUsers = overallStats?.totalUsers || 0;
+    const totalVendors = overallStats?.totalVendors || 0;
+    const totalMechanics = realTimeData?.onlineMechanics || 0;
+    const totalOrders = overallStats?.totalOrders || 0;
+    const totalRevenue = overallStats?.totalRevenue || 0;
+    const totalProducts = overallStats?.totalProducts || 0;
+    const activeJobs = realTimeData?.activeJobs || 0;
+    const completedJobs = 0; // Would need to calculate from orders with status 'Delivered'
 
-    // Calculate changes (simulated)
-    const changes = {
-      users: (Math.random() * 20 + 5).toFixed(1),
-      vendors: (Math.random() * 15 + 3).toFixed(1),
-      mechanics: (Math.random() * 25 + 8).toFixed(1),
-      orders: (Math.random() * 30 + 10).toFixed(1),
-      revenue: (Math.random() * 25 + 12).toFixed(1),
-      products: (Math.random() * 10 + 2).toFixed(1),
+    // Use changes from backend if available
+    const changes = overallStats?.changes || {
+      users: 0,
+      vendors: 0,
+      mechanics: 0,
+      orders: 0,
+      revenue: 0,
+      products: 0,
     };
 
     const calculated = {
@@ -132,48 +197,48 @@ const SuperAdminDashboard = () => {
         value: calculated.totalUsers.toLocaleString(),
         icon: FaUsers,
         color: 'bg-blue-500',
-        change: `+${calculated.changes.users}%`,
-        trend: 'up'
+        change: `${calculated.changes.users >= 0 ? '+' : ''}${calculated.changes.users}%`,
+        trend: calculated.changes.users > 0 ? 'up' : calculated.changes.users < 0 ? 'down' : 'neutral'
       },
       {
         label: 'Vendors',
         value: calculated.totalVendors.toLocaleString(),
         icon: FaStore,
         color: 'bg-green-500',
-        change: `+${calculated.changes.vendors}%`,
-        trend: 'up'
+        change: `${calculated.changes.vendors >= 0 ? '+' : ''}${calculated.changes.vendors}%`,
+        trend: calculated.changes.vendors > 0 ? 'up' : calculated.changes.vendors < 0 ? 'down' : 'neutral'
       },
       {
         label: 'Mechanics',
         value: calculated.totalMechanics.toLocaleString(),
         icon: FaTools,
         color: 'bg-yellow-500',
-        change: `+${calculated.changes.mechanics}%`,
-        trend: 'up'
+        change: `${calculated.activeJobs} ongoing`,
+        trend: 'neutral'
       },
       {
         label: 'Total Orders',
         value: calculated.totalOrders.toLocaleString(),
         icon: FaShoppingCart,
         color: 'bg-purple-500',
-        change: `+${calculated.changes.orders}%`,
-        trend: 'up'
+        change: `${calculated.changes.orders >= 0 ? '+' : ''}${calculated.changes.orders}%`,
+        trend: calculated.changes.orders > 0 ? 'up' : calculated.changes.orders < 0 ? 'down' : 'neutral'
       },
       {
         label: 'Revenue',
         value: `₹${(calculated.totalRevenue / 1000000).toFixed(2)}M`,
         icon: FaMoneyBillWave,
         color: 'bg-red-500',
-        change: `+${calculated.changes.revenue}%`,
-        trend: 'up'
+        change: `${calculated.changes.revenue >= 0 ? '+' : ''}${calculated.changes.revenue}%`,
+        trend: calculated.changes.revenue > 0 ? 'up' : calculated.changes.revenue < 0 ? 'down' : 'neutral'
       },
       {
         label: 'Products',
         value: calculated.totalProducts.toLocaleString(),
         icon: FaBox,
         color: 'bg-indigo-500',
-        change: `+${calculated.changes.products}%`,
-        trend: 'up'
+        change: `${calculated.changes.products >= 0 ? '+' : ''}${calculated.changes.products}%`,
+        trend: calculated.changes.products > 0 ? 'up' : calculated.changes.products < 0 ? 'down' : 'neutral'
       },
       {
         label: 'Active Jobs',
@@ -192,31 +257,21 @@ const SuperAdminDashboard = () => {
         trend: 'neutral'
       },
     ];
-  }, [timeSeriesData, jobs]);
+  }, [overallStats, realTimeData, jobs]);
 
-  // Generate recent activities dynamically
-  const recentActivities = useMemo(() => {
-    const activities = [
-      { id: 1, type: 'user', message: 'New vendor registered: ABC Auto Parts', time: '2 minutes ago', icon: FaStore },
-      { id: 2, type: 'order', message: 'Large order placed: ₹45,000', time: '15 minutes ago', icon: FaShoppingCart },
-      { id: 3, type: 'user', message: 'New mechanic joined: John Smith', time: '1 hour ago', icon: FaTools },
-      { id: 4, type: 'system', message: 'System backup completed', time: '2 hours ago', icon: FaCheckCircle },
-      { id: 5, type: 'order', message: 'Order #ORD-1234 delivered successfully', time: '3 hours ago', icon: FaCheckCircle },
-      { id: 6, type: 'user', message: '5 new customers registered', time: '4 hours ago', icon: FaUsers },
-    ];
-    return activities;
-  }, []);
-
-  // Top performing vendors
-  const topVendors = useMemo(() => {
-    return [
-      { id: 1, name: 'Auto Parts Hub', orders: 1234, revenue: '₹2.5M', rating: 4.8, status: 'active' },
-      { id: 2, name: 'Premium Spares', orders: 987, revenue: '₹1.9M', rating: 4.7, status: 'active' },
-      { id: 3, name: 'Quick Auto Solutions', orders: 756, revenue: '₹1.5M', rating: 4.6, status: 'active' },
-      { id: 4, name: 'Genuine Parts Store', orders: 654, revenue: '₹1.2M', rating: 4.9, status: 'active' },
-      { id: 5, name: 'Budget Auto Parts', orders: 543, revenue: '₹980K', rating: 4.5, status: 'active' },
-    ];
-  }, []);
+  // Helper function to get icon for activity type
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'user':
+        return FaUsers;
+      case 'order':
+        return FaShoppingCart;
+      case 'product':
+        return FaBox;
+      default:
+        return FaCheckCircle;
+    }
+  };
 
   // User management data
   const usersData = useMemo(() => {
@@ -395,9 +450,16 @@ const SuperAdminDashboard = () => {
             {/* Stats Grid - Only visible on Overview page */}
             {currentPage === 'overview' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                {loading && stats.length === 0 && (
+                  <div className="col-span-full flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                )}
                 {stats.map((stat, index) => {
                   const Icon = stat.icon;
-                  const TrendIcon = stat.trend === 'up' ? FaArrowUp : stat.trend === 'down' ? FaArrowDown : null;
+                  const changeValue = parseFloat(stat.change.replace(/[+%]/g, '')) || 0;
+                  const trend = changeValue > 0 ? 'up' : changeValue < 0 ? 'down' : 'neutral';
+                  const TrendIcon = trend === 'up' ? FaArrowUp : trend === 'down' ? FaArrowDown : null;
                   return (
                     <div key={index} className="card-hover bg-white rounded-xl shadow-md p-6 border border-gray-100">
                       <div className="flex items-center justify-between">
@@ -405,15 +467,20 @@ const SuperAdminDashboard = () => {
                           <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
                           <p className="text-2xl font-bold text-gray-900 mb-2">{stat.value}</p>
                           <div className="flex items-center gap-2">
-                            {TrendIcon && (
-                              <TrendIcon className={`text-sm ${stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                                }`} />
+                            {TrendIcon && trend !== 'neutral' && (
+                              <TrendIcon className={`text-sm ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`} />
                             )}
-                            <p className={`text-sm font-semibold ${stat.trend === 'up' ? 'text-green-600' : stat.trend === 'down' ? 'text-red-600' : 'text-gray-600'
-                              }`}>
-                              {stat.change}
-                            </p>
-                            <span className="text-xs text-gray-500">from last month</span>
+                            {trend !== 'neutral' && (
+                              <p className={`text-sm font-semibold ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                                {changeValue > 0 ? '+' : ''}{changeValue}%
+                              </p>
+                            )}
+                            {trend === 'neutral' && (
+                              <p className="text-sm font-semibold text-gray-600">{stat.change}</p>
+                            )}
+                            {trend !== 'neutral' && (
+                              <span className="text-xs text-gray-500">from last month</span>
+                            )}
                           </div>
                         </div>
                         <div className={`${stat.color} p-4 rounded-xl text-white shadow-lg`}>
@@ -435,7 +502,7 @@ const SuperAdminDashboard = () => {
                       timeSeriesData={timeSeriesData}
                       dateRange={dateRange}
                       stats={stats}
-                      topVendors={topVendors}
+                      topVendors={topVendorsData}
                       recentActivities={recentActivities}
                     />
                   )}
@@ -446,7 +513,7 @@ const SuperAdminDashboard = () => {
                     <Orders ordersData={ordersData} />
                   )}
                   {currentPage === 'vendors' && (
-                    <Vendors topVendors={topVendors} />
+                    <Vendors topVendors={topVendorsData} />
                   )}
                   {currentPage === 'garages' && (
                     <Garages />
@@ -503,26 +570,32 @@ const SuperAdminDashboard = () => {
                       <button className="text-sm text-primary-600 hover:text-primary-700">View All</button>
                     </div>
                     <div className="space-y-4">
-                      {recentActivities.map((activity) => {
-                        const Icon = activity.icon;
-                        return (
-                          <div key={activity.id} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
-                            <div className={`p-2 rounded-lg ${activity.type === 'user' ? 'bg-blue-100' :
-                              activity.type === 'order' ? 'bg-green-100' :
-                                'bg-gray-100'
-                              }`}>
-                              <Icon className={`text-sm ${activity.type === 'user' ? 'text-blue-600' :
-                                activity.type === 'order' ? 'text-green-600' :
-                                  'text-gray-600'
-                                }`} />
+                      {recentActivities.length === 0 ? (
+                        <div className="text-center py-4 text-gray-500 text-sm">No recent activities</div>
+                      ) : (
+                        recentActivities.map((activity) => {
+                          const Icon = getActivityIcon(activity.type);
+                          return (
+                            <div key={activity.id} className="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0">
+                              <div className={`p-2 rounded-lg ${activity.type === 'user' ? 'bg-blue-100' :
+                                activity.type === 'order' ? 'bg-green-100' :
+                                activity.type === 'product' ? 'bg-purple-100' :
+                                  'bg-gray-100'
+                                }`}>
+                                <Icon className={`text-sm ${activity.type === 'user' ? 'text-blue-600' :
+                                  activity.type === 'order' ? 'text-green-600' :
+                                  activity.type === 'product' ? 'text-purple-600' :
+                                    'text-gray-600'
+                                  }`} />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-700">{activity.message}</p>
+                                <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-700">{activity.message}</p>
-                              <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      )}
                     </div>
                   </div>
 
@@ -530,19 +603,34 @@ const SuperAdminDashboard = () => {
                   <div className="card bg-white rounded-xl shadow-md border border-gray-100">
                     <h3 className="text-base font-bold text-gray-900 mb-4">Quick Actions</h3>
                     <div className="space-y-2">
-                      <button className="w-full btn-outline text-left justify-start">
+                      <button 
+                        onClick={() => navigate('/admin/dashboard/users')}
+                        className="w-full btn-outline text-left justify-start hover:bg-blue-50 transition-colors"
+                      >
                         <FaUserShield className="mr-2" /> Manage Users
                       </button>
-                      <button className="w-full btn-outline text-left justify-start">
+                      <button 
+                        onClick={() => navigate('/admin/dashboard/vendors')}
+                        className="w-full btn-outline text-left justify-start hover:bg-green-50 transition-colors"
+                      >
                         <FaStore className="mr-2" /> Manage Vendors
                       </button>
-                      <button className="w-full btn-outline text-left justify-start">
+                      <button 
+                        onClick={() => navigate('/admin/dashboard/mechanics')}
+                        className="w-full btn-outline text-left justify-start hover:bg-yellow-50 transition-colors"
+                      >
                         <FaTools className="mr-2" /> Manage Mechanics
                       </button>
-                      <button className="w-full btn-outline text-left justify-start">
+                      <button 
+                        onClick={() => navigate('/admin/dashboard/analytics')}
+                        className="w-full btn-outline text-left justify-start hover:bg-purple-50 transition-colors"
+                      >
                         <FaChartLine className="mr-2" /> View Analytics
                       </button>
-                      <button className="w-full btn-outline text-left justify-start">
+                      <button 
+                        onClick={() => navigate('/admin/dashboard/settings')}
+                        className="w-full btn-outline text-left justify-start hover:bg-gray-50 transition-colors"
+                      >
                         <FaCog className="mr-2" /> System Settings
                       </button>
                     </div>
@@ -555,24 +643,41 @@ const SuperAdminDashboard = () => {
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">API Status</span>
                         <span className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-sm font-semibold text-green-600">Operational</span>
+                          <div className={`w-2 h-2 rounded-full ${
+                            systemStatus.apiStatus === 'Operational' ? 'bg-green-500' : 'bg-red-500'
+                          }`}></div>
+                          <span className={`text-sm font-semibold ${
+                            systemStatus.apiStatus === 'Operational' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {systemStatus.apiStatus || 'Unknown'}
+                          </span>
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Database</span>
                         <span className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-sm font-semibold text-green-600">Healthy</span>
+                          <div className={`w-2 h-2 rounded-full ${
+                            systemStatus.database === 'Healthy' ? 'bg-green-500' : 'bg-red-500'
+                          }`}></div>
+                          <span className={`text-sm font-semibold ${
+                            systemStatus.database === 'Healthy' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {systemStatus.database || 'Unknown'}
+                          </span>
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Server Load</span>
-                        <span className="text-sm font-semibold text-gray-900">42%</span>
+                        <span className={`text-sm font-semibold ${
+                          systemStatus.serverLoad < 50 ? 'text-green-600' :
+                          systemStatus.serverLoad < 80 ? 'text-yellow-600' : 'text-red-600'
+                        }`}>
+                          {systemStatus.serverLoad || 0}%
+                        </span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-gray-600">Uptime</span>
-                        <span className="text-sm font-semibold text-gray-900">99.9%</span>
+                        <span className="text-sm font-semibold text-gray-900">{systemStatus.uptime || '0%'}</span>
                       </div>
                     </div>
                   </div>
