@@ -240,9 +240,9 @@ const Overview = ({ timeSeriesData, dateRange, stats, topVendors, recentActiviti
         <button 
           onClick={handleExportReport}
           disabled={loading}
-          className="btn-outline flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-50 transition-colors"
+          className="bg-white border border-red-500 text-red-500 rounded-lg px-4 py-2 flex items-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 transition-colors"
         >
-          {loading ? <FaSpinner className="animate-spin" /> : <FaDownload />} Export Report
+          {loading ? <FaSpinner className="animate-spin text-red-500" /> : <FaDownload className="text-red-500" />} <span className="text-red-500">Export Report</span>
         </button>
       </div>
 

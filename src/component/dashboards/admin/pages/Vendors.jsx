@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { FaEye, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaSearch, FaDownload, FaStore, FaStar, FaBox, FaTags } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaSearch, FaDownload, FaStore, FaStar, FaBox, FaTags, FaSpinner } from 'react-icons/fa';
 import { productService } from '../../../../services/apiService';
 import { userService } from '../../../../services/apiService';
 import { toast } from 'react-toastify';
@@ -14,6 +14,7 @@ const Vendors = ({ topVendors }) => {
   const [pendingProducts, setPendingProducts] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [productSearchTerm, setProductSearchTerm] = useState('');
 
   const [formData, setFormData] = useState({
@@ -180,6 +181,92 @@ const Vendors = ({ topVendors }) => {
       return matchesSearch;
     });
   }, [pendingProducts, productSearchTerm]);
+
+  // Export vendors data to CSV
+  const handleExport = () => {
+    try {
+      setExporting(true);
+      
+      // Determine what to export based on active tab
+      let dataToExport = [];
+      let fileName = '';
+      let csvContent = '';
+      
+      if (activeTab === 'vendors') {
+        // Export filtered vendors or all vendors
+        dataToExport = filteredVendors.length > 0 ? filteredVendors : vendors;
+        fileName = `vendors_report_${new Date().toISOString().split('T')[0]}.csv`;
+        
+        // Generate CSV content for vendors
+        csvContent = 'Vendor Management Report\n';
+        csvContent += `Generated: ${new Date().toLocaleString()}\n`;
+        csvContent += `Total Vendors: ${dataToExport.length}\n\n`;
+        
+        // CSV Headers
+        csvContent += 'Vendor Name,Email,Orders,Revenue,Rating,Commission,Status,Registration Date\n';
+        
+        // CSV Data
+        dataToExport.forEach(vendor => {
+          const name = (vendor.name || '').replace(/,/g, ';');
+          const email = (vendor.email || '').replace(/,/g, ';');
+          const orders = vendor.orders || 0;
+          const revenue = (vendor.revenue || 'N/A').replace(/,/g, '');
+          const rating = vendor.rating || 'N/A';
+          const commission = (vendor.commission || 'N/A').replace(/,/g, '');
+          const status = (vendor.status || 'N/A').replace(/,/g, ';');
+          const regDate = vendor.registrationDate || 'N/A';
+          
+          csvContent += `${name},${email},${orders},${revenue},${rating},${commission},${status},${regDate}\n`;
+        });
+      } else if (activeTab === 'products') {
+        // Export filtered products or all pending products
+        dataToExport = filteredProducts.length > 0 ? filteredProducts : pendingProducts;
+        fileName = `pending_products_report_${new Date().toISOString().split('T')[0]}.csv`;
+        
+        // Generate CSV content for products
+        csvContent = 'Pending Products Report\n';
+        csvContent += `Generated: ${new Date().toLocaleString()}\n`;
+        csvContent += `Total Pending Products: ${dataToExport.length}\n\n`;
+        
+        // CSV Headers
+        csvContent += 'Product Name,SKU,Part Number,Vendor,Price,Stock,Category,Brand,Status\n';
+        
+        // CSV Data
+        dataToExport.forEach(product => {
+          const name = (product.name || '').replace(/,/g, ';');
+          const sku = (product.sku || 'N/A').replace(/,/g, ';');
+          const partNumber = (product.partNumber || 'N/A').replace(/,/g, ';');
+          const vendor = (product.vendorId?.name || product.vendorId?.vendorDetails?.storeName || 'N/A').replace(/,/g, ';');
+          const price = product.price || 0;
+          const stock = product.stock || 0;
+          const category = (product.category || 'N/A').replace(/,/g, ';');
+          const brand = (product.brand || 'N/A').replace(/,/g, ';');
+          const status = (product.status || 'pending').replace(/,/g, ';');
+          
+          csvContent += `${name},${sku},${partNumber},${vendor},₹${price},${stock},${category},${brand},${status}\n`;
+        });
+      }
+      
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`Exported ${dataToExport.length} ${activeTab === 'vendors' ? 'vendors' : 'products'} successfully!`);
+    } catch (error) {
+      console.error('Failed to export data:', error);
+      toast.error('Failed to export data: ' + error.message);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Product Detail View
   if (view === 'productDetail' && selectedProduct) {
@@ -372,8 +459,13 @@ const Vendors = ({ topVendors }) => {
           <p className="text-xs text-gray-600 mt-1">Approve and manage vendor registrations and products</p>
         </div>
         <div className="flex gap-2">
-          <button className="btn-outline flex items-center gap-2 text-sm">
-            <FaDownload /> Export
+          <button 
+            onClick={handleExport}
+            disabled={exporting || (activeTab === 'vendors' && filteredVendors.length === 0 && vendors.length === 0) || (activeTab === 'products' && filteredProducts.length === 0 && pendingProducts.length === 0)}
+            className="bg-white border border-red-500 text-red-500 rounded-lg px-4 py-2 flex items-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 transition-colors"
+            title={`Export ${activeTab === 'vendors' ? 'vendors' : 'pending products'} to CSV`}
+          >
+            {exporting ? <FaSpinner className="animate-spin text-red-500" /> : <FaDownload className="text-red-500" />} <span className="text-red-500">Export</span>
           </button>
         </div>
       </div>

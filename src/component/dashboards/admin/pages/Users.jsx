@@ -15,7 +15,8 @@ import {
   FaTimesCircle,
   FaGift,
   FaShieldAlt,
-  FaStar
+  FaStar,
+  FaSpinner
 } from 'react-icons/fa';
 import { userService } from '../../../../services/apiService';
 import { toast } from 'react-toastify';
@@ -122,6 +123,63 @@ const Users = () => {
       toast.error(error.message || 'Failed to delete user');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setRoleFilter('all');
+    setStatusFilter('all');
+    toast.info('Filters cleared');
+  };
+
+  // Export users data to CSV
+  const handleExport = () => {
+    try {
+      // Use filtered users for export
+      const dataToExport = filteredUsers.length > 0 ? filteredUsers : usersData;
+      
+      // Generate CSV content
+      let csvContent = 'User Management Report\n';
+      csvContent += `Generated: ${new Date().toLocaleString()}\n`;
+      csvContent += `Total Users: ${dataToExport.length}\n\n`;
+      
+      // CSV Headers
+      csvContent += 'Name,Email,Account Type,Status,Orders/Jobs,Rating,Revenue,Last Login,Phone,Joined Date\n';
+      
+      // CSV Data
+      dataToExport.forEach(user => {
+        const name = (user.name || '').replace(/,/g, ';');
+        const email = (user.email || '').replace(/,/g, ';');
+        const role = formatRoleName(user.role || 'customer');
+        const status = (user.status || 'N/A').replace(/,/g, ';');
+        const orders = user.orders || 0;
+        const rating = user.rating || 'N/A';
+        const revenue = user.revenue || 'N/A';
+        const lastLogin = user.lastLogin || 'Never';
+        const phone = (user.phone || '').replace(/,/g, ';');
+        const joined = user.joined || 'N/A';
+        
+        csvContent += `${name},${email},${role},${status},${orders},${rating},${revenue},${lastLogin},${phone},${joined}\n`;
+      });
+      
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `users_report_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success(`Exported ${dataToExport.length} users successfully!`);
+    } catch (error) {
+      console.error('Failed to export users:', error);
+      toast.error('Failed to export users: ' + error.message);
     }
   };
 
@@ -280,11 +338,21 @@ const Users = () => {
           <p className="text-xs text-gray-600 mt-1">Manage customers, vendors, and mechanics</p>
         </div>
         <div className="flex gap-2">
-          <button className="btn-outline flex items-center gap-2 text-sm">
-            <FaFilter /> Filter
+          <button 
+            onClick={handleClearFilters}
+            disabled={searchTerm === '' && roleFilter === 'all' && statusFilter === 'all'}
+            className="btn-outline flex items-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition-colors"
+            title="Clear all filters"
+          >
+            <FaTimesCircle /> Clear Filters
           </button>
-          <button className="btn-primary flex items-center gap-2 text-sm">
-            <FaDownload /> Export
+          <button 
+            onClick={handleExport}
+            disabled={loading || (filteredUsers.length === 0 && usersData.length === 0)}
+            className="bg-white border border-red-500 text-red-500 rounded-lg px-4 py-2 flex items-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 transition-colors"
+            title="Export users to CSV"
+          >
+            {loading ? <FaSpinner className="animate-spin text-red-500" /> : <FaDownload className="text-red-500" />} <span className="text-red-500">Export</span>
           </button>
         </div>
       </div>
