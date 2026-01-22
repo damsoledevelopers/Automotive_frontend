@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @layer base {
@@ -12,7 +22,7 @@
   body {
     @apply bg-gray-50 text-gray-900;
     margin: 0;
-    padding-bottom: 80px; /* Space for bottom navigation on mobile */
+    /*padding-bottom: 80px;  Space for bottom navigation on mobile */
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
       'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
       sans-serif;
@@ -23,7 +33,7 @@
 
   @media (min-width: 1024px) {
     body {
-      padding-bottom: 70px; /* Space for bottom navigation on desktop */
+      /*padding-bottom: 70px;  Space for bottom navigation on desktop */
     }
   }
 

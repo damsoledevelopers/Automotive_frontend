@@ -343,6 +343,27 @@ export const orderService = {
   },
 
   /**
+   * VENDOR: Get vendor orders
+   * @param {Object} filters - Optional filters (e.g., { status: 'Delivered' })
+   * @returns {Promise}
+   */
+  getVendorOrders: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.status) {
+        params.append('status', filters.status);
+      }
+      const queryString = params.toString();
+      const url = queryString ? `/vendor/orders?${queryString}` : '/vendor/orders';
+      const response = await api.get(url);
+      // Backend returns { success: true, data: { orders, summary } }
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch vendor orders');
+    }
+  },
+
+  /**
    * Get order by ID
    * @param {string} orderId
    * @returns {Promise}
@@ -1109,6 +1130,25 @@ export const analyticsService = {
       return response.data.data || response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to export data');
+    }
+  },
+
+  /**
+   * VENDOR: Get vendor dashboard data
+   * @param {Object} filters - dateRange
+   * @returns {Promise}
+   */
+  getVendorDashboard: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+      
+      const queryString = params.toString();
+      const url = queryString ? `/vendor/analytics/dashboard?${queryString}` : '/vendor/analytics/dashboard';
+      const response = await api.get(url);
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch vendor dashboard data');
     }
   },
 };

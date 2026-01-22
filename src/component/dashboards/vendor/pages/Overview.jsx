@@ -33,13 +33,13 @@ const Overview = ({ timeSeriesData, dateRange, recentOrders }) => {
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <p className="text-sm text-gray-600 mb-1">Pending</p>
           <p className="text-2xl font-bold text-orange-600">
-            {recentOrders.filter(o => o.status === 'Pending').length}
+            {recentOrders.filter(o => o.status === 'Pending Payment' || o.status === 'Pending' || o.status === 'Confirmed').length}
           </p>
         </div>
         <div className="bg-white rounded-lg p-4 border border-gray-200">
           <p className="text-sm text-gray-600 mb-1">Processing</p>
           <p className="text-2xl font-bold text-yellow-600">
-            {recentOrders.filter(o => o.status === 'Processing').length}
+            {recentOrders.filter(o => o.status === 'In-Progress' || o.status === 'Processing').length}
           </p>
         </div>
         <div className="bg-white rounded-lg p-4 border border-gray-200">
@@ -60,26 +60,30 @@ const Overview = ({ timeSeriesData, dateRange, recentOrders }) => {
       <div>
         <h4 className="font-semibold text-gray-900 mb-4">Recent Orders</h4>
         <div className="space-y-3">
-          {recentOrders.slice(0, 5).map((order) => (
-            <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition">
-              <div>
-                <h5 className="font-semibold text-gray-900">{order.orderId}</h5>
-                <p className="text-sm text-gray-600">{order.customer} • {order.items} items</p>
-                <p className="text-xs text-gray-500 mt-1">{order.date}</p>
+          {recentOrders.slice(0, 5).map((order) => {
+            const orderDate = order.date ? (typeof order.date === 'string' ? order.date : new Date(order.date).toLocaleDateString()) : 'N/A';
+            return (
+              <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition">
+                <div>
+                  <h5 className="font-semibold text-gray-900">{order.orderId}</h5>
+                  <p className="text-sm text-gray-600">{order.customer} • {order.items} items</p>
+                  <p className="text-xs text-gray-500 mt-1">{orderDate}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-gray-900">₹{order.amount.toLocaleString()}</p>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                    order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
+                    order.status === 'In-Progress' || order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
+                    order.status === 'Pending Payment' || order.status === 'Pending' || order.status === 'Confirmed' ? 'bg-orange-100 text-orange-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {order.status}
+                  </span>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-gray-900">₹{order.amount.toLocaleString()}</p>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                  order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
-                  order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {order.status}
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

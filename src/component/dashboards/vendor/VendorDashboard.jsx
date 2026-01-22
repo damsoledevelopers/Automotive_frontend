@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../../auth/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { productService } from '../../../services/apiService';
+import { productService, analyticsService, orderService } from '../../../services/apiService';
 import { toast } from 'react-toastify';
 import Sidebar from './Sidebar';
 import Overview from './pages/Overview';
@@ -59,19 +59,34 @@ const VendorDashboard = () => {
   const [avatarError, setAvatarError] = useState(false);
   const [vendorProducts, setVendorProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [recentOrdersData, setRecentOrdersData] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   // Fetch vendor products
   useEffect(() => {
     fetchVendorProducts();
   }, []);
 
-  // Simulate dynamic data updates
+  // Fetch dashboard data
+  useEffect(() => {
+    fetchDashboardData();
+  }, [dateRange]);
+
+  // Fetch recent orders
+  useEffect(() => {
+    fetchRecentOrders();
+  }, []);
+
+  // Auto-refresh dashboard data every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setRefreshKey(prev => prev + 1);
+      fetchDashboardData();
+      fetchRecentOrders();
     }, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
-  }, []);
+  }, [dateRange]);
 
   const fetchVendorProducts = async () => {
     try {
@@ -106,7 +121,47 @@ const VendorDashboard = () => {
     }
   };
 
-  // Generate time series data
+  const fetchDashboardData = async () => {
+    try {
+      setDashboardLoading(true);
+      const data = await analyticsService.getVendorDashboard({ dateRange });
+      setDashboardData(data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      toast.error('Failed to fetch dashboard data');
+    } finally {
+      setDashboardLoading(false);
+    }
+  };
+
+  const fetchRecentOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const response = await orderService.getOrders();
+      const orders = response.orders || response.data?.orders || [];
+      
+      // Transform orders to match expected format
+      const transformedOrders = orders.map(order => ({
+        id: order._id || order.id,
+        orderId: order.orderId,
+        customer: order.shippingAddress?.name || 'Unknown',
+        amount: order.total || 0,
+        status: order.status || 'Pending',
+        date: order.createdAt,
+        items: order.totalItems || order.items?.length || 0,
+        payment: order.paymentStatus || 'Pending'
+      }));
+      
+      setRecentOrdersData(transformedOrders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      toast.error('Failed to fetch orders');
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  // Generate time series data (simplified for now, can be enhanced with real data)
   const generateTimeSeriesData = (days = 30) => {
     const data = [];
     const today = new Date();
@@ -115,9 +170,9 @@ const VendorDashboard = () => {
       date.setDate(date.getDate() - i);
       data.push({
         date: date.toISOString().split('T')[0],
-        sales: Math.floor(Math.random() * 50) + 10,
-        revenue: Math.floor(Math.random() * 100000) + 20000,
-        orders: Math.floor(Math.random() * 30) + 5,
+        sales: 0,
+        revenue: 0,
+        orders: 0,
       });
     }
     return data;
@@ -125,90 +180,79 @@ const VendorDashboard = () => {
 
   const timeSeriesData = useMemo(() => generateTimeSeriesData(
     dateRange === '7d' ? 7 : dateRange === '30d' ? 30 : 90
-  ), [dateRange, refreshKey]);
-
-  // Calculate dynamic stats
-  const calculateStats = () => {
-    const totalProducts = Math.floor(Math.random() * 500) + 1000;
-    const totalOrders = timeSeriesData.reduce((sum, d) => sum + d.orders, 0);
-    const totalRevenue = timeSeriesData.reduce((sum, d) => sum + d.revenue, 0);
-    const stockValue = Math.floor(Math.random() * 500000) + 1500000;
-    const lowStockItems = Math.floor(Math.random() * 20) + 5;
-    const pendingOrders = Math.floor(Math.random() * 15) + 3;
-    const completedOrders = Math.floor(Math.random() * 100) + 200;
-
-    const changes = {
-      products: (Math.random() * 15 + 5).toFixed(1),
-      orders: (Math.random() * 25 + 8).toFixed(1),
-      revenue: (Math.random() * 20 + 10).toFixed(1),
-      stock: (Math.random() * 10 + 2).toFixed(1),
-    };
-
-    return {
-      totalProducts,
-      totalOrders,
-      totalRevenue,
-      stockValue,
-      lowStockItems,
-      pendingOrders,
-      completedOrders,
-      changes,
-    };
-  };
+  ), [dateRange]);
 
   const stats = useMemo(() => {
-    const calculated = calculateStats();
+    if (!dashboardData) {
+      // Return loading state or default values
+      return [
+        { label: 'Total Products', value: '0', icon: FaBox, color: 'bg-blue-500', change: '0%', trend: 'neutral', route: '/vendor/dashboard/products' },
+        { label: 'Orders', value: '0', icon: FaShoppingCart, color: 'bg-green-500', change: '0%', trend: 'neutral', route: '/vendor/dashboard/orders' },
+        { label: 'Revenue', value: '₹0.00M', icon: FaMoneyBillWave, color: 'bg-yellow-500', change: '0%', trend: 'neutral', route: '/vendor/dashboard/analytics' },
+        { label: 'Stock Value', value: '₹0.00M', icon: FaWarehouse, color: 'bg-purple-500', change: '0%', trend: 'neutral', route: '/vendor/dashboard/inventory' },
+        { label: 'Low Stock Items', value: '0', icon: FaExclamationTriangle, color: 'bg-red-500', change: 'Needs attention', trend: 'neutral', route: '/vendor/dashboard/inventory' },
+        { label: 'Pending Orders', value: '0', icon: FaClock, color: 'bg-orange-500', change: 'To process', trend: 'neutral', route: '/vendor/dashboard/orders' },
+      ];
+    }
+
+    const data = dashboardData;
     return [
       {
         label: 'Total Products',
-        value: calculated.totalProducts.toLocaleString(),
+        value: (data.totalProducts || 0).toLocaleString(),
         icon: FaBox,
         color: 'bg-blue-500',
-        change: `+${calculated.changes.products}%`,
-        trend: 'up'
+        change: `+${data.changes?.products || '0.0'}%`,
+        trend: parseFloat(data.changes?.products || 0) >= 0 ? 'up' : 'down',
+        route: '/vendor/dashboard/products'
       },
       {
         label: 'Orders',
-        value: calculated.totalOrders.toLocaleString(),
+        value: (data.totalOrders || 0).toLocaleString(),
         icon: FaShoppingCart,
         color: 'bg-green-500',
-        change: `+${calculated.changes.orders}%`,
-        trend: 'up'
+        change: `+${data.changes?.orders || '0.0'}%`,
+        trend: parseFloat(data.changes?.orders || 0) >= 0 ? 'up' : 'down',
+        route: '/vendor/dashboard/orders'
       },
       {
         label: 'Revenue',
-        value: `₹${(calculated.totalRevenue / 1000000).toFixed(2)}M`,
+        value: `₹${((data.totalRevenue || 0) / 1000000).toFixed(2)}M`,
         icon: FaMoneyBillWave,
         color: 'bg-yellow-500',
-        change: `+${calculated.changes.revenue}%`,
-        trend: 'up'
+        change: `+${data.changes?.revenue || '0.0'}%`,
+        trend: parseFloat(data.changes?.revenue || 0) >= 0 ? 'up' : 'down',
+        route: '/vendor/dashboard/analytics'
       },
       {
         label: 'Stock Value',
-        value: `₹${(calculated.stockValue / 1000000).toFixed(2)}M`,
+        value: `₹${((data.stockValue || 0) / 1000000).toFixed(2)}M`,
         icon: FaWarehouse,
         color: 'bg-purple-500',
-        change: `+${calculated.changes.stock}%`,
-        trend: 'up'
+        change: '+4.2%', // Can be calculated from previous period
+        trend: 'up',
+        route: '/vendor/dashboard/inventory'
       },
       {
         label: 'Low Stock Items',
-        value: calculated.lowStockItems.toString(),
+        value: (data.lowStockItems || 0).toString(),
         icon: FaExclamationTriangle,
         color: 'bg-red-500',
         change: 'Needs attention',
-        trend: 'neutral'
+        trend: 'neutral',
+        route: '/vendor/dashboard/inventory'
       },
       {
         label: 'Pending Orders',
-        value: calculated.pendingOrders.toString(),
+        value: (data.pendingOrders || 0).toString(),
         icon: FaClock,
         color: 'bg-orange-500',
         change: 'To process',
-        trend: 'neutral'
+        trend: 'neutral',
+        route: '/vendor/dashboard/orders'
       },
     ];
-  }, [timeSeriesData, refreshKey]);
+  }, [dashboardData]);
 
   // Products data - use fetched products from API
   const products = useMemo(() => {
@@ -221,24 +265,39 @@ const VendorDashboard = () => {
     return vendorProducts;
   }, [vendorProducts, searchTerm]);
 
-  // Recent orders
+  // Recent orders - use real data from dashboard or orders API
   const recentOrders = useMemo(() => {
-    return [
-      { id: 1, orderId: 'ORD-001', customer: 'John Doe', amount: 5000, status: 'Pending', date: '2024-01-15', items: 3, payment: 'Pending' },
-      { id: 2, orderId: 'ORD-002', customer: 'Jane Smith', amount: 8500, status: 'Shipped', date: '2024-01-14', items: 5, payment: 'Paid' },
-      { id: 3, orderId: 'ORD-003', customer: 'Bob Johnson', amount: 3200, status: 'Delivered', date: '2024-01-13', items: 2, payment: 'Paid' },
-      { id: 4, orderId: 'ORD-004', customer: 'Alice Brown', amount: 12000, status: 'Processing', date: '2024-01-15', items: 8, payment: 'Paid' },
-      { id: 5, orderId: 'ORD-005', customer: 'Charlie Wilson', amount: 6800, status: 'Pending', date: '2024-01-14', items: 4, payment: 'Pending' },
-    ];
-  }, [refreshKey]);
+    if (dashboardData?.recentOrders && dashboardData.recentOrders.length > 0) {
+      return dashboardData.recentOrders.map(order => ({
+        id: order.id,
+        orderId: order.orderId,
+        customer: order.customer,
+        amount: order.amount || 0,
+        status: order.status,
+        date: order.date,
+        items: order.items || 0,
+        payment: order.payment || 'Pending'
+      }));
+    }
+    // Fallback to orders from orders API
+    return recentOrdersData.slice(0, 10);
+  }, [dashboardData, recentOrdersData]);
 
-  // Top selling products
+  // Top selling products - use real data from dashboard
   const topSelling = useMemo(() => {
-    return products
-      .filter(p => p.status === 'Active')
-      .sort((a, b) => b.sales - a.sales)
-      .slice(0, 5);
-  }, [products]);
+    if (dashboardData?.topSellingProducts && dashboardData.topSellingProducts.length > 0) {
+      return dashboardData.topSellingProducts.map(product => ({
+        id: product.id,
+        name: product.name,
+        sales: product.sales || 0,
+        rating: product.rating || 4.5,
+        revenue: product.revenue || 0,
+        imageUrl: product.imageUrl
+      }));
+    }
+    // Fallback: return empty array or products sorted by sales
+    return [];
+  }, [dashboardData]);
 
   // Determine which page to show based on location
   const getCurrentPage = () => {
@@ -398,7 +457,7 @@ const VendorDashboard = () => {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto scrollbar-hide">
           <div className="p-4 md:p-6 lg:p-8">
             {/* Stats Grid - Only visible on Overview page */}
             {currentPage === 'overview' && (
@@ -407,7 +466,11 @@ const VendorDashboard = () => {
                   const Icon = stat.icon;
                   const TrendIcon = stat.trend === 'up' ? FaArrowUp : stat.trend === 'down' ? FaArrowDown : null;
                   return (
-                    <div key={index} className="card-hover bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                    <div 
+                      key={index} 
+                      className="card-hover bg-white rounded-xl shadow-md p-6 border border-gray-100 cursor-pointer transition-all hover:shadow-lg hover:scale-105"
+                      onClick={() => stat.route && navigate(stat.route)}
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
@@ -454,13 +517,13 @@ const VendorDashboard = () => {
                     />
                   )}
                   {currentPage === 'orders' && (
-                    <Orders recentOrders={recentOrders} />
+                    <Orders />
                   )}
                   {currentPage === 'inventory' && (
                     <Inventory products={products} />
                   )}
                   {currentPage === 'analytics' && (
-                    <Analytics timeSeriesData={timeSeriesData} products={products} />
+                    <Analytics dateRange={dateRange} />
                   )}
                   {currentPage === 'settings' && (
                     <Settings />
@@ -479,23 +542,27 @@ const VendorDashboard = () => {
                   <div className="card bg-white rounded-xl shadow-md border border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 mb-4">Top Selling Products</h3>
                     <div className="space-y-3">
-                      {topSelling.map((product, idx) => (
-                        <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold text-xs">
-                              {idx + 1}
+                      {topSelling.length > 0 ? (
+                        topSelling.map((product, idx) => (
+                          <div key={product.id || idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center text-white font-bold text-xs">
+                                {idx + 1}
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-900">{product.name}</p>
+                                <p className="text-xs text-gray-600">{product.sales || 0} sales</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="text-sm font-semibold text-gray-900">{product.name}</p>
-                              <p className="text-xs text-gray-600">{product.sales} sales</p>
+                            <div className="flex items-center gap-1">
+                              <FaStar className="text-yellow-400 text-xs" />
+                              <span className="text-xs text-gray-600">{product.rating || 4.5}</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <FaStar className="text-yellow-400 text-xs" />
-                            <span className="text-xs text-gray-600">{product.rating}</span>
-                          </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-500 text-center py-4">No sales data available yet</p>
+                      )}
                     </div>
                   </div>
 

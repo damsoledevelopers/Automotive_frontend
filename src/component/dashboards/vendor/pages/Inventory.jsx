@@ -35,7 +35,7 @@ const Inventory = ({ products }) => {
     const totalSKUs = products.length;
     const inStock = products.filter(p => p.stock > 0).length;
     const outOfStock = products.filter(p => p.stock === 0).length;
-    const lowStock = products.filter(p => p.stock > 0 && p.stock < 20).length;
+    const lowStock = products.filter(p => p.stock > 0 && p.stock < 5).length;
     const totalStockValue = products.reduce((sum, p) => sum + (p.stock * (p.price || 0)), 0);
 
     return {
@@ -61,11 +61,11 @@ const Inventory = ({ products }) => {
 
     // Status filter
     if (filterStatus === 'low') {
-      filtered = filtered.filter(p => p.stock > 0 && p.stock < 20);
+      filtered = filtered.filter(p => p.stock > 0 && p.stock < 5);
     } else if (filterStatus === 'out') {
       filtered = filtered.filter(p => p.stock === 0);
     } else if (filterStatus === 'in') {
-      filtered = filtered.filter(p => p.stock >= 20);
+      filtered = filtered.filter(p => p.stock >= 5);
     }
 
     return filtered;
@@ -74,7 +74,7 @@ const Inventory = ({ products }) => {
   // Restocking alerts
   const restockingAlerts = useMemo(() => {
     return products
-      .filter(p => p.stock < 20)
+      .filter(p => p.stock < 5)
       .sort((a, b) => a.stock - b.stock)
       .slice(0, 10);
   }, [products]);
@@ -86,7 +86,7 @@ const Inventory = ({ products }) => {
 
   const getStockStatus = (stock) => {
     if (stock === 0) return { label: 'Out of Stock', color: 'bg-red-100 text-red-800', icon: FaTimesCircle };
-    if (stock < 20) return { label: 'Low Stock', color: 'bg-orange-100 text-orange-800', icon: FaExclamationTriangle };
+    if (stock < 5) return { label: 'Low Stock', color: 'bg-orange-100 text-orange-800', icon: FaExclamationTriangle };
     return { label: 'In Stock', color: 'bg-green-100 text-green-800', icon: FaCheckCircle };
   };
 
@@ -387,8 +387,8 @@ const Inventory = ({ products }) => {
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
             >
               <option value="all">All Products</option>
-              <option value="in">In Stock (≥20)</option>
-              <option value="low">Low Stock (&lt;20)</option>
+              <option value="in">In Stock (≥5)</option>
+              <option value="low">Low Stock (&lt;5)</option>
               <option value="out">Out of Stock</option>
             </select>
           </div>
@@ -427,12 +427,12 @@ const Inventory = ({ products }) => {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <span className={`text-sm font-bold ${product.stock === 0 ? 'text-red-600' :
-                            product.stock < 20 ? 'text-orange-600' :
+                            product.stock < 5 ? 'text-orange-600' :
                               'text-green-600'
                           }`}>
                           {product.stock}
                         </span>
-                        {product.stock < 20 && product.stock > 0 && (
+                        {product.stock < 5 && product.stock > 0 && (
                           <FaArrowDown className="text-orange-500 text-xs" />
                         )}
                       </div>

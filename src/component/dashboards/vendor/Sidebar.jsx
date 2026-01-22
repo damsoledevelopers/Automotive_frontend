@@ -6,7 +6,6 @@ import {
   FaShoppingCart,
   FaChartLine,
   FaWarehouse,
-  FaFileInvoice,
   FaCog,
   FaSignOutAlt,
   FaTimes
@@ -22,7 +21,6 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     { id: 'orders', label: 'Orders', icon: FaShoppingCart, path: '/vendor/dashboard/orders' },
     { id: 'inventory', label: 'Inventory', icon: FaWarehouse, path: '/vendor/dashboard/inventory' },
     { id: 'analytics', label: 'Analytics', icon: FaChartLine, path: '/vendor/dashboard/analytics' },
-    { id: 'reports', label: 'Reports', icon: FaFileInvoice, path: '/vendor/dashboard/reports' },
     { id: 'settings', label: 'Settings', icon: FaCog, path: '/vendor/dashboard/settings' },
   ];
 
@@ -45,8 +43,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen w-64 border-r border-gray-200 shrink-0`}
+        className={`fixed bottom-0 left-0 h-full bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          } lg:translate-x-0 mb-0 lg:sticky lg:top-0 lg:h-screen w-64 border-r border-gray-200 shrink-0`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -61,7 +59,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4">
+          <nav className="flex-1 overflow-y-auto p-4 scrollbar-hide">
             <ul className="space-y-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
