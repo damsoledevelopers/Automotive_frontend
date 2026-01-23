@@ -43,8 +43,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed bottom-0 left-0 h-full bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
-          } lg:translate-x-0 mb-0 lg:sticky lg:top-0 lg:h-screen w-64 border-r border-gray-200 shrink-0`}
+        className={`fixed top-0 left-0 h-full bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+          } lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen w-64 border-r border-gray-200 shrink-0`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}

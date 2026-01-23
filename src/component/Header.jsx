@@ -9,7 +9,6 @@ import {
   FaVideo,
   FaTimes,
   FaUpload,
-  FaBell,
   FaWallet,
   FaMapMarkerAlt,
   FaChevronUp,
@@ -41,7 +40,7 @@ export const Header = () => {
 
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [membershipType, setMembershipType] = useState("Gold");
-  const [notificationCount, setNotificationCount] = useState(3);
+  const [wishlistCount, setWishlistCount] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -153,14 +152,15 @@ export const Header = () => {
             {/* RIGHT SECTION - CORNER FIXED */}
             <div className="flex items-center gap-4">
 
-              {/* Notifications */}
+              {/* Wishlist */}
               <motion.button
+                onClick={() => navigate("/mywishlist")}
                 className="relative p-2 hover:bg-gray-100 rounded-full"
               >
-                <FaBell className="text-xl" />
-                {notificationCount > 0 && (
+                <FaHeart className="text-xl" />
+                {wishlistCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {notificationCount}
+                    {wishlistCount}
                   </span>
                 )}
               </motion.button>
