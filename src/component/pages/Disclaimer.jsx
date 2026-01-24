@@ -125,7 +125,7 @@ const Disclaimer = () => {
           <div className="space-y-2 text-sm text-gray-700">
             <p>
               <strong>Email:</strong>{' '}
-              <a href="mailto:legal@sparelo.com" className="hover:text-gray-900">
+              <a href="mailto:legal@sparepe.com" className="hover:text-gray-900">
                 legal@sparelo.com
               </a>
             </p>

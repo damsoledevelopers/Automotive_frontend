@@ -86,9 +86,18 @@ const TermsOfUse = () => {
             If you have any questions about these Terms of Use, please contact us:
           </p>
           <p className="text-sm text-gray-700">
-            <strong>Email:</strong> legal@sparelo.com<br />
-            <strong>Phone:</strong> +91 98765 43210
-          </p>
+  <strong>Email:</strong>{" "}
+  <a href="mailto:legal@sparepe.com" className="text-gray-700">
+    legal@sparepe.com
+  </a>
+  <br />
+  <strong>Phone:</strong>{" "}
+  <a href="tel:+919876543210" className="text-gray-700">
+    +91 98765 43210
+  </a>
+</p>
+
+
         </div>
       </div>
       <Footer />

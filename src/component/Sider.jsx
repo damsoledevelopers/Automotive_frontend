@@ -98,7 +98,7 @@ export const Sider = ({ isOpen, onClose }) => {
     { label: "Return Policy", href: "/return-policy" },
     { label: "Privacy Policy", href: "/privacy-policy" },
     { label: "Terms of Use", href: "/terms-of-use" },
-    { label: "Become a Vendor", href: "/become-vendor" },
+    { label: "Become a Vendor", href: "/signup" },
   ];
 
   const handleItemClick = (item) => {
