@@ -96,57 +96,10 @@ const CategoryProductList = ({
       }
 
       // Map category slug to category name for API
-      // This mapping covers common category slugs to their database category names
+      // We keep a minimal map for backward compatibility with old URLs
+      // but primarily rely on dynamic slug matching
       const categoryMap = {
-        'maintenance_service_parts': 'Maintenance Service Parts',
-        'brakes': 'Brake System', // Try both variations
-        'brake': 'Brake System',
-        'brake_system': 'Brake System',
-        'break_system': 'Brake System',
-        'filters': 'Filters',
-        'filter': 'Filters',
-        'engine': 'Engine',
-        'lighting': 'Lighting',
-        'suspension': 'Suspension and Arms',
-        'suspension_arms': 'Suspension and Arms',
-        'cooling': 'Engine Cooling System',
-        'cooling_system': 'Engine Cooling System',
-        'electrical': 'Electrical Components',
-        'electrical_components': 'Electrical Components',
-        'electric_components': 'Electrical Components',
-        'body': 'Body',
-        'interior': 'Interior Comfort',
-        'interior_comfort': 'Interior Comfort',
-        'exhaust': 'Exhaust System',
-        'exhaust_system': 'Exhaust System',
-        'other': 'Other',
-        'air_conditioning': 'Air Conditioning',
-        'bearings': 'Bearings',
-        'belts_chains_rollers': 'Belts Chains And Rollers',
-        'belts': 'Belts Chains And Rollers',
-        'drive_belts': 'Belts Chains And Rollers',
-        'car_accessories': 'Car Accessories',
-        'clutch': 'Clutch',
-        'control_cables': 'Control Cables',
-        'fuel_system': 'Fuel Supply System',
-        'fuelsystem': 'Fuel Supply System',
-        'gaskets_sealingrings': 'Gaskets & Seals',
-        'gaskets_seals': 'Gaskets & Seals',
-        'ignition_glowplug': 'Ignition & Glowplug System',
-        'oilsfluids': 'Oils & Fluids',
-        'oils_fluids': 'Oils & Fluids',
-        'pipes_hoses': 'Pipes & Hoses',
-        'repair_kits': 'Repair Kits',
-        'sensors_control_units': 'Sensors Relay and Control Units',
-        'steering': 'Steering',
-        'towbar': 'Towbar Parts',
-        'towbar_parts': 'Towbar Parts',
-        'trims': 'Trims',
-        'tyres_and_alloys': 'Tyres and Alloys',
-        'transmission': 'Transmission',
-        'universal': 'Universal',
-        'wheels': 'Wheels',
-        'windscreen_cleaning_system': 'Windscreen Cleaning System'
+        // Minimal map for legacy URLs if needed
       };
 
       // Try to extract category name from slug
@@ -156,17 +109,14 @@ const CategoryProductList = ({
       if (!categoryName) {
         // Try to extract from slug format like "4079-accessory_kit_disc_brake_pads"
         const slugWithoutNumbers = categorySlug.replace(/^\d+-/, '').replace(/_/g, ' ');
-        // Try to match with category map first
-        const normalizedSlug = slugWithoutNumbers.toLowerCase().replace(/\s+/g, '_');
-        categoryName = categoryMap[normalizedSlug];
-
-        // If still not found, this might be a subcategory slug
-        if (!categoryName) {
-          // Convert underscore slug to title case (e.g., "bulb" or "fog_lamp" -> "Bulb" or "Fog Lamp")
-          subCategoryName = slugWithoutNumbers.split(' ').map(word =>
-            word.charAt(0).toUpperCase() + word.slice(1)
-          ).join(' ');
-        }
+        
+        // Convert underscore/hyphen slug to Title Case (e.g., "brake_system" -> "Brake System")
+        // This is the primary dynamic matching logic
+        const titleCaseName = slugWithoutNumbers.split(/[\s_-]+/).map(word =>
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+        
+        categoryName = titleCaseName;
       }
 
       // If we have a parent category from location state, use that

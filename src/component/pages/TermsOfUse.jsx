@@ -85,6 +85,8 @@ const TermsOfUse = () => {
           <p className="text-sm sm:text-base text-gray-700 mb-2">
             If you have any questions about these Terms of Use, please contact us:
           </p>
+
+          
           <p className="text-sm text-gray-700">
   <strong>Email:</strong>{" "}
   <a href="mailto:legal@sparepe.com" className="text-gray-700">

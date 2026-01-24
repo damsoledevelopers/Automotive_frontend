@@ -784,7 +784,7 @@ export const SearchSection = ({ onClose, initialVehicle = null }) => {
                       background: linear-gradient(to bottom, #6b7280, #4b5563);
                     }
                   `}</style>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 sm:gap-5 md:gap-6 categories-scroll">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5 categories-scroll">
                     {categories.map((cat, index) => (
                       <motion.div
                         key={cat.title}
@@ -792,22 +792,22 @@ export const SearchSection = ({ onClose, initialVehicle = null }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.03 }}
                         onClick={() => handleCategoryClick(cat.href)}
-                        className="group flex flex-col items-center p-4 sm:p-5 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all duration-300 cursor-pointer shadow-sm hover:shadow-md"
-                        whileHover={{ scale: 1.05, y: -5 }}
-                        whileTap={{ scale: 0.95 }}
+                        className="group flex flex-col items-center transition-all duration-300 cursor-pointer"
+                        whileHover={{ y: -4 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 mb-3 sm:mb-4 flex items-center justify-center bg-white rounded-xl p-2 border border-gray-200 group-hover:border-gray-300 transition-all duration-300">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-2 flex items-center justify-center">
                           <img 
                             src={cat.img} 
                             alt={cat.title} 
-                            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300" 
+                            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" 
                             onError={(e) => {
                               e.target.src = `https://via.placeholder.com/80x80/9ca3af/ffffff?text=${cat.title.substring(0, 2)}`;
                             }}
                             loading="lazy"
                           />
                         </div>
-                        <span className="text-center font-bold text-gray-700 text-[10px] sm:text-xs md:text-sm group-hover:text-gray-900 transition-colors duration-300 line-clamp-2">
+                        <span className="text-center font-medium text-gray-800 text-[10px] sm:text-xs md:text-sm">
                           {cat.title}
                         </span>
                       </motion.div>

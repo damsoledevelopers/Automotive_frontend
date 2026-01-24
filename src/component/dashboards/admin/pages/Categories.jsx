@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaPlus, FaEdit, FaTrash, FaSearch, FaBox, FaSpinner } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaSearch, FaBox, FaSpinner, FaUpload } from 'react-icons/fa';
 import { categoryService } from '../../../../services/apiService';
 
 const Categories = () => {
@@ -26,17 +26,62 @@ const Categories = () => {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const filters = {};
-      if (searchTerm) {
-        filters.search = searchTerm;
+      
+      // Fast initial load using flat endpoint (no product counts)
+      const fastResult = await categoryService.getAllActiveCategoriesFlat();
+      let fastCategoriesData = [];
+      
+      if (fastResult && fastResult.categories && Array.isArray(fastResult.categories)) {
+        fastCategoriesData = fastResult.categories;
+      } else if (Array.isArray(fastResult)) {
+        fastCategoriesData = fastResult;
+      } else if (fastResult && fastResult.data && Array.isArray(fastResult.data.categories)) {
+        fastCategoriesData = fastResult.data.categories;
+      } else if (fastResult && fastResult.data && Array.isArray(fastResult.data)) {
+        fastCategoriesData = fastResult.data;
       }
-      const result = await categoryService.getAdminCategories(filters);
-      const categoriesData = result.categories || result || [];
-      setCategories(categoriesData);
+      
+      // Apply search filter if provided
+      let filteredFast = fastCategoriesData;
+      if (searchTerm) {
+        filteredFast = fastCategoriesData.filter(cat => {
+          const name = cat.name || cat;
+          return name.toLowerCase().includes(searchTerm.toLowerCase());
+        });
+      }
+      
+      // Set categories immediately for fast display
+      setCategories(filteredFast);
+      setLoading(false);
+      
+      // Load full data with counts in background (optional, for product counts)
+      // This runs async so UI is responsive
+      if (!searchTerm) {
+        // Only load counts if not searching (to avoid double loading)
+        setTimeout(async () => {
+          try {
+            const filters = {};
+            const result = await categoryService.getAdminCategories(filters);
+            const categoriesData = result.categories || result || [];
+            // Update with counts, but keep fast data structure
+            setCategories(prev => {
+              const updated = prev.map(cat => {
+                const fullCat = categoriesData.find(fc => 
+                  (fc._id || fc.id) === (cat.id || cat._id) || fc.name === (cat.name || cat)
+                );
+                return fullCat || cat;
+              });
+              return updated.length > 0 ? updated : categoriesData;
+            });
+          } catch (error) {
+            // Silent fail - we already have the fast data
+            console.warn('Failed to load category counts:', error);
+          }
+        }, 100);
+      }
     } catch (error) {
       console.error('Failed to fetch categories:', error);
       alert('Failed to load categories: ' + error.message);
-    } finally {
       setLoading(false);
     }
   };
@@ -84,6 +129,63 @@ const Categories = () => {
     }
   };
 
+  const compressImage = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          const maxSize = 200;
+          if (width > height) {
+            if (width > maxSize) {
+              height = (height * maxSize) / width;
+              width = maxSize;
+            }
+          } else {
+            if (height > maxSize) {
+              width = (width * maxSize) / height;
+              height = maxSize;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedBase64 = canvas.toDataURL('image/png', 0.9);
+          resolve(compressedBase64);
+        };
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleIconUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+
+    try {
+      const compressedIcon = await compressImage(file);
+      setFormData({ ...formData, icon: compressedIcon });
+    } catch (error) {
+      console.error('Failed to process icon:', error);
+      alert('Failed to process icon: ' + error.message);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     try {
@@ -120,6 +222,63 @@ const Categories = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Helper to determine category level (1, 2, or 3)
+  const getLevel = (cat) => {
+    if (!cat.parentCategory) return 1;
+    
+    // Find parent
+    const parentId = typeof cat.parentCategory === 'object' 
+      ? (cat.parentCategory._id || cat.parentCategory.id) 
+      : cat.parentCategory;
+      
+    const parent = categories.find(c => (c._id || c.id) == parentId);
+    
+    if (!parent) return 2; // Fallback
+    if (!parent.parentCategory) return 2;
+    
+    return 3;
+  };
+
+  // Helper function to get category hierarchy path
+  const getCategoryPath = (category) => {
+    if (!category.parentCategory) {
+      return { level: 1, path: category.name, label: `${category.name} (Parent Category)` };
+    }
+    
+    const parent = categories.find(c => {
+      if (typeof category.parentCategory === 'object') {
+        return (c._id || c.id) === (category.parentCategory._id || category.parentCategory.id);
+      }
+      return (c._id || c.id) === category.parentCategory;
+    });
+    
+    if (parent && !parent.parentCategory) {
+      return { 
+        level: 2, 
+        path: `${parent.name} → ${category.name}`, 
+        label: `${parent.name} → ${category.name} (Category)` 
+      };
+    }
+    
+    if (parent && parent.parentCategory) {
+      const grandParent = categories.find(c => {
+        if (typeof parent.parentCategory === 'object') {
+          return (c._id || c.id) === (parent.parentCategory._id || parent.parentCategory.id);
+        }
+        return (c._id || c.id) === parent.parentCategory;
+      });
+      if (grandParent) {
+        return { 
+          level: 3, 
+          path: `${grandParent.name} → ${parent.name} → ${category.name}`, 
+          label: `${grandParent.name} → ${parent.name} → ${category.name} (Subcategory)` 
+        };
+      }
+    }
+    
+    return { level: 2, path: category.name, label: category.name };
   };
 
   const filteredCategories = categories.filter(cat =>
@@ -159,17 +318,42 @@ const Categories = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Parent Category</label>
+                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">
+                      Parent Category
+                      <span className="text-[10px] text-gray-400 ml-2">(Select parent to create hierarchy)</span>
+                    </label>
                     <select
                       className="w-full px-5 py-4 bg-gray-50 border-none rounded-2xl focus:ring-4 focus:ring-blue-500/10 font-bold transition appearance-none"
                       value={formData.parentCategory}
                       onChange={(e) => setFormData({ ...formData, parentCategory: e.target.value })}
                     >
-                      <option value="none">None (Root Category)</option>
-                      {categories.filter(cat => !cat.parentCategory || cat.parentCategory === null).map(cat => (
-                        <option key={cat._id || cat.id} value={cat.name}>{cat.name}</option>
-                      ))}
+                      <option value="none">None (Create Level 1 - Parent Category)</option>
+                      {categories
+                        .filter(cat => getLevel(cat) < 3) // Only allow selecting Level 1 or 2 as parent
+                        .map(cat => {
+                          const level = getLevel(cat);
+                          let displayName = cat.name;
+                          
+                          if (level === 2) {
+                             const parentId = typeof cat.parentCategory === 'object' 
+                              ? (cat.parentCategory._id || cat.parentCategory.id) 
+                              : cat.parentCategory;
+                             const parent = categories.find(c => (c._id || c.id) == parentId);
+                             if (parent) displayName = `${parent.name} → ${cat.name}`;
+                          }
+
+                          return (
+                            <option key={cat._id || cat.id} value={cat.name}>
+                              {displayName} {level === 1 ? '(Creates Level 2 - Category)' : '(Creates Level 3 - Subcategory)'}
+                            </option>
+                          );
+                        })}
                     </select>
+                    <p className="text-[10px] text-gray-500 mt-1">
+                      <strong>Guide:</strong> Select "None" to create a main category (e.g. Maintenance). <br/>
+                      Select a Level 1 item to create a sub-category (e.g. Braking). <br/>
+                      Select a Level 2 item to create a product type (e.g. Brake Pads).
+                    </p>
                   </div>
                 </div>
 
@@ -188,12 +372,23 @@ const Categories = () => {
                   <div className="space-y-2">
                     <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Display Icon</label>
                     <div className="flex gap-4">
-                      <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
-                        <FaBox size={24} />
+                      <div className="w-14 h-14 bg-blue-50 flex items-center justify-center text-blue-600 shrink-0 overflow-hidden">
+                        {formData.icon ? (
+                          <img src={formData.icon} alt="Category icon" className="w-full h-full object-cover" />
+                        ) : (
+                          <FaBox size={24} />
+                        )}
                       </div>
-                      <button type="button" className="flex-1 px-5 py-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl font-bold text-gray-400 hover:border-blue-400 hover:text-blue-500 transition">
-                        Upload Icon
-                      </button>
+                      <label className="flex-1 px-5 py-4 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl font-bold text-gray-400 hover:border-blue-400 hover:text-blue-500 transition cursor-pointer flex items-center justify-center gap-2">
+                        <FaUpload />
+                        <span>Upload Icon</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleIconUpload}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
                   </div>
                   <div className="flex flex-col justify-end">
@@ -231,8 +426,12 @@ const Categories = () => {
             <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
               <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-6">Preview Card</h3>
               <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 border-t-4 border-t-blue-500">
-                <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center text-white mb-4 shadow-lg shadow-blue-500/20">
-                  <FaBox />
+                <div className="w-12 h-12 bg-blue-500 flex items-center justify-center text-white mb-4 shadow-lg shadow-blue-500/20 overflow-hidden">
+                  {formData.icon ? (
+                    <img src={formData.icon} alt="Category icon" className="w-full h-full object-cover" />
+                  ) : (
+                    <FaBox />
+                  )}
                 </div>
                 <h4 className="text-lg font-black text-gray-900 mb-1">{formData.name || 'Category Name'}</h4>
                 <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-4">
@@ -308,8 +507,12 @@ const Categories = () => {
         {!loading && filteredCategories.map((category) => (
           <div key={category._id || category.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 hover:shadow-xl transition-all group border-b-4 border-b-transparent hover:border-b-blue-500">
             <div className="flex items-center justify-between mb-6">
-              <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300 shadow-sm group-hover:shadow-lg group-hover:shadow-blue-500/20">
-                <FaBox size={24} />
+              <div className="w-14 h-14 bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300 shadow-sm group-hover:shadow-lg group-hover:shadow-blue-500/20 overflow-hidden">
+                {category.icon ? (
+                  <img src={category.icon} alt={category.name} className="w-full h-full object-cover" />
+                ) : (
+                  <FaBox size={24} />
+                )}
               </div>
               <div className="flex gap-2">
                 <button
@@ -327,7 +530,17 @@ const Categories = () => {
                 </button>
               </div>
             </div>
-            <h3 className="text-xl font-black text-gray-900 mb-2 truncate uppercase tracking-tight">{category.name}</h3>
+            <h3 className="text-xl font-black text-gray-900 mb-1 truncate uppercase tracking-tight">{category.name}</h3>
+            <p className="text-xs text-gray-500 font-bold mb-2">
+              {getCategoryPath(category).path}
+            </p>
+            <span className={`inline-block px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded-full mb-2 ${
+              getCategoryPath(category).level === 1 ? 'bg-blue-100 text-blue-700' :
+              getCategoryPath(category).level === 2 ? 'bg-green-100 text-green-700' :
+              'bg-purple-100 text-purple-700'
+            }`}>
+              {getCategoryPath(category).level === 1 ? 'Parent' : getCategoryPath(category).level === 2 ? 'Category' : 'Subcategory'}
+            </span>
             <div className="flex items-center gap-4 border-t border-gray-50 pt-4 mt-4">
               <div className="flex flex-col">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">Products</span>

@@ -3,56 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { categoryService } from "../../services/apiService";
 import { FaSpinner } from "react-icons/fa";
 
-// Category name to display format mapping (with images and slugs)
+// Helper function to map category name to display format
 const mapCategoryToDisplay = (categoryName) => {
-  const categoryMap = {
-    "Air Conditioning": { slug: "air_conditioning", img: "https://boodmo.com/media/cache/catalog_image/images/categories/db9dad4.jpg" },
-    "Bearings": { slug: "bearings", img: "https://boodmo.com/media/cache/catalog_image/images/categories/40e95ca.jpg" },
-    "Belts Chains And Rollers": { slug: "drive_belts", img: "https://boodmo.com/media/cache/catalog_image/images/categories/ddbeb81.jpg" },
-    "Body": { slug: "body", img: "https://boodmo.com/media/cache/catalog_image/images/categories/40e6a4c.jpg" },
-    "Brake System": { slug: "brakes", img: "https://boodmo.com/media/cache/catalog_image/images/categories/5301830.jpg" },
-    "Car Accessories": { slug: "car_accessories", img: "https://boodmo.com/media/cache/catalog_image/images/categories/ab143a7.webp" },
-    "Clutch": { slug: "clutch", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e8cb288.jpg" },
-    "Clutch System": { slug: "clutch", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e8cb288.jpg" },
-    "Control Cables": { slug: "control_cables", img: "https://boodmo.com/media/cache/catalog_image/images/categories/7455b44.jpg" },
-    "Electrical Components": { slug: "electric_components", img: "https://boodmo.com/media/cache/catalog_image/images/categories/d5b3ac7.jpg" },
-    "Engine": { slug: "engine", img: "https://boodmo.com/media/cache/catalog_image/images/categories/8fea232.jpg" },
-    "Engine Cooling System": { slug: "cooling_system", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e215fcc.jpg" },
-    "Exhaust System": { slug: "exhaust", img: "https://boodmo.com/media/cache/catalog_image/images/categories/d1e33d6.jpg" },
-    "Filters": { slug: "filters", img: "https://boodmo.com/media/cache/catalog_image/images/categories/a16bbf6.jpg" },
-    "Fuel Supply System": { slug: "fuelsystem", img: "https://boodmo.com/media/cache/catalog_image/images/categories/49ed220.jpg" },
-    "Gaskets & Seals": { slug: "gaskets_sealingrings", img: "https://boodmo.com/media/cache/catalog_image/images/categories/14b8753.jpg" },
-    "Interior Comfort": { slug: "interior_comfort", img: "https://boodmo.com/media/cache/catalog_image/images/categories/05a2b84.jpg" },
-    "Interior and Comfort": { slug: "interior_comfort", img: "https://boodmo.com/media/cache/catalog_image/images/categories/05a2b84.jpg" },
-    "Lighting": { slug: "lighting", img: "https://boodmo.com/media/cache/catalog_image/images/categories/53380d3.webp" },
-    "Maintenance Service Parts": { slug: "maintenance_service_parts", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e8cb288.jpg" },
-    "Oils & Fluids": { slug: "oilsfluids", img: "https://boodmo.com/media/cache/catalog_image/images/categories/4614ecf.webp" },
-    "Oils and Fluids": { slug: "oilsfluids", img: "https://boodmo.com/media/cache/catalog_image/images/categories/4614ecf.webp" },
-    "Pipes & Hoses": { slug: "pipes_hoses", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e0b2a63.jpg" },
-    "Repair Kits": { slug: "repair_kits", img: "https://boodmo.com/media/cache/catalog_image/images/categories/2676bd2.jpg" },
-    "Sensors Relay and Control Units": { slug: "sensors_control_units", img: "https://boodmo.com/media/cache/catalog_image/images/categories/2676bd2.jpg" },
-    "Sensors Relays and Control Units": { slug: "sensors_control_units", img: "https://boodmo.com/media/cache/catalog_image/images/categories/2676bd2.jpg" },
-    "Steering": { slug: "steering", img: "https://boodmo.com/media/cache/catalog_image/images/categories/72fb97b.jpg" },
-    "Suspension and Arms": { slug: "suspension_arms", img: "https://boodmo.com/media/cache/catalog_image/images/categories/f26073e.jpg" },
-    "Towbar Parts": { slug: "towbar", img: "https://boodmo.com/media/cache/catalog_image/images/categories/98b48d2.jpg" },
-    "Transmission": { slug: "transmission", img: "https://boodmo.com/media/cache/catalog_image/images/categories/21ce121.jpg" },
-    "Trims": { slug: "trims", img: "https://boodmo.com/media/cache/catalog_image/images/categories/beccd06.jpg" },
-    "Universal": { slug: "universal", img: "https://boodmo.com/media/cache/catalog_image/images/categories/af8d099.jpg" },
-    "Wheels": { slug: "wheels", img: "https://boodmo.com/media/cache/catalog_image/images/categories/430177a.jpg" },
-    "Windscreen Cleaning System": { slug: "windscreen_cleaning_system", img: "https://boodmo.com/media/cache/catalog_image/images/categories/1053d82.jpg" },
-  };
-
-  const mapped = categoryMap[categoryName];
-  if (mapped) {
-    return {
-      title: categoryName,
-      href: `/catalog/${mapped.slug}/`,
-      img: mapped.img
-    };
-  }
-  
-  // Default mapping if not found - use category icon from backend or placeholder
+  // Dynamic mapping: Convert category name to slug and use backend icon if available
+  // If no icon, use a placeholder
   const slug = categoryName.toLowerCase().replace(/\s+/g, '_').replace(/&/g, '').replace(/\//g, '');
+  
   return {
     title: categoryName,
     href: `/catalog/${slug}/`,
@@ -104,7 +60,12 @@ const ReplacementParts = () => {
             if (!categoryName || typeof categoryName !== 'string') {
               return null;
             }
-            return mapCategoryToDisplay(categoryName);
+            const mapped = mapCategoryToDisplay(categoryName);
+            // Use category icon from backend if available, otherwise use mapped image
+            if (cat && cat.icon) {
+              mapped.img = cat.icon;
+            }
+            return mapped;
           })
           .filter(cat => cat && cat.title);
         
@@ -131,12 +92,15 @@ const ReplacementParts = () => {
   );
 
   return (
-    <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-10">
+    <section className="max-w-7xl mx-auto px-2 sm:px-3 py-6 sm:py-8 md:py-10">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 sm:mb-8 gap-4">
-        <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">
-          Replacement <span className="text-sky-600">Parts</span>
-        </h3>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 sm:mb-10 gap-4">
+        <div>
+          <div className="w-16 h-1 bg-gradient-to-r from-sky-600 to-blue-600 mb-3 rounded-full"></div>
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">
+            Replacement <span className="text-blue-600">Parts</span>
+          </h3>
+        </div>
 
         <input
           type="search"
@@ -161,22 +125,24 @@ const ReplacementParts = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {filteredParts.map((part, index) => (
             <a
               key={index}
               href={part.href}
-              className="flex flex-col items-center bg-white shadow hover:shadow-lg rounded-lg sm:rounded-xl p-2 sm:p-3 transition-transform transform hover:scale-105"
+              className="group flex flex-col items-center p-3 transition-all duration-300"
             >
-              <img
-                src={part.img}
-                alt={part.title}
-                className="w-12 h-12 sm:w-14 sm:h-14 object-contain mb-2"
-                onError={(e) => {
-                  e.target.src = `https://via.placeholder.com/100x100/9ca3af/ffffff?text=${(part.title || 'Part').substring(0, 2).toUpperCase()}`;
-                }}
-              />
-              <span className="text-[10px] sm:text-xs text-gray-700 text-center font-medium line-clamp-2">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 mb-2 flex items-center justify-center">
+                <img
+                  src={part.img}
+                  alt={part.title}
+                  className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+                  onError={(e) => {
+                    e.target.src = `https://via.placeholder.com/100x100/9ca3af/ffffff?text=${(part.title || 'Part').substring(0, 2).toUpperCase()}`;
+                  }}
+                />
+              </div>
+              <span className="text-center font-medium text-gray-800 text-xs sm:text-sm">
                 {part.title}
               </span>
             </a>

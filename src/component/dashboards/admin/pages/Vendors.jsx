@@ -106,7 +106,7 @@ const Vendors = ({ topVendors }) => {
     }
   };
 
-  const handleAction = (type, vendor) => {
+  const handleAction = async (type, vendor) => {
     setSelectedVendor(vendor);
     if (type === 'edit') {
       setFormData({ ...vendor });
@@ -114,8 +114,18 @@ const Vendors = ({ topVendors }) => {
     } else if (type === 'view') {
       setView('view');
     } else if (type === 'delete') {
-      if (window.confirm(`Are you sure you want to delete ${vendor.name}?`)) {
-        alert('Vendor deleted successfully');
+      if (window.confirm(`Are you sure you want to permanently delete vendor "${vendor.name}"? This action cannot be undone.`)) {
+        try {
+          setLoading(true);
+          await userService.deleteUser(vendor.id);
+          toast.success('Vendor deleted successfully');
+          fetchVendors(); // Refresh the list
+        } catch (error) {
+          console.error('Failed to delete vendor:', error);
+          toast.error(error.message || 'Failed to delete vendor');
+        } finally {
+          setLoading(false);
+        }
       }
     }
   };

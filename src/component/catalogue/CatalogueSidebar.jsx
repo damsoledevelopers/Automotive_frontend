@@ -118,11 +118,23 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
 
   // Categories are now fetched from API (see useEffect above)
 
-  const toggleCategory = (categoryName) => {
-    setExpandedCategories(prev => ({
-      ...prev,
-      [categoryName]: !prev[categoryName]
-    }));
+  const toggleCategory = (categoryName, e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setExpandedCategories(prev => {
+      const newState = { ...prev };
+      // Close all other categories
+      Object.keys(newState).forEach(key => {
+        if (key !== categoryName) {
+          newState[key] = false;
+        }
+      });
+      // Toggle only the clicked category
+      newState[categoryName] = !prev[categoryName];
+      return newState;
+    });
   };
 
   const handleReset = () => {
@@ -271,7 +283,7 @@ const CatalogueSidebar = ({ isMobileOpen, setIsMobileOpen }) => {
                   </Link>
                   {category.subCategories && category.subCategories.length > 0 && (
                     <button
-                      onClick={() => toggleCategory(category.name)}
+                      onClick={(e) => toggleCategory(category.name, e)}
                       className="text-gray-500 hover:text-gray-700 px-1 text-xs"
                       aria-label={expandedCategories[category.name] ? "Collapse" : "Expand"}
                     >

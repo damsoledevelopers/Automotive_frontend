@@ -45,7 +45,8 @@ const Products = () => {
                 search: searchTerm || undefined,
                 category: categoryFilter !== 'all' ? categoryFilter : undefined,
                 status: statusFilter, // Always filter by status (approved or pending)
-                limit: 100 // Get more products
+                limit: 100, // Get more products
+                isActive: statusFilter === 'approved' ? true : undefined // Only show active products in 'approved' (Live) tab
             };
 
             // Remove undefined filters
@@ -61,7 +62,7 @@ const Products = () => {
             const [totalResult, pendingResult, approvedResult, rejectedResult] = await Promise.all([
                 productService.getAdminProducts({ limit: 1 }),
                 productService.getAdminProducts({ status: 'pending', limit: 1 }),
-                productService.getAdminProducts({ status: 'approved', limit: 1 }),
+                productService.getAdminProducts({ status: 'approved', isActive: true, limit: 1 }), // Only count active as approved/live
                 productService.getAdminProducts({ status: 'rejected', limit: 1 })
             ]);
 

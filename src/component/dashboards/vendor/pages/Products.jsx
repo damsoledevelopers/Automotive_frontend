@@ -19,6 +19,7 @@ import {
 } from 'react-icons/fa';
 import { productService, categoryService } from '../../../../services/apiService';
 import { toast } from 'react-toastify';
+import HierarchicalCategorySelector from '../../admin/components/HierarchicalCategorySelector';
 
 const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -457,7 +458,11 @@ const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
       product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.sku?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
+    // Case-insensitive category matching with trimmed values
+    const productCategory = product.category?.toString().trim() || '';
+    const selectedCategory = filterCategory?.toString().trim() || '';
+    const matchesCategory = filterCategory === 'all' || 
+      productCategory.toLowerCase() === selectedCategory.toLowerCase();
     
     // Determine status based on status field (or approved for backward compatibility) and stock
     const productStatusValue = product.status || (product.approved ? 'approved' : 'pending');
@@ -778,29 +783,11 @@ const Products = ({ products, searchTerm, setSearchTerm, onProductAdded }) => {
                     />
                   </div>
                   <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Category *
-                    </label>
-                    <select
-                      required
+                    <HierarchicalCategorySelector
                       value={formData.category}
-                      onChange={(e) => setFormData({...formData, category: e.target.value})}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-                      style={{ zIndex: 1 }}
-                      disabled={loadingCategories}
-                    >
-                      <option value="">Select Category</option>
-                      {loadingCategories ? (
-                        <option disabled>Loading categories...</option>
-                      ) : (
-                        categories.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))
-                      )}
-                    </select>
-                    {loadingCategories && (
-                      <FaSpinner className="absolute right-3 top-9 text-gray-400 animate-spin" />
-                    )}
+                      onChange={(value) => setFormData({...formData, category: value})}
+                      required={true}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">

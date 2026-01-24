@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../../auth/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useJob } from '../../../contexts/JobContext';
-import { analyticsService } from '../../../services/apiService';
+import { analyticsService, orderService } from '../../../services/apiService';
 import { toast } from 'react-toastify';
 import Sidebar from './Sidebar';
 import Overview from './pages/Overview';
@@ -78,18 +78,45 @@ const SuperAdminDashboard = () => {
     uptime: '0%'
   });
   const [topVendorsData, setTopVendorsData] = useState([]);
+  const [orders, setOrders] = useState([]);
 
   // Fetch real-time data from backend
   useEffect(() => {
     fetchDashboardData();
     fetchAdditionalData();
+    fetchOrders();
     // Refresh every 30 seconds
     const interval = setInterval(() => {
       fetchDashboardData();
       fetchAdditionalData();
+      fetchOrders();
     }, 30000);
     return () => clearInterval(interval);
   }, [dateRange]);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await orderService.getOrders();
+      // Handle different response structures
+      const ordersList = Array.isArray(response) ? response : 
+                        (response.orders && Array.isArray(response.orders)) ? response.orders : [];
+      
+      const mappedOrders = ordersList.map(order => ({
+        id: order._id || order.id,
+        orderId: order.orderId || (order._id ? `ORD-${order._id.substring(0, 6).toUpperCase()}` : 'N/A'),
+        customer: order.user?.name || order.customerName || 'Unknown Customer',
+        vendor: order.items?.[0]?.vendor?.name || order.vendor?.name || order.vendorName || 'Unknown Vendor',
+        amount: order.totalAmount ? `₹${order.totalAmount.toLocaleString()}` : (typeof order.amount === 'string' ? order.amount : `₹${order.amount || 0}`),
+        status: order.status || 'Pending',
+        date: order.createdAt ? new Date(order.createdAt).toLocaleDateString() : (order.date || new Date().toLocaleDateString()),
+        items: order.items?.length || order.itemCount || 0
+      }));
+      
+      setOrders(mappedOrders);
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
+    }
+  };
 
   const fetchDashboardData = async () => {
     try {
@@ -168,7 +195,7 @@ const SuperAdminDashboard = () => {
     const totalRevenue = overallStats?.totalRevenue || 0;
     const totalProducts = overallStats?.totalProducts || 0;
     const activeJobs = realTimeData?.activeJobs || 0;
-    const completedJobs = 0; // Would need to calculate from orders with status 'Delivered'
+    const completedJobs = overallStats?.completedJobs || 0;
 
     // Use changes from backend if available
     const changes = overallStats?.changes || {
@@ -198,7 +225,8 @@ const SuperAdminDashboard = () => {
         icon: FaUsers,
         color: 'bg-blue-500',
         change: `${calculated.changes.users >= 0 ? '+' : ''}${calculated.changes.users}%`,
-        trend: calculated.changes.users > 0 ? 'up' : calculated.changes.users < 0 ? 'down' : 'neutral'
+        trend: calculated.changes.users > 0 ? 'up' : calculated.changes.users < 0 ? 'down' : 'neutral',
+        path: '/admin/dashboard/users'
       },
       {
         label: 'Vendors',
@@ -206,7 +234,8 @@ const SuperAdminDashboard = () => {
         icon: FaStore,
         color: 'bg-green-500',
         change: `${calculated.changes.vendors >= 0 ? '+' : ''}${calculated.changes.vendors}%`,
-        trend: calculated.changes.vendors > 0 ? 'up' : calculated.changes.vendors < 0 ? 'down' : 'neutral'
+        trend: calculated.changes.vendors > 0 ? 'up' : calculated.changes.vendors < 0 ? 'down' : 'neutral',
+        path: '/admin/dashboard/vendors'
       },
       {
         label: 'Mechanics',
@@ -214,7 +243,8 @@ const SuperAdminDashboard = () => {
         icon: FaTools,
         color: 'bg-yellow-500',
         change: `${calculated.activeJobs} ongoing`,
-        trend: 'neutral'
+        trend: 'neutral',
+        path: '/admin/dashboard/mechanics'
       },
       {
         label: 'Total Orders',
@@ -222,7 +252,8 @@ const SuperAdminDashboard = () => {
         icon: FaShoppingCart,
         color: 'bg-purple-500',
         change: `${calculated.changes.orders >= 0 ? '+' : ''}${calculated.changes.orders}%`,
-        trend: calculated.changes.orders > 0 ? 'up' : calculated.changes.orders < 0 ? 'down' : 'neutral'
+        trend: calculated.changes.orders > 0 ? 'up' : calculated.changes.orders < 0 ? 'down' : 'neutral',
+        path: '/admin/dashboard/orders'
       },
       {
         label: 'Revenue',
@@ -230,7 +261,8 @@ const SuperAdminDashboard = () => {
         icon: FaMoneyBillWave,
         color: 'bg-red-500',
         change: `${calculated.changes.revenue >= 0 ? '+' : ''}${calculated.changes.revenue}%`,
-        trend: calculated.changes.revenue > 0 ? 'up' : calculated.changes.revenue < 0 ? 'down' : 'neutral'
+        trend: calculated.changes.revenue > 0 ? 'up' : calculated.changes.revenue < 0 ? 'down' : 'neutral',
+        path: '/admin/dashboard/analytics'
       },
       {
         label: 'Products',
@@ -238,7 +270,8 @@ const SuperAdminDashboard = () => {
         icon: FaBox,
         color: 'bg-indigo-500',
         change: `${calculated.changes.products >= 0 ? '+' : ''}${calculated.changes.products}%`,
-        trend: calculated.changes.products > 0 ? 'up' : calculated.changes.products < 0 ? 'down' : 'neutral'
+        trend: calculated.changes.products > 0 ? 'up' : calculated.changes.products < 0 ? 'down' : 'neutral',
+        path: '/admin/dashboard/products'
       },
       {
         label: 'Active Jobs',
@@ -246,7 +279,8 @@ const SuperAdminDashboard = () => {
         icon: FaTools,
         color: 'bg-orange-500',
         change: `${calculated.activeJobs} ongoing`,
-        trend: 'neutral'
+        trend: 'neutral',
+        path: '/admin/dashboard/orders'
       },
       {
         label: 'Completed Jobs',
@@ -254,7 +288,8 @@ const SuperAdminDashboard = () => {
         icon: FaCheckCircle,
         color: 'bg-teal-500',
         change: 'This month',
-        trend: 'neutral'
+        trend: 'neutral',
+        path: '/admin/dashboard/orders'
       },
     ];
   }, [overallStats, realTimeData, jobs]);
@@ -281,17 +316,6 @@ const SuperAdminDashboard = () => {
       { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'Mechanic', status: 'Active', joined: '2024-01-08', orders: 8 },
       { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'Customer', status: 'Inactive', joined: '2023-12-20', orders: 3 },
       { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'Vendor', status: 'Active', joined: '2024-01-05', orders: 67 },
-    ];
-  }, []);
-
-  // Order management data
-  const ordersData = useMemo(() => {
-    return [
-      { id: 1, orderId: 'ORD-001', customer: 'John Doe', vendor: 'Auto Parts Hub', amount: '₹15,000', status: 'Delivered', date: '2024-01-15', items: 5 },
-      { id: 2, orderId: 'ORD-002', customer: 'Jane Smith', vendor: 'Premium Spares', amount: '₹8,500', status: 'Shipped', date: '2024-01-14', items: 3 },
-      { id: 3, orderId: 'ORD-003', customer: 'Bob Johnson', vendor: 'Quick Auto', amount: '₹12,300', status: 'Processing', date: '2024-01-14', items: 7 },
-      { id: 4, orderId: 'ORD-004', customer: 'Alice Brown', vendor: 'Genuine Parts', amount: '₹6,200', status: 'Pending', date: '2024-01-13', items: 2 },
-      { id: 5, orderId: 'ORD-005', customer: 'Charlie Wilson', vendor: 'Budget Auto', amount: '₹9,800', status: 'Delivered', date: '2024-01-13', items: 4 },
     ];
   }, []);
 
@@ -461,7 +485,11 @@ const SuperAdminDashboard = () => {
                   const trend = changeValue > 0 ? 'up' : changeValue < 0 ? 'down' : 'neutral';
                   const TrendIcon = trend === 'up' ? FaArrowUp : trend === 'down' ? FaArrowDown : null;
                   return (
-                    <div key={index} className="card-hover bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                    <div 
+                      key={index} 
+                      onClick={() => navigate(stat.path)}
+                      className="card-hover bg-white rounded-xl shadow-md p-6 border border-gray-100 cursor-pointer transition-transform hover:scale-105"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <p className="text-sm text-gray-600 mb-1">{stat.label}</p>
@@ -510,7 +538,7 @@ const SuperAdminDashboard = () => {
                     <Users />
                   )}
                   {currentPage === 'orders' && (
-                    <Orders ordersData={ordersData} />
+                    <Orders ordersData={orders} />
                   )}
                   {currentPage === 'vendors' && (
                     <Vendors topVendors={topVendorsData} />

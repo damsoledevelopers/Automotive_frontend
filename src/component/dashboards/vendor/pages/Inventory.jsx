@@ -116,140 +116,174 @@ const Inventory = ({ products }) => {
           </div>
           <button
             onClick={() => setView('list')}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold flex items-center gap-2 transition"
+            className="text-gray-400 hover:text-gray-600 transition"
           >
-            ← Back to Inventory
+            <FaTimesCircle className="text-2xl" />
           </button>
         </div>
 
-        <form onSubmit={handleAddProduct} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <section className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 space-y-6">
-              <h4 className="text-lg font-black text-gray-900 border-b pb-4">Product Details</h4>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Product Name</label>
-                  <input
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g. Premium Ceramic Brake Pads"
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition font-bold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">SKU Number</label>
-                  <input
-                    required
-                    value={formData.sku}
-                    onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
-                    placeholder="PR-BK-772"
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition font-mono font-bold"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none transition font-bold appearance-none bg-white"
-                  >
-                    <option>Brakes</option>
-                    <option>Suspension</option>
-                    <option>Engine</option>
-                    <option>Filters</option>
-                    <option>Cooling</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Brand Name</label>
-                  <input
-                    value={formData.brand}
-                    onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
-                    placeholder="OEM / Bosch"
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none transition font-bold"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">MRP Rate (₹)</label>
-                  <input
-                    required
-                    type="number"
-                    value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    placeholder="2500"
-                    className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none transition font-bold"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Product Description</label>
-                <textarea
-                  rows={4}
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Detailed technical specifications..."
-                  className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none transition font-medium"
-                />
-              </div>
-            </section>
-
-            <section className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 space-y-6">
-              <h4 className="text-lg font-black text-gray-900 border-b pb-4">Vehicle Compatibility</h4>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Compatible Models</label>
-                <input
-                  value={formData.compatibility}
-                  onChange={(e) => setFormData(prev => ({ ...prev, compatibility: e.target.value }))}
-                  placeholder="Toyota Innova (2015-2022), Mahindra XUV500..."
-                  className="w-full px-5 py-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none transition font-bold"
-                />
-                <p className="text-[10px] text-gray-400 italic">Separate multiple models with commas</p>
-              </div>
-            </section>
+        <form onSubmit={handleAddProduct} className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8 space-y-8">
+          
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-red-200 rounded-2xl p-8 bg-red-50 cursor-pointer hover:bg-red-100 transition">
+            <div className="bg-red-600 text-white p-3 rounded-full mb-3">
+              <FaPlus className="text-xl" />
+            </div>
+            <p className="text-red-600 font-bold text-lg">Upload Images</p>
+            <p className="text-gray-500 text-xs mt-1">PNG, JPG, GIF up to 10MB each</p>
           </div>
 
-          <div className="space-y-6">
-            <section className="bg-indigo-900 text-white p-8 rounded-3xl shadow-xl space-y-6">
-              <h4 className="text-lg font-bold border-b border-white/20 pb-4">Stock Management</h4>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-indigo-300 uppercase tracking-widest">Initial Opening Stock</label>
-                <input
-                  required
-                  type="number"
-                  value={formData.stock}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stock: e.target.value }))}
-                  placeholder="0"
-                  className="w-full bg-white/10 border border-white/20 px-5 py-3 rounded-2xl focus:bg-white/20 outline-none transition font-black text-xl"
-                />
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-white/5 rounded-2xl border border-white/10">
-                <FaBell className="text-yellow-400" />
-                <div>
-                  <p className="text-[10px] font-bold text-white uppercase">Stock Alert</p>
-                  <p className="text-[8px] text-indigo-200">Notify me when stock drops below 10 units.</p>
-                </div>
-              </div>
-            </section>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">Product Name *</label>
+              <input
+                required
+                value={formData.name}
+                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Brake Pad Set - Front"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">SKU *</label>
+              <input
+                required
+                value={formData.sku}
+                onChange={(e) => setFormData(prev => ({ ...prev, sku: e.target.value }))}
+                placeholder="e.g., BP-F-001"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+              />
+            </div>
+          </div>
 
-            <div className="bg-white p-2 rounded-3xl shadow-lg border border-gray-100">
-              <button
-                type="submit"
-                className="w-full py-6 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-xl shadow-2xl shadow-blue-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">Category *</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition appearance-none bg-white"
               >
-                <FaPlus /> SAVE PRODUCT
-              </button>
+                <option value="" disabled>Select Category</option>
+                <option>Brakes</option>
+                <option>Suspension</option>
+                <option>Engine</option>
+                <option>Filters</option>
+                <option>Cooling</option>
+              </select>
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">Brand</label>
+              <input
+                value={formData.brand}
+                onChange={(e) => setFormData(prev => ({ ...prev, brand: e.target.value }))}
+                placeholder="e.g., Bosch, Delphi, Honda"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+              />
+            </div>
+          </div>
 
-            <div className="p-6 bg-gray-50 rounded-3xl border border-dashed border-gray-300 text-center">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Internal Note</p>
-              <p className="text-[10px] text-gray-500 italic">Adding a product will automatically trigger a sync with the workshop catalog.</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">Part Number</label>
+              <input
+                value={formData.partNumber || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, partNumber: e.target.value }))}
+                placeholder="OEM Part Number"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+              />
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">Origin *</label>
+              <select
+                value={formData.origin || 'Aftermarket'}
+                onChange={(e) => setFormData(prev => ({ ...prev, origin: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition appearance-none bg-white"
+              >
+                <option>Aftermarket</option>
+                <option>OEM</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">Class *</label>
+              <select
+                value={formData.class || 'Universal'}
+                onChange={(e) => setFormData(prev => ({ ...prev, class: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition appearance-none bg-white"
+              >
+                <option>Universal</option>
+                <option>Vehicle-specific</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">Condition *</label>
+              <select
+                value={formData.condition || 'New'}
+                onChange={(e) => setFormData(prev => ({ ...prev, condition: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition appearance-none bg-white"
+              >
+                <option>New</option>
+                <option>Refurbished</option>
+                <option>Used</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">Price (₹) *</label>
+              <input
+                required
+                type="number"
+                value={formData.price}
+                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                placeholder="0"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">MRP (₹) *</label>
+              <input
+                required
+                type="number"
+                value={formData.mrp || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, mrp: e.target.value }))}
+                placeholder="0"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">Stock Quantity *</label>
+              <input
+                required
+                type="number"
+                value={formData.stock}
+                onChange={(e) => setFormData(prev => ({ ...prev, stock: e.target.value }))}
+                placeholder="0"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-gray-700">Min Order Quantity</label>
+              <input
+                type="number"
+                value={formData.minOrderQty || 1}
+                onChange={(e) => setFormData(prev => ({ ...prev, minOrderQty: e.target.value }))}
+                placeholder="1"
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+              />
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <button
+              type="submit"
+              className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-200 transition-all flex items-center justify-center gap-2"
+            >
+              <FaPlus /> Add Product
+            </button>
           </div>
         </form>
       </div>

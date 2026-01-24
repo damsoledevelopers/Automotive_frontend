@@ -8,92 +8,19 @@ import { categoryService } from "../services/apiService";
 import "swiper/css";
 import "swiper/css/navigation";
 
-// Fallback categories (used if API fails)
-const fallbackCategories = [
-  { title: "Air Conditioning", href: "/catalog/air_conditioning/", img:"https://boodmo.com/media/cache/catalog_image/images/categories/db9dad4.jpg"}, // Receiver Drier
-  { title: "Bearings", href: "/catalog/bearings/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/40e95ca.jpg" }, // Big End Bearing
-  { title: "Belts Chains And Rollers", href: "/catalog/drive_belts/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/ddbeb81.jpg" }, // Belt
-  { title: "Body", href: "/catalog/body/", img:  "https://boodmo.com/media/cache/catalog_image/images/categories/40e6a4c.jpg" }, // Bumper
-  { title: "Brake System", href: "/catalog/brakes/", img:"https://boodmo.com/media/cache/catalog_image/images/categories/5301830.jpg" }, // Brake Pads
-  { title: "Car Accessories", href: "/catalog/car_accessories/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/ab143a7.webp" }, // Body Accessories
-  { title: "Clutch System", href: "/catalog/clutch/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e8cb288.jpg" }, // Clutch
-  { title: "Control Cables", href: "/catalog/control_cables/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/7455b44.jpg" }, // Cable Strap
-  { title: "Electrical Components", href: "/catalog/electric_components/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/d5b3ac7.jpg" }, // Horn
-  { title: "Engine", href: "/catalog/engine/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/8fea232.jpg" }, // Air Supply/Engine Parts
-  { title: "Engine Cooling System", href: "/catalog/cooling_system/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e215fcc.jpg" }, // Radiator Mounting
-  { title: "Exhaust System", href: "/catalog/exhaust/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/d1e33d6.jpg" }, // Cooler EGR
-  { title: "Filters", href: "/catalog/filters/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/a16bbf6.jpg" }, // Air Filter
-  { title: "Fuel Supply System", href: "/catalog/fuelsystem/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/49ed220.jpg" }, // Fuel Tank
-  { title: "Gaskets & Seals", href: "/catalog/Gasket_SealingRings/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/14b8753.jpg" }, // O-Ring
-  { title: "Interior and Comfort", href: "/catalog/interior_comfort/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/05a2b84.jpg" }, // Interior Mirror
-  { title: "Lighting", href: "/catalog/lighting/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/53380d3.webp" }, // Light
-  { title: "Maintenance Service Parts", href: "/catalog/maintenance_service_parts/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e8cb288.jpg" }, // Engine Oil
-  { title: "Oils and Fluids", href: "/catalog/oilsfluids/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/4614ecf.webp" }, // Engine Oil
-  { title: "Pipes & Hoses", href: "/catalog/pipes_hoses/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e0b2a63.jpg" }, // Sunroof Drain Hose
-  { title: "Sensors Relays and Control Units", href: "/catalog/sensors_control_units/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/2676bd2.jpg" }, // Control Unit
-  { title: "Steering", href: "/catalog/steering/", img:  "https://boodmo.com/media/cache/catalog_image/images/categories/72fb97b.jpg" }, // Steering Component
-  { title: "Suspension and Arms", href: "/catalog/suspension/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/f26073e.jpg" }, // Shock Absorber
-  { title: "Towbar Parts", href: "/catalog/towbar/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/98b48d2.jpg" }, // Towhook Cover
-  { title: "Transmission", href: "/catalog/transmission/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/21ce121.jpg" }, // Automatic Transmission Filter
-  { title: "Trims", href: "/catalog/trims/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/beccd06.jpg" }, // Bumper Trim
-  { title: "Universal", href: "/catalog/universal/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/af8d099.jpg" }, // Bolt
-  { title: "Wheels", href: "/catalog/wheels/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/430177a.jpg" }, // Spare Wheel Carrier
-  { title: "Windscreen Cleaning System", href: "/catalog/windscreen_cleaning_system/", img: "https://boodmo.com/media/cache/catalog_image/images/categories/1053d82.jpg" }, // Wiper Blade
-];
-
 // Helper function to map category name to slug and image
 const mapCategoryToDisplay = (categoryName) => {
-  const categoryMap = {
-    "Air Conditioning": { slug: "air_conditioning", img: "https://boodmo.com/media/cache/catalog_image/images/categories/db9dad4.jpg" },
-    "Bearings": { slug: "bearings", img: "https://boodmo.com/media/cache/catalog_image/images/categories/40e95ca.jpg" },
-    "Belts Chains And Rollers": { slug: "drive_belts", img: "https://boodmo.com/media/cache/catalog_image/images/categories/ddbeb81.jpg" },
-    "Body": { slug: "body", img: "https://boodmo.com/media/cache/catalog_image/images/categories/40e6a4c.jpg" },
-    "Brake System": { slug: "brakes", img: "https://boodmo.com/media/cache/catalog_image/images/categories/5301830.jpg" },
-    "Car Accessories": { slug: "car_accessories", img: "https://boodmo.com/media/cache/catalog_image/images/categories/ab143a7.webp" },
-    "Clutch": { slug: "clutch", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e8cb288.jpg" },
-    "Control Cables": { slug: "control_cables", img: "https://boodmo.com/media/cache/catalog_image/images/categories/7455b44.jpg" },
-    "Electrical Components": { slug: "electric_components", img: "https://boodmo.com/media/cache/catalog_image/images/categories/d5b3ac7.jpg" },
-    "Engine": { slug: "engine", img: "https://boodmo.com/media/cache/catalog_image/images/categories/8fea232.jpg" },
-    "Engine Cooling System": { slug: "cooling_system", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e215fcc.jpg" },
-    "Exhaust System": { slug: "exhaust", img: "https://boodmo.com/media/cache/catalog_image/images/categories/d1e33d6.jpg" },
-    "Filters": { slug: "filters", img: "https://boodmo.com/media/cache/catalog_image/images/categories/a16bbf6.jpg" },
-    "Fuel Supply System": { slug: "fuelsystem", img: "https://boodmo.com/media/cache/catalog_image/images/categories/49ed220.jpg" },
-    "Gaskets & Seals": { slug: "Gasket_SealingRings", img: "https://boodmo.com/media/cache/catalog_image/images/categories/14b8753.jpg" },
-    "Interior Comfort": { slug: "interior_comfort", img: "https://boodmo.com/media/cache/catalog_image/images/categories/05a2b84.jpg" },
-    "Lighting": { slug: "lighting", img: "https://boodmo.com/media/cache/catalog_image/images/categories/53380d3.webp" },
-    "Maintenance Service Parts": { slug: "maintenance_service_parts", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e8cb288.jpg" },
-    "Oils & Fluids": { slug: "oilsfluids", img: "https://boodmo.com/media/cache/catalog_image/images/categories/4614ecf.webp" },
-    "Pipes & Hoses": { slug: "pipes_hoses", img: "https://boodmo.com/media/cache/catalog_image/images/categories/e0b2a63.jpg" },
-    "Sensors Relay and Control Units": { slug: "sensors_control_units", img: "https://boodmo.com/media/cache/catalog_image/images/categories/2676bd2.jpg" },
-    "Steering": { slug: "steering", img: "https://boodmo.com/media/cache/catalog_image/images/categories/72fb97b.jpg" },
-    "Suspension and Arms": { slug: "suspension", img: "https://boodmo.com/media/cache/catalog_image/images/categories/f26073e.jpg" },
-    "Towbar Parts": { slug: "towbar", img: "https://boodmo.com/media/cache/catalog_image/images/categories/98b48d2.jpg" },
-    "Transmission": { slug: "transmission", img: "https://boodmo.com/media/cache/catalog_image/images/categories/21ce121.jpg" },
-    "Trims": { slug: "trims", img: "https://boodmo.com/media/cache/catalog_image/images/categories/beccd06.jpg" },
-    "Universal": { slug: "universal", img: "https://boodmo.com/media/cache/catalog_image/images/categories/af8d099.jpg" },
-    "Wheels": { slug: "wheels", img: "https://boodmo.com/media/cache/catalog_image/images/categories/430177a.jpg" },
-    "Windscreen Cleaning System": { slug: "windscreen_cleaning_system", img: "https://boodmo.com/media/cache/catalog_image/images/categories/1053d82.jpg" },
-  };
-
-  const mapped = categoryMap[categoryName];
-  if (mapped) {
-    return {
-      title: categoryName,
-      href: `/catalog/${mapped.slug}/`,
-      img: mapped.img
-    };
-  }
+  // Dynamic mapping only - no hardcoded data
+  const slug = categoryName.toLowerCase().replace(/\s+/g, '_').replace(/&/g, '').replace(/\//g, '');
   
-  // Default mapping if not found
-  const slug = categoryName.toLowerCase().replace(/\s+/g, '_').replace(/&/g, '');
   return {
     title: categoryName,
     href: `/catalog/${slug}/`,
-    img: `https://via.placeholder.com/80x80/9ca3af/ffffff?text=${categoryName.substring(0, 2)}`
+    img: `https://via.placeholder.com/80x80/9ca3af/ffffff?text=${categoryName.substring(0, 2).toUpperCase()}`
   };
 };
 
-export let categories = fallbackCategories;
+export let categories = [];
 
 // Category Card Component
 const CategoryCard = React.memo(({ category, index, isGrid = false }) => {
@@ -110,19 +37,24 @@ const CategoryCard = React.memo(({ category, index, isGrid = false }) => {
   return (
     <motion.div
       {...animationProps}
-      className="group flex flex-col items-center p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors duration-300"
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
+      className="group"
     >
-      <Link to={category.href} className="flex flex-col items-center w-full">
-        <div className="w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 lg:w-44 lg:h-44 mb-2 sm:mb-3 flex items-center justify-center bg-transparent">
+      <Link 
+        to={category.href} 
+        className="flex flex-col items-center justify-center p-4 sm:p-5 md:p-6 rounded-md bg-white shadow-sm hover:shadow-md hover:scale-105 transition-all duration-300 w-full h-full"
+      >
+        <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 lg:w-36 lg:h-36 mb-3 flex items-center justify-center">
           <img 
             src={category.img} 
             alt={category.title} 
-            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300 category-image" 
+            className="w-full h-full object-contain transition-transform duration-300" 
             onError={handleImageError}
             loading="lazy"
           />
         </div>
-        <span className="text-center font-semibold text-gray-700 text-xs sm:text-sm md:text-base group-hover:text-red-600 transition-colors duration-300">
+        <span className="text-center font-medium text-gray-700 text-xs sm:text-sm">
           {category.title}
         </span>
       </Link>
@@ -140,7 +72,7 @@ export default function SearchByCategory() {
   
   // Show all categories by default on /category route
   const [showAll, setShowAll] = useState(isCategoryPage);
-  const [categories, setCategories] = useState(fallbackCategories);
+  const [categories, setCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
   // Fetch categories from backend
@@ -153,19 +85,25 @@ export default function SearchByCategory() {
         
         // Map backend categories to display format
         const mappedCategories = categoriesData
-          .map(cat => mapCategoryToDisplay(cat.name))
+          .map(cat => {
+            const mapped = mapCategoryToDisplay(cat.name || cat);
+            // Use category icon from backend if available, otherwise use mapped image
+            if (cat && cat.icon) {
+              mapped.img = cat.icon;
+            }
+            return mapped;
+          })
           .filter(cat => cat && cat.title);
         
         if (mappedCategories.length > 0) {
           setCategories(mappedCategories);
         } else {
-          // Use fallback if no categories found
-          setCategories(fallbackCategories);
+          // No categories found
+          setCategories([]);
         }
       } catch (error) {
         console.error('Failed to fetch categories:', error);
-        // Use fallback on error
-        setCategories(fallbackCategories);
+        setCategories([]);
       } finally {
         setLoadingCategories(false);
       }
@@ -235,7 +173,7 @@ export default function SearchByCategory() {
       },
       1024: {
         slidesPerView: 5,
-        spaceBetween: 14
+        spaceBetween: 16
       },
       1280: {
         slidesPerView: 6,
@@ -245,31 +183,28 @@ export default function SearchByCategory() {
   }), []);
 
   return (
-    <section className={`relative bg-white ${isCategoryPage ? 'pt-20 md:pt-24 pb-8 md:pb-12' : 'py-4 sm:py-6 md:py-8'} overflow-hidden`}>
-      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
-        {/* Red Accent Line */}
-        <div className="w-16 h-0.5 bg-red-600 mb-4 md:mb-5"></div>
+    <section className={`relative bg-gray-50 ${isCategoryPage ? 'pt-20 md:pt-24 pb-8 md:pb-12' : 'py-6 sm:py-8 md:py-10'} overflow-hidden`}>
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Header Section */}
-        <div className="mb-5 md:mb-6 flex flex-row items-center justify-between gap-3">
+        <div className="mb-4 sm:mb-5 md:mb-6 flex flex-row items-center justify-between gap-3">
           <div className="flex-1">
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
-              {isCategoryPage ? 'All Categories' : 'Search by'} <span className={isCategoryPage ? 'text-red-600' : ''}>{isCategoryPage ? '' : 'Spares Catalogue'}</span>
+            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
+              {isCategoryPage ? 'All Categories' : 'Search by'} <span className="text-blue-600">{isCategoryPage ? '' : 'Spares Catalogue'}</span>
             </h2>
-            <p className="text-xs sm:text-sm md:text-base text-gray-600">
-              {isCategoryPage 
-                ? 'Browse through all available product categories' 
-                : 'Discover high-quality car parts and accessories organized into convenient categories'
-              }
-            </p>
+            {isCategoryPage && (
+              <p className="text-sm sm:text-base md:text-lg text-gray-600 font-medium mt-2">
+                Browse through all available product categories
+              </p>
+            )}
           </div>
           {!showAll && !isCategoryPage && (
             <Link
               to="/category"
-              className="px-4 py-2 sm:px-6 sm:py-2.5 text-blue-500 font-semibold rounded-lg duration-300 text-sm sm:text-base hover:text-blue-600 transition-colors whitespace-nowrap flex-shrink-0"
+              className="text-xs sm:text-sm text-blue-600 hover:underline font-semibold transition-colors whitespace-nowrap flex-shrink-0"
               aria-label="View All Categories"
             >
-              View All
+              VIEW ALL
             </Link>
           )}
         </div>
@@ -281,7 +216,7 @@ export default function SearchByCategory() {
           </div>
         ) : showAll || isCategoryPage ? (
           /* All Categories Grid - 4 columns mobile, 6 columns desktop */
-          <div className="grid grid-cols-4 md:grid-cols-6 gap-2 sm:gap-3 md:gap-4 lg:gap-5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
             {categories.map((cat, index) => (
               <CategoryCard 
                 key={cat.title} 
@@ -293,21 +228,28 @@ export default function SearchByCategory() {
           </div>
         ) : (
           <>
-            {/* Mobile View: 4 columns x 3 rows Swiper (No Auto-scrolling, Swipeable) */}
+            {/* Mobile View: Horizontal Scrollable Swiper */}
             <div className="block md:hidden">
-              <Swiper {...mobileSwiperConfig} className="category-swiper-mobile">
-                {mobileCategoriesChunks.map((chunk, chunkIndex) => (
-                  <SwiperSlide key={chunkIndex}>
-                    <div className="grid grid-cols-4 gap-2 px-2">
-                      {chunk.map((cat, index) => (
-                        <CategoryCard 
-                          key={cat.title} 
-                          category={cat} 
-                          index={chunkIndex * 12 + index} 
-                          isGrid={true}
-                        />
-                      ))}
-                    </div>
+              <Swiper
+                modules={[Autoplay]}
+                spaceBetween={12}
+                slidesPerView={3}
+                loop={true}
+                autoplay={{ delay: 2000, disableOnInteraction: false }}
+                speed={400}
+                className="w-full"
+                breakpoints={{
+                  320: { slidesPerView: 3, spaceBetween: 12 },
+                  640: { slidesPerView: 4, spaceBetween: 12 },
+                }}
+              >
+                {categories.map((cat, index) => (
+                  <SwiperSlide key={cat.title}>
+                    <CategoryCard 
+                      category={cat} 
+                      index={index} 
+                      isGrid={false}
+                    />
                   </SwiperSlide>
                 ))}
               </Swiper>
@@ -329,20 +271,20 @@ export default function SearchByCategory() {
 
               {/* Navigation Arrows */}
               <button
-                className="category-prev absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 hover:bg-white border border-gray-200 hover:border-gray-300 flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"
+                className="category-prev absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-gray-50 border border-gray-300 hover:border-gray-400 flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg"
                 aria-label="Previous slide"
                 type="button"
               >
-                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               <button
-                className="category-next absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/90 hover:bg-white border border-gray-200 hover:border-gray-300 flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-md"
+                className="category-next absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white hover:bg-gray-50 border border-gray-300 hover:border-gray-400 flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg"
                 aria-label="Next slide"
                 type="button"
               >
-                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -364,12 +306,13 @@ export default function SearchByCategory() {
         .category-next.swiper-button-disabled {
           opacity: 0.35;
           cursor: not-allowed;
+          transform: scale(1);
         }
         .category-image {
           background: transparent;
         }
         .category-image:hover {
-          filter: none;
+          filter: brightness(1.05);
         }
       `}</style>
 

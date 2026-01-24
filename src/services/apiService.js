@@ -446,6 +446,9 @@ export const productService = {
       if (filters.limit) {
         params.append('limit', filters.limit);
       }
+      if (filters.isActive !== undefined) {
+        params.append('isActive', filters.isActive);
+      }
       
       const queryString = params.toString();
       const url = queryString ? `/admin/products?${queryString}` : '/admin/products';
