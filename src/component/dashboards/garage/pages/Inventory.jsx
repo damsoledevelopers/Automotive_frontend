@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaBox, FaPlus } from 'react-icons/fa';
+import { FaPlus } from 'react-icons/fa';
 
 const Inventory = () => {
   return (
@@ -18,4 +18,3 @@ const Inventory = () => {
 };
 
 export default Inventory;
-
