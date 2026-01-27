@@ -470,6 +470,54 @@ export const orderService = {
       throw new Error(error.response?.data?.message || 'Failed to delete order');
     }
   },
+
+  /**
+   * ADMIN: Get all orders
+   * @param {Object} filters - Filters (status, paymentStatus, startDate, endDate)
+   * @param {number} skip - Pagination skip
+   * @param {number} limit - Pagination limit
+   * @returns {Promise}
+   */
+  getAllOrders: async (filters = {}, skip = 0, limit = 50) => {
+    try {
+      const params = new URLSearchParams();
+      params.append('skip', skip);
+      params.append('limit', limit);
+      
+      if (filters.status) {
+        params.append('status', filters.status);
+      }
+      if (filters.paymentStatus) {
+        params.append('paymentStatus', filters.paymentStatus);
+      }
+      if (filters.startDate) {
+        params.append('startDate', filters.startDate);
+      }
+      if (filters.endDate) {
+        params.append('endDate', filters.endDate);
+      }
+      
+      const response = await api.get(`/orders/admin/all?${params.toString()}`);
+      // Backend returns { success: true, data: { orders, total, pages } }
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch all orders');
+    }
+  },
+
+  /**
+   * ADMIN: Get order statistics
+   * @returns {Promise}
+   */
+  getOrderStats: async () => {
+    try {
+      const response = await api.get('/orders/admin/stats');
+      // Backend returns { success: true, data: { totalOrders, paidOrders, deliveredOrders, etc } }
+      return response.data.data || response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Failed to fetch order stats');
+    }
+  },
 };
 
 /**

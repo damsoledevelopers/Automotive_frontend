@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  FaShoppingCart, 
-  FaMapMarkerAlt, 
-  FaFileAlt, 
-  FaCreditCard, 
-  FaArrowLeft, 
-  FaQuestionCircle, 
-  FaCheckCircle 
+import {
+  FaShoppingCart,
+  FaMapMarkerAlt,
+  FaFileAlt,
+  FaCreditCard,
+  FaArrowLeft,
+  FaQuestionCircle,
+  FaCheckCircle
 } from "react-icons/fa";
 import { useCart } from "../../contexts/CartContext";
 import WorkflowWrapper from "../workflow/WorkflowWrapper";
@@ -123,7 +123,7 @@ const Review = () => {
     const deliveryDate = getDeliveryDate(pkg.packageNumber);
 
     return (
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9, x: -100 }}
@@ -147,7 +147,7 @@ const Review = () => {
           const hasDiscount = item.discountPrice && item.discountPrice < item.price;
 
           return (
-            <motion.div 
+            <motion.div
               key={item.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -192,7 +192,7 @@ const Review = () => {
           );
         })}
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: (index * 0.1) + 0.3 }}
@@ -206,16 +206,15 @@ const Review = () => {
               </p>
             </div>
             <div className="text-right">
-              <p className={`text-sm font-medium ${
-                deliveryCharge === 0 ? 'text-gray-600' : 'text-gray-800'
-              }`}>
+              <p className={`text-sm font-medium ${deliveryCharge === 0 ? 'text-gray-600' : 'text-gray-800'
+                }`}>
                 {deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge.toFixed(2)}`}
               </p>
             </div>
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: (index * 0.1) + 0.4 }}
@@ -238,151 +237,165 @@ const Review = () => {
 
   return (
     <WorkflowWrapper currentStep="review">
-      <div className="min-h-screen bg-gray-50 py-4">
-        <div className="max-w-6xl mx-auto px-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 py-6 md:py-8">
+        <div className="max-w-6xl mx-auto px-4 md:px-6">
 
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-4"
-        >
-          <h1 className="text-xl md:text-2xl font-semibold text-gray-900 mb-1">
-            Order Review
-          </h1>
-          <p className="text-gray-600 text-sm">Review your order details before proceeding</p>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-4 mb-6"
-        >
-          <AnimatePresence mode="popLayout">
-            {packages.map((pkg, index) => (
-              <PackageCard 
-                key={pkg.packageNumber} 
-                pkg={pkg} 
-                index={index}
-                getDeliveryCharge={getDeliveryCharge}
-                getDeliveryDate={getDeliveryDate}
-              />
-            ))}
-          </AnimatePresence>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white border border-gray-200 p-4 sm:p-6 mb-6"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-semibold text-gray-900">Shipping Address</h2>
-            <button
-              onClick={() => handleOpenMap(shippingAddress)}
-              className="text-xs text-gray-600 hover:text-gray-900 underline flex items-center gap-1 transition-colors"
-              title="Open in Google Maps"
-            >
-              <FaMapMarkerAlt className="text-xs" />
-              View on Map
-            </button>
-          </div>
-          <div className="text-gray-700">
-            <p className="text-sm font-medium">
-              {shippingAddress.name} - {shippingAddress.mobile}
-            </p>
-            <p className="text-xs mt-1 text-gray-600">
-              {shippingAddress.address}, {shippingAddress.cityState}, {shippingAddress.postalCode}
-            </p>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="bg-white border border-gray-200 p-4 sm:p-6"
-        >
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-6">
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="disableReplacements"
-                className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-500"
-              />
-              <label htmlFor="disableReplacements" className="text-xs text-gray-700 flex items-center gap-1">
-                Disable part replacements
-                <FaQuestionCircle className="text-gray-400 text-xs" />
-              </label>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-8"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <FaShoppingCart className="text-2xl text-blue-600" />
+              <h1 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tight">
+                Order Review
+              </h1>
             </div>
+            <p className="text-gray-600 text-sm md:text-base">Review your order details and confirm before payment</p>
+          </motion.div>
 
-            <div className="text-right">
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between gap-8 mb-2">
-                  <span className="text-gray-600">{getTotalItems()} items</span>
-                  <span className="text-gray-800 font-medium">₹{getSubtotal().toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between gap-8">
-                  <span className="text-gray-600">Delivery Charge:</span>
-                  <span className="text-gray-800 font-medium">₹{totalDeliveryCharge.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between gap-8">
-                  <span className="text-gray-600">Platform Fee:</span>
-                  <span className="text-gray-800 font-medium">₹{platformFee.toFixed(2)}</span>
-                </div>
-                {totalSavings > 0 && (
-                  <div className="flex justify-between gap-8">
-                    <span className="text-gray-600">
-                      Total Savings ({itemsWithSavings} {itemsWithSavings === 1 ? 'item' : 'items'}):
-                    </span>
-                    <span className="text-gray-600 font-medium">₹{totalSavings.toFixed(2)}</span>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-4 mb-6"
+          >
+            <AnimatePresence mode="popLayout">
+              {packages.map((pkg, index) => (
+                <PackageCard
+                  key={pkg.packageNumber}
+                  pkg={pkg}
+                  index={index}
+                  getDeliveryCharge={getDeliveryCharge}
+                  getDeliveryDate={getDeliveryDate}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 mb-6"
+          >
+            <div className="flex items-start justify-between gap-4 mb-4 pb-4 border-b border-gray-200">
+              <div className="flex-1">
+                <h2 className="text-base md:text-lg font-black text-gray-900 uppercase tracking-wide mb-1">📍 Shipping Address</h2>
+                <p className="text-xs text-gray-500">Delivery to this address</p>
+              </div>
+              <button
+                onClick={() => handleOpenMap(shippingAddress)}
+                className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1 transition-colors font-semibold"
+                title="Open in Google Maps"
+              >
+                <FaMapMarkerAlt className="text-xs" />
+                View Map
+              </button>
+            </div>
+            <div className="text-gray-700">
+              <p className="text-sm font-semibold text-gray-900">
+                {shippingAddress.name} • {shippingAddress.mobile}
+              </p>
+              <p className="text-xs mt-2 text-gray-600 leading-relaxed">
+                {shippingAddress.address}, {shippingAddress.cityState}, {shippingAddress.postalCode}
+              </p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-lg border border-blue-100 p-4 sm:p-6 md:p-8 sticky bottom-24 md:relative md:bottom-0 z-60 left-0 right-0 px-4 md:px-0 pb-8 md:pb-8"
+            style={{ WebkitTapHighlightColor: 'transparent', paddingBottom: 'calc(env(safe-area-inset-bottom) + 2rem)' }}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              {/* Left: Checkbox */}
+              <div className="lg:col-span-1 flex items-center gap-3 py-2">
+                <input
+                  type="checkbox"
+                  id="disableReplacements"
+                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                />
+                <label htmlFor="disableReplacements" className="text-xs sm:text-sm text-gray-700 flex items-center gap-2 cursor-pointer font-medium">
+                  Disable part replacements
+                  <FaQuestionCircle className="text-gray-400 text-sm hover:text-gray-600 transition-colors" title="Items won't be replaced if any damage occurs" />
+                </label>
+              </div>
+
+              {/* Middle: Price Breakdown */}
+              <div className="lg:col-span-1">
+                <div className="space-y-3 text-xs">
+                  <div className="flex justify-between gap-4">
+                    <span className="text-gray-700">Subtotal ({getTotalItems()} items)</span>
+                    <span className="font-semibold text-gray-800">₹{getSubtotal().toFixed(2)}</span>
                   </div>
-                )}
-                <div className="flex justify-between gap-8 items-center">
-                  <span className="text-gray-600">boodmo Points to be earned:</span>
-                  <span className="text-gray-700 font-medium flex items-center gap-1">
+                  <div className="flex justify-between gap-4">
+                    <span className="text-gray-700">Delivery Charge</span>
+                    <span className="font-semibold text-gray-800">₹{totalDeliveryCharge.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span className="text-gray-700">Platform Fee</span>
+                    <span className="font-semibold text-gray-800">₹{platformFee.toFixed(2)}</span>
+                  </div>
+                  {totalSavings > 0 && (
+                    <div className="flex justify-between gap-4 pt-2 border-t border-blue-200">
+                      <span className="text-green-700 font-semibold">Savings ({itemsWithSavings} {itemsWithSavings === 1 ? 'item' : 'items'})</span>
+                      <span className="text-green-700 font-semibold">-₹{totalSavings.toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: Grand Total & Points */}
+              <div className="lg:col-span-1 bg-white rounded-xl p-4 border border-blue-200 shadow-md">
+                <div className="flex items-center justify-between mb-3 pb-3 border-b border-blue-100">
+                  <span className="text-xs text-gray-600">boodmo Points</span>
+                  <span className="text-lg font-bold text-blue-600 flex items-center gap-1">
                     {boodmoPoints}
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                     </svg>
                   </span>
                 </div>
-                <div className="flex justify-between gap-8 pt-2 border-t border-gray-200">
-                  <span className="text-base font-semibold text-gray-800">Grand Total:</span>
-                  <span className="text-xl font-bold text-gray-800">₹{grandTotal.toFixed(2)}</span>
+                <div className="flex items-end justify-between">
+                  <span className="text-xs text-gray-600">Total Amount</span>
+                  <span className="text-2xl md:text-3xl font-black text-gray-900">₹{grandTotal.toFixed(2)}</span>
                 </div>
               </div>
             </div>
-          </div>
 
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex items-center justify-between pt-6 border-t border-gray-200"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleBack}
-              className="flex items-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
+            {/* Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-blue-200 w-full"
             >
-              <FaArrowLeft />
-              Back
-            </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleBack}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 sm:px-6 py-3 md:py-4 bg-white border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 text-sm md:text-base font-semibold shadow-sm"
+              >
+                <FaArrowLeft className="text-sm" />
+                Back
+              </motion.button>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleContinue}
-              className="px-8 py-3 bg-gray-900 hover:bg-gray-800 text-white rounded-lg transition-colors text-sm font-medium"
-            >
-              Continue
-            </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02, boxShadow: "0 20px 25px -5px rgba(29, 78, 216, 0.3)" }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleContinue}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 sm:px-8 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl transition-all duration-200 text-sm md:text-base font-semibold shadow-lg"
+                style={{ minWidth: 180 }}
+              >
+                Continue to Payment
+                <FaCreditCard className="text-sm" />
+              </motion.button>
+            </motion.div>
           </motion.div>
-        </motion.div>
         </div>
       </div>
     </WorkflowWrapper>

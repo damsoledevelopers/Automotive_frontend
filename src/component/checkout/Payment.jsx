@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from 'react-toastify';
 import { 
   FaShoppingCart, 
   FaMapMarkerAlt, 
@@ -14,13 +15,16 @@ import {
   FaUniversity,
   FaWallet,
   FaShieldAlt,
-  FaCheckCircle
+  FaCheckCircle,
+  FaSpinner,
+  FaGift
 } from "react-icons/fa";
 import { 
   SiPaytm,
   SiRazorpay
 } from "react-icons/si";
 import { useCart } from "../../contexts/CartContext";
+import { orderService } from "../../services/apiService";
 import WorkflowWrapper from "../workflow/WorkflowWrapper";
 
 const Payment = () => {
@@ -30,6 +34,8 @@ const Payment = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [shippingAddress, setShippingAddress] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
   
   // Payment form data
   const [paymentData, setPaymentData] = useState({
@@ -110,7 +116,98 @@ const Payment = () => {
       description: 'Pay when you receive the order',
       popular: false,
     },
+    {
+      id: 'dummy',
+      name: 'Demo Payment',
+      icon: FaGift,
+      color: '#9C27B0',
+      description: 'Test payment for demo purposes',
+      popular: false,
+    },
   ], []);
+
+  const handleCreateOrder = async () => {
+    try {
+      setPaymentProcessing(true);
+      
+      // Prepare order data
+      const orderData = {
+        items: cartItems.map(item => ({
+          productId: item.id || item.productId,
+          name: item.name,
+          brand: item.brand,
+          imageUrl: item.imageUrl,
+          price: item.price,
+          discountPrice: item.discountPrice,
+          quantity: item.quantity,
+          seller: item.seller,
+          partNumber: item.partNumber,
+          vendorId: item.vendorId
+        })),
+        shippingAddress: shippingAddress,
+        paymentMethod: selectedPayment,
+        paymentStatus: selectedPayment === 'dummy' ? 'Paid' : 'Pending',
+        status: selectedPayment === 'dummy' ? 'Confirmed' : 'Pending Payment',
+        subtotal: getSubtotal(),
+        deliveryCharge: deliveryCharge,
+        platformFee: platformFee,
+        total: grandTotal,
+        totalItems: getTotalItems(),
+        paymentDetails: {
+          method: selectedPayment,
+          timestamp: new Date().toISOString(),
+          isDemoPayment: selectedPayment === 'dummy'
+        }
+      };
+
+      // Create order via API
+      const response = await orderService.createOrder(orderData);
+      
+      if (response.order || response.success) {
+        // Show success modal
+        setShowSuccessModal(true);
+        setShowPaymentModal(false);
+        
+        // Clear cart after 2 seconds
+        setTimeout(() => {
+          clearCart();
+          localStorage.removeItem('shippingAddress');
+          localStorage.removeItem('pendingCartProduct');
+          localStorage.removeItem('pendingBuyNowProduct');
+        }, 2000);
+        
+        // Navigate to order confirmation after 3 seconds
+        setTimeout(() => {
+          navigate('/checkout/confirmation', { 
+            state: { 
+              order: response.order || response.data?.order,
+              paymentSuccess: true 
+            } 
+          });
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Failed to create order:', error);
+      toast.error('Failed to create order: ' + error.message);
+    } finally {
+      setPaymentProcessing(false);
+    }
+  };
+
+  const handleProcessDummyPayment = () => {
+    // Simulate payment processing
+    setPaymentProcessing(true);
+    
+    // Simulate network delay
+    setTimeout(() => {
+      if (selectedPayment === 'dummy') {
+        handleCreateOrder();
+      } else {
+        setPaymentProcessing(false);
+        toast.info('Please use Demo Payment option to test');
+      }
+    }, 1500);
+  };
 
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
@@ -200,149 +297,6 @@ const Payment = () => {
     }
     return true;
   }, [selectedPayment, paymentData]);
-
-  const processOrder = useCallback(async () => {
-    let orderId = `ORD-${Date.now()}`;
-    const orderDate = new Date().toISOString();
-    
-    // Group items by seller for packages
-    const groupItemsBySeller = () => {
-      const packages = {};
-      cartItems.forEach((item) => {
-        const seller = item.seller || "Default Seller";
-        if (!packages[seller]) {
-          packages[seller] = [];
-        }
-        packages[seller].push(item);
-      });
-      return Object.entries(packages).map(([seller, items], index) => ({
-        packageNumber: index + 1,
-        seller,
-        items,
-      }));
-    };
-
-    const packages = groupItemsBySeller();
-    const getDeliveryCharge = (packageTotal) => {
-      return packageTotal >= 500 ? 0 : 58;
-    };
-    const totalDeliveryCharge = packages.reduce((total, pkg) => {
-      const packageTotal = pkg.items.reduce((sum, item) => {
-        return sum + ((item.discountPrice || item.price) * item.quantity);
-      }, 0);
-      return total + getDeliveryCharge(packageTotal);
-    }, 0);
-    const platformFee = Math.max(packages.length * 16, 32);
-
-    const order = {
-      id: orderId,
-      date: orderDate,
-      status: selectedPayment === 'cod' ? 'Pending Payment' : 'Confirmed',
-      items: cartItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        brand: item.brand,
-        imageUrl: item.imageUrl,
-        price: item.price,
-        discountPrice: item.discountPrice,
-        quantity: item.quantity,
-        seller: item.seller || "Default Seller",
-        partNumber: item.partNumber || item.id,
-      })),
-      packages: packages,
-      shippingAddress: shippingAddress,
-      paymentMethod: paymentOptions.find(p => p.id === selectedPayment)?.name || selectedPayment,
-      paymentStatus: selectedPayment === 'cod' ? 'Pending' : 'Paid',
-      paymentDetails: selectedPayment === 'cod' || selectedPayment === 'razorpay' 
-        ? null 
-        : { ...paymentData, method: selectedPayment },
-      subtotal: getSubtotal(),
-      deliveryCharge: totalDeliveryCharge,
-      platformFee: platformFee,
-      total: grandTotal,
-      totalItems: getTotalItems(),
-    };
-
-    // Save order to backend
-    try {
-      const orderData = {
-        items: cartItems.map(item => ({
-          productId: item.id || item.productId,
-          name: item.name,
-          brand: item.brand,
-          imageUrl: item.imageUrl,
-          price: item.price,
-          discountPrice: item.discountPrice,
-          quantity: item.quantity,
-          seller: item.seller || "Default Seller",
-          partNumber: item.partNumber || item.id,
-        })),
-        packages: packages,
-        shippingAddress: shippingAddress,
-        paymentMethod: paymentOptions.find(p => p.id === selectedPayment)?.name || selectedPayment,
-        paymentStatus: selectedPayment === 'cod' ? 'Pending' : 'Paid',
-        paymentDetails: selectedPayment === 'cod' || selectedPayment === 'razorpay' 
-          ? null 
-          : { ...paymentData, method: selectedPayment },
-        subtotal: getSubtotal(),
-        deliveryCharge: totalDeliveryCharge,
-        platformFee: platformFee,
-        total: grandTotal,
-        totalItems: getTotalItems(),
-        status: selectedPayment === 'cod' ? 'Pending Payment' : 'Confirmed',
-      };
-
-      const { orderService } = await import('../../services/apiService');
-      const response = await orderService.createOrder(orderData);
-      
-      // Update orderId from response if available
-      if (response.data?.order?.orderId) {
-        orderId = response.data.order.orderId;
-      } else if (response.order?.orderId) {
-        orderId = response.order.orderId;
-      }
-    } catch (error) {
-      console.error('Failed to save order:', error);
-      // Fallback to localStorage if backend fails
-      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-      existingOrders.unshift(order);
-      localStorage.setItem('orders', JSON.stringify(existingOrders));
-    }
-
-    // Clear cart
-    clearCart();
-
-    setIsProcessing(false);
-
-    // Navigate to order confirmation page
-    navigate(`/checkout/confirmation?orderId=${orderId}`, { 
-      state: { orderId } 
-    });
-  }, [cartItems, selectedPayment, shippingAddress, paymentData, paymentOptions, getSubtotal, grandTotal, getTotalItems, clearCart, navigate]);
-
-  const handlePlaceOrder = useCallback(async () => {
-    if (!selectedPayment) {
-      alert('Please select a payment method');
-      return;
-    }
-    
-    if (selectedPayment !== 'cod' && selectedPayment !== 'razorpay') {
-      if (!validatePaymentData()) {
-        return;
-      }
-    }
-
-    setIsProcessing(true);
-
-    if (selectedPayment === 'razorpay') {
-      setTimeout(() => {
-        processOrder();
-      }, 2000);
-      return;
-    }
-
-    processOrder();
-  }, [selectedPayment, validatePaymentData, processOrder]);
 
   const banks = useMemo(() => [
     'State Bank of India',
@@ -951,20 +905,116 @@ const Payment = () => {
                       setShowPaymentModal(false);
                       return;
                     }
+                    if (selectedPayment === 'dummy') {
+                      handleProcessDummyPayment();
+                      return;
+                    }
                     if (validatePaymentData()) {
                       setShowPaymentModal(false);
                     }
                   }}
-                  className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium flex items-center gap-2"
+                  disabled={paymentProcessing}
+                  className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FaCheck className="text-xs" />
-                  Confirm Payment Details
+                  {paymentProcessing ? (
+                    <>
+                      <FaSpinner className="text-xs animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <FaCheck className="text-xs" />
+                      Confirm Payment Details
+                    </>
+                  )}
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Success Modal */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full"
+            >
+              <div className="text-center">
+                {/* Success Icon */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1, type: "spring", damping: 20, stiffness: 300 }}
+                  className="flex justify-center mb-6"
+                >
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                    <FaCheckCircle className="text-4xl text-green-500" />
+                  </div>
+                </motion.div>
+
+                {/* Success Title */}
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Payment Successful!
+                </h2>
+                <p className="text-gray-600 text-sm mb-6">
+                  Your order has been placed successfully. You will receive a confirmation shortly.
+                </p>
+
+                {/* Order Details */}
+                <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 text-sm">Order Total</span>
+                    <span className="font-bold text-gray-900">₹{grandTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 text-sm">Payment Method</span>
+                    <span className="font-medium text-gray-900">
+                      {paymentOptions.find(p => p.id === selectedPayment)?.name}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 text-sm">Items</span>
+                    <span className="font-medium text-gray-900">{getTotalItems()} item(s)</span>
+                  </div>
+                </div>
+
+                {/* Redirect Info */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+                  <p className="text-xs text-blue-800">
+                    Redirecting to order confirmation in <span className="font-bold">3</span> seconds...
+                  </p>
+                </div>
+
+                {/* Action Button */}
+                <button
+                  onClick={() => {
+                    navigate('/checkout/confirmation', { 
+                      state: { 
+                        paymentSuccess: true 
+                      } 
+                    });
+                  }}
+                  className="w-full px-6 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                >
+                  View Order Confirmation
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       </div>
     </WorkflowWrapper>
   );

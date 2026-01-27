@@ -332,28 +332,40 @@ const OrderConfirmation = () => {
             <div className="space-y-4 md:space-y-6">
               <TimelineStep
                 icon={FaCheckCircle}
-                title="Order Confirmed"
-                description="Your order has been confirmed and payment received"
+                title="Order Placed"
+                description="Your order has been successfully placed and confirmed"
                 date={formatDate(order.date)}
                 isCompleted={true}
               />
               <TimelineStep
                 icon={FaBox}
-                title="Processing"
-                description="Your order is being prepared for shipment"
+                title="Processing Item"
+                description="We are processing your items for shipment"
                 date={formatDate(new Date(Date.now() + 86400000).toISOString())}
                 isActive={true}
               />
               <TimelineStep
+                icon={FaBox}
+                title="Packed"
+                description="Your order has been packed and ready to ship"
+                isActive={false}
+              />
+              <TimelineStep
                 icon={FaTruck}
-                title="Shipped"
-                description="Your order will be shipped soon"
+                title="Handed to Courier"
+                description="Your package has been handed to the courier"
+                isActive={false}
+              />
+              <TimelineStep
+                icon={FaTruck}
+                title="Shipment In Transit"
+                description="Your shipment is on its way to you"
                 isActive={false}
               />
               <TimelineStep
                 icon={FaCheckCircle}
-                title="Delivered"
-                description="Your order will be delivered to your address"
+                title="Delivery Completed"
+                description="Your order has been delivered to your address"
                 isActive={false}
               />
             </div>

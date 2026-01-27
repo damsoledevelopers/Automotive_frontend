@@ -196,6 +196,7 @@ const SuperAdminDashboard = () => {
     const totalProducts = overallStats?.totalProducts || 0;
     const activeJobs = realTimeData?.activeJobs || 0;
     const completedJobs = overallStats?.completedJobs || 0;
+    const totalGarages = overallStats?.totalGarages || 0;
 
     // Use changes from backend if available
     const changes = overallStats?.changes || {
@@ -216,6 +217,7 @@ const SuperAdminDashboard = () => {
       totalProducts,
       activeJobs,
       completedJobs,
+      totalGarages,
       changes,
     };
     return [
@@ -283,13 +285,13 @@ const SuperAdminDashboard = () => {
         path: '/admin/dashboard/orders'
       },
       {
-        label: 'Completed Jobs',
-        value: calculated.completedJobs.toString(),
-        icon: FaCheckCircle,
+        label: 'Total Garages',
+        value: calculated.totalGarages.toLocaleString(),
+        icon: FaTools,
         color: 'bg-teal-500',
-        change: 'This month',
-        trend: 'neutral',
-        path: '/admin/dashboard/orders'
+        change: `${calculated.changes.garages >= 0 ? '+' : ''}${calculated.changes.garages || 0}%`,
+        trend: calculated.changes.garages > 0 ? 'up' : calculated.changes.garages < 0 ? 'down' : 'neutral',
+        path: '/admin/dashboard/garages'
       },
     ];
   }, [overallStats, realTimeData, jobs]);

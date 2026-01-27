@@ -179,13 +179,19 @@ export const MyOrder = () => {
     if (order.status === 'Cancelled') {
       return { step: 0, status: 'cancelled' };
     }
-    if (order.status === 'Delivered') {
-      return { step: 4, status: 'delivered' };
+    if (order.status === 'Delivery Completed') {
+      return { step: 6, status: 'delivered' };
     }
-    if (daysSinceOrder >= 5) {
-      return { step: 3, status: 'shipped' };
+    if (order.status === 'Shipment In Transit') {
+      return { step: 5, status: 'in_transit' };
     }
-    if (daysSinceOrder >= 2) {
+    if (order.status === 'Handed to Courier') {
+      return { step: 4, status: 'handed_to_courier' };
+    }
+    if (order.status === 'Packed') {
+      return { step: 3, status: 'packed' };
+    }
+    if (order.status === 'Processing Item') {
       return { step: 2, status: 'processing' };
     }
     return { step: 1, status: 'confirmed' };
@@ -526,7 +532,7 @@ export const MyOrder = () => {
                           </h4>
                           <div className="relative">
                             <div className="space-y-4 md:space-y-5 lg:space-y-5">
-                            {/* Step 1: Order Confirmed */}
+                            {/* Step 1: Order Placed */}
                             <div className="timeline-step flex gap-2 md:gap-3 lg:gap-3">
                               <div className="flex flex-col items-center">
                                 <div className={`timeline-icon w-8 h-8 md:w-10 md:h-10 lg:w-10 lg:h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
@@ -536,7 +542,7 @@ export const MyOrder = () => {
                                     trackingStatus.step >= 1 ? 'opacity-100' : 'opacity-50'
                                   }`} />
                                 </div>
-                                {trackingStatus.step < 4 && (
+                                {trackingStatus.step < 6 && (
                                   <div className={`timeline-line w-1 h-10 md:h-12 lg:h-12 mt-2 rounded-full transition-all ${
                                     trackingStatus.step >= 2 ? 'bg-green-500' : 'bg-gray-300'
                                   }`}></div>
@@ -546,18 +552,18 @@ export const MyOrder = () => {
                                   <h5 className={`font-semibold mb-0.5 md:mb-1 text-xs md:text-sm lg:text-sm ${
                                     trackingStatus.step >= 1 ? 'text-gray-900' : 'text-gray-400'
                                   }`}>
-                                    Order Confirmed
+                                    Order Placed
                                   </h5>
                                   <p className={`text-xs md:text-sm lg:text-sm mb-0.5 md:mb-1 ${
                                     trackingStatus.step >= 1 ? 'text-gray-700' : 'text-gray-400'
                                   }`}>
-                                    Your order has been confirmed
+                                    Your order has been successfully placed
                                   </p>
                                   <p className="text-[10px] md:text-xs lg:text-xs text-gray-500">{formatDate(order.date)}</p>
                                 </div>
                               </div>
 
-                            {/* Step 2: Processing */}
+                            {/* Step 2: Processing Item */}
                             <div className="timeline-step flex gap-2 md:gap-3 lg:gap-3">
                               <div className="flex flex-col items-center">
                                 <div className={`timeline-icon w-8 h-8 md:w-10 md:h-10 lg:w-10 lg:h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
@@ -567,7 +573,7 @@ export const MyOrder = () => {
                                     trackingStatus.step >= 2 ? 'opacity-100' : 'opacity-50'
                                   }`} />
                                 </div>
-                                {trackingStatus.step < 4 && (
+                                {trackingStatus.step < 6 && (
                                   <div className={`timeline-line w-1 h-10 md:h-12 lg:h-12 mt-2 rounded-full transition-all ${
                                     trackingStatus.step >= 3 ? 'bg-blue-500' : 'bg-gray-300'
                                   }`}></div>
@@ -577,27 +583,27 @@ export const MyOrder = () => {
                                   <h5 className={`font-semibold mb-0.5 md:mb-1 text-xs md:text-sm lg:text-sm ${
                                     trackingStatus.step >= 2 ? 'text-gray-900' : 'text-gray-400'
                                   }`}>
-                                    Processing
+                                    Processing Item
                                   </h5>
                                   <p className={`text-xs md:text-sm lg:text-sm ${
                                     trackingStatus.step >= 2 ? 'text-gray-700' : 'text-gray-400'
                                   }`}>
-                                    Your order is being prepared for shipment
+                                    Your items are being processed
                                   </p>
                                 </div>
                               </div>
 
-                            {/* Step 3: Shipped */}
+                            {/* Step 3: Packed */}
                             <div className="timeline-step flex gap-2 md:gap-3 lg:gap-3">
                               <div className="flex flex-col items-center">
                                 <div className={`timeline-icon w-8 h-8 md:w-10 md:h-10 lg:w-10 lg:h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
                                   trackingStatus.step >= 3 ? 'bg-purple-500 md:scale-110 active status-icon-glow' : 'bg-gray-300'
                                 }`}>
-                                  <FaTruck className={`text-white text-sm md:text-lg lg:text-lg ${
+                                  <FaBox className={`text-white text-sm md:text-lg lg:text-lg ${
                                     trackingStatus.step >= 3 ? 'opacity-100' : 'opacity-50'
                                   }`} />
                                 </div>
-                                {trackingStatus.step < 4 && (
+                                {trackingStatus.step < 6 && (
                                   <div className={`timeline-line w-1 h-10 md:h-12 lg:h-12 mt-2 rounded-full transition-all ${
                                     trackingStatus.step >= 4 ? 'bg-purple-500' : 'bg-gray-300'
                                   }`}></div>
@@ -607,35 +613,95 @@ export const MyOrder = () => {
                                   <h5 className={`font-semibold mb-0.5 md:mb-1 text-xs md:text-sm lg:text-sm ${
                                     trackingStatus.step >= 3 ? 'text-gray-900' : 'text-gray-400'
                                   }`}>
-                                    Shipped
+                                    Packed
                                   </h5>
                                   <p className={`text-xs md:text-sm lg:text-sm ${
                                     trackingStatus.step >= 3 ? 'text-gray-700' : 'text-gray-400'
                                   }`}>
-                                    Your order has been shipped
+                                    Your items have been packed
                                   </p>
                                 </div>
                               </div>
 
-                            {/* Step 4: Delivered */}
+                            {/* Step 4: Handed to Courier */}
                             <div className="timeline-step flex gap-2 md:gap-3 lg:gap-3">
                               <div className="flex flex-col items-center">
                                 <div className={`timeline-icon w-8 h-8 md:w-10 md:h-10 lg:w-10 lg:h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
-                                  trackingStatus.step >= 4 ? 'bg-green-500 md:scale-110 active status-icon-glow' : 'bg-gray-300'
+                                  trackingStatus.step >= 4 ? 'bg-orange-500 md:scale-110 active status-icon-glow' : 'bg-gray-300'
+                                }`}>
+                                  <FaTruck className={`text-white text-sm md:text-lg lg:text-lg ${
+                                    trackingStatus.step >= 4 ? 'opacity-100' : 'opacity-50'
+                                  }`} />
+                                </div>
+                                {trackingStatus.step < 6 && (
+                                  <div className={`timeline-line w-1 h-10 md:h-12 lg:h-12 mt-2 rounded-full transition-all ${
+                                    trackingStatus.step >= 5 ? 'bg-orange-500' : 'bg-gray-300'
+                                  }`}></div>
+                                )}
+                              </div>
+                                <div className="flex-1 pb-4 md:pb-5 lg:pb-5">
+                                  <h5 className={`font-semibold mb-0.5 md:mb-1 text-xs md:text-sm lg:text-sm ${
+                                    trackingStatus.step >= 4 ? 'text-gray-900' : 'text-gray-400'
+                                  }`}>
+                                    Handed to Courier
+                                  </h5>
+                                  <p className={`text-xs md:text-sm lg:text-sm ${
+                                    trackingStatus.step >= 4 ? 'text-gray-700' : 'text-gray-400'
+                                  }`}>
+                                    Handed to courier for delivery
+                                  </p>
+                                </div>
+                              </div>
+
+                            {/* Step 5: Shipment In Transit */}
+                            <div className="timeline-step flex gap-2 md:gap-3 lg:gap-3">
+                              <div className="flex flex-col items-center">
+                                <div className={`timeline-icon w-8 h-8 md:w-10 md:h-10 lg:w-10 lg:h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                                  trackingStatus.step >= 5 ? 'bg-cyan-500 md:scale-110 active status-icon-glow' : 'bg-gray-300'
+                                }`}>
+                                  <FaTruck className={`text-white text-sm md:text-lg lg:text-lg ${
+                                    trackingStatus.step >= 5 ? 'opacity-100' : 'opacity-50'
+                                  }`} />
+                                </div>
+                                {trackingStatus.step < 6 && (
+                                  <div className={`timeline-line w-1 h-10 md:h-12 lg:h-12 mt-2 rounded-full transition-all ${
+                                    trackingStatus.step >= 6 ? 'bg-cyan-500' : 'bg-gray-300'
+                                  }`}></div>
+                                )}
+                              </div>
+                                <div className="flex-1 pb-4 md:pb-5 lg:pb-5">
+                                  <h5 className={`font-semibold mb-0.5 md:mb-1 text-xs md:text-sm lg:text-sm ${
+                                    trackingStatus.step >= 5 ? 'text-gray-900' : 'text-gray-400'
+                                  }`}>
+                                    Shipment In Transit
+                                  </h5>
+                                  <p className={`text-xs md:text-sm lg:text-sm ${
+                                    trackingStatus.step >= 5 ? 'text-gray-700' : 'text-gray-400'
+                                  }`}>
+                                    Your shipment is on the way
+                                  </p>
+                                </div>
+                              </div>
+
+                            {/* Step 6: Delivery Completed */}
+                            <div className="timeline-step flex gap-2 md:gap-3 lg:gap-3">
+                              <div className="flex flex-col items-center">
+                                <div className={`timeline-icon w-8 h-8 md:w-10 md:h-10 lg:w-10 lg:h-10 rounded-full flex items-center justify-center shadow-lg transition-all ${
+                                  trackingStatus.step >= 6 ? 'bg-green-500 md:scale-110 active status-icon-glow' : 'bg-gray-300'
                                 }`}>
                                   <FaCheckCircle className={`text-white text-sm md:text-lg lg:text-lg ${
-                                    trackingStatus.step >= 4 ? 'opacity-100' : 'opacity-50'
+                                    trackingStatus.step >= 6 ? 'opacity-100' : 'opacity-50'
                                   }`} />
                                 </div>
                               </div>
                                 <div className="flex-1">
                                   <h5 className={`font-semibold mb-0.5 md:mb-1 text-xs md:text-sm lg:text-sm ${
-                                    trackingStatus.step >= 4 ? 'text-gray-900' : 'text-gray-400'
+                                    trackingStatus.step >= 6 ? 'text-gray-900' : 'text-gray-400'
                                   }`}>
-                                    Delivered
+                                    Delivery Completed
                                   </h5>
                                   <p className={`text-xs md:text-sm lg:text-sm ${
-                                    trackingStatus.step >= 4 ? 'text-gray-700' : 'text-gray-400'
+                                    trackingStatus.step >= 6 ? 'text-gray-700' : 'text-gray-400'
                                   }`}>
                                     Your order has been delivered
                                   </p>

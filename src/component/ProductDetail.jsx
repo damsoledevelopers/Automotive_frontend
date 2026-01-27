@@ -163,6 +163,7 @@ const ProductDetail = () => {
               subCategory: productData.class || "Parts",
               subSubCategory: productData.name,
               seller: productData.soldBy || "Mumbai/MUM",
+              vendorId: productData.vendorId,
               fulfilledBySparelo: true,
               spareloChoice: true,
               deliveryDays: productData.deliveryTime ? parseInt(productData.deliveryTime) || 4 : 4,
@@ -240,6 +241,7 @@ const ProductDetail = () => {
           reviews: product.reviews || 0,
           partNumber: product.partNumber || product.fullPartNumber || '',
           seller: product.seller || 'Unknown Seller',
+          vendorId: product.vendorId,
           quantity: quantity,
         };
         localStorage.setItem('pendingCartProduct', JSON.stringify(cartProduct));
@@ -264,6 +266,7 @@ const ProductDetail = () => {
           reviews: product.reviews || 0,
           partNumber: product.partNumber || product.fullPartNumber || '',
           seller: product.seller || 'Unknown Seller',
+          vendorId: product.vendorId,
           quantity: quantity,
         };
         // Add to cart with the specified quantity
@@ -378,7 +381,11 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6">
         {/* Breadcrumbs */}
-        <Breadcrumbs />
+        <Breadcrumbs 
+          category={product?.category || 'Maintenance Service Parts'} 
+          subcategory={product?.subCategory || 'Parts'}
+          productName={product?.name || 'Product'}
+        />
 
         {/* Breadcrumbs and Page Title */}
         <div className="mb-6">

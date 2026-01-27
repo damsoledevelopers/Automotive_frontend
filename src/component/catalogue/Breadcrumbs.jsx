@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 
-const Breadcrumbs = () => {
+const Breadcrumbs = ({ category, subcategory, productName }) => {
   const location = useLocation();
 
   // Extract the last part of the URL (after the last slash)
@@ -42,20 +42,32 @@ const Breadcrumbs = () => {
                 Catalogues
               </Link>
             </li>
-            <li><span className="text-gray-400">/</span></li>
-            <li>
-              <Link to="/catalog/maintenance_service_parts/" className="hover:text-red-600 transition-colors">
-                Maintenance Service Parts
-              </Link>
-            </li>
-            <li><span className="text-gray-400">/</span></li>
-            <li>
-              <Link to="/catalog/4032-belts/" className="hover:text-red-600 transition-colors">
-                Belt
-              </Link>
-            </li>
-            <li><span className="text-gray-400">/</span></li>
-            <li className="text-gray-800 font-semibold">Timing Belt</li>
+            {category && (
+              <>
+                <li><span className="text-gray-400">/</span></li>
+                <li>
+                  <span className="hover:text-red-600 transition-colors">
+                    {category}
+                  </span>
+                </li>
+              </>
+            )}
+            {subcategory && (
+              <>
+                <li><span className="text-gray-400">/</span></li>
+                <li>
+                  <span className="hover:text-red-600 transition-colors">
+                    {subcategory}
+                  </span>
+                </li>
+              </>
+            )}
+            {productName && (
+              <>
+                <li><span className="text-gray-400">/</span></li>
+                <li className="text-gray-800 font-semibold">{productName}</li>
+              </>
+            )}
           </>
         ) : isTimingBeltPage ? (
           <>

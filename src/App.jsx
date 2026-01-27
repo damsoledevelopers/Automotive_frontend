@@ -185,7 +185,10 @@ const Layout = ({ children }) => {
   return (
     <>
       {!hideHeaderFooter && <Header />}
-      <div className={!hideHeaderFooter ? "pt-[100px] sm:pt-[110px] md:pt-[110px]" : ""}>
+      <div
+        className={!hideHeaderFooter ? "pt-[100px] sm:pt-[110px] md:pt-[110px] pb-24 lg:pb-32" : ""}
+        style={!hideHeaderFooter ? { paddingBottom: 'calc(env(safe-area-inset-bottom) + 2rem)' } : {}}
+      >
         {children}
       </div>
       <ToastContainer />
@@ -225,7 +228,7 @@ function App() {
                           <ChooseMechanics />
                           {/* <SearchSection /> */}
 
-                         
+
                           {/* <WhyChooseAftermarket /> */}
                           <BrandTrustAndCarMakers />
                           <CurrentOffers />
@@ -290,71 +293,71 @@ function App() {
                     <Route path="/brands" element={<Brands />} />
                     <Route path="/brands/:brandSlug" element={<BrandDetail />} />
                     {/* Protected Routes - Require Authentication */}
-                    <Route 
-                      path="/cart" 
+                    <Route
+                      path="/cart"
                       element={
                         <ProtectedRoute>
                           <Cart />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/checkout/address" 
+                    <Route
+                      path="/checkout/address"
                       element={
                         <ProtectedRoute>
                           <ShippingAddress />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/checkout/review" 
+                    <Route
+                      path="/checkout/review"
                       element={
                         <ProtectedRoute>
                           <Review />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/checkout/payment" 
+                    <Route
+                      path="/checkout/payment"
                       element={
                         <ProtectedRoute>
                           <Payment />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/checkout/confirmation" 
+                    <Route
+                      path="/checkout/confirmation"
                       element={
                         <ProtectedRoute>
                           <OrderConfirmation />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/myprofile" 
+                    <Route
+                      path="/myprofile"
                       element={
                         <ProtectedRoute>
                           <MyProfile />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/myorder" 
+                    <Route
+                      path="/myorder"
                       element={
                         <ProtectedRoute>
                           <MyOrder />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    <Route 
-                      path="/mywishlist" 
+                    <Route
+                      path="/mywishlist"
                       element={
                         <ProtectedRoute>
                           <MyWishlist />
                         </ProtectedRoute>
-                      } 
+                      }
                     />
-                    
+
                     {/* Other Routes */}
                     <Route path="/wallet" element={<Wallet />} />
                     <Route path="/membership" element={<Membership />} />
