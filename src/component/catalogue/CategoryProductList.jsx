@@ -99,7 +99,52 @@ const CategoryProductList = ({
       // We keep a minimal map for backward compatibility with old URLs
       // but primarily rely on dynamic slug matching
       const categoryMap = {
+<<<<<<< Updated upstream
         // Minimal map for legacy URLs if needed
+=======
+        'maintenance_service_parts': 'Maintenance Service Parts',
+        'brakes': 'Brake',
+        'brake': 'Brake',
+        'filters': 'Filters',
+        'filter': 'Filters',
+        'engine': 'Engine',
+        'lighting': 'Lighting',
+        'suspension': 'Suspension',
+        'cooling': 'Cooling',
+        'cooling_system': 'Engine Cooling System',
+        'electrical': 'Electrical Components',
+        'electrical_components': 'Electrical Components',
+        'electric_components': 'Electrical Components',
+        'body': 'Body',
+        'interior': 'Interior',
+        'exhaust': 'Exhaust System',
+        'exhaust_system': 'Exhaust System',
+        'other': 'Other',
+        'air_conditioning': 'Air Conditioning',
+        'bearings': 'Bearings',
+        'belts_chains_rollers': 'Belts Chains And Rollers',
+        'belts': 'Belts Chains And Rollers',
+        'car_accessories': 'Car Accessories',
+        'clutch': 'Clutch',
+        'control_cables': 'Control Cables',
+        'fuel_system': 'Fuel Supply System',
+        'fuelsystem': 'Fuel Supply System',
+        'gaskets_sealingrings': 'Gaskets & Seals',
+        'ignition_glowplug': 'Ignition & Glowplug System',
+        'interior_comfort': 'Interior Comfort',
+        'oilsfluids': 'Oils & Fluids',
+        'pipes_hoses': 'Pipes & Hoses',
+        'repair_kits': 'Repair Kits',
+        'sensors_control_units': 'Sensors Relay and Control Units',
+        'steering': 'Steering',
+        'towbar': 'Towbar Parts',
+        'trims': 'Trims',
+        'tyres_and_alloys': 'Tyres and Alloys',
+        'transmission': 'Transmission',
+        'universal': 'Universal',
+        'wheels': 'Wheels',
+        'windscreen_cleaning_system': 'Windscreen Cleaning System'
+>>>>>>> Stashed changes
       };
 
       // Try to extract category name from slug
@@ -141,42 +186,13 @@ const CategoryProductList = ({
             category: categoryName,
             limit: 100
           });
-          
-          // If no products found, try alternative category name variations
-          const fetchedProducts = result.products || result.data?.products || [];
-          if (fetchedProducts.length === 0) {
-            console.log(`No products found for "${categoryName}", trying alternative names...`);
-            // Try common variations
-            const alternatives = [
-              categoryName.replace('System', '').trim(),
-              categoryName + ' System',
-              categoryName.replace(' and ', ' & '),
-              categoryName.replace(' & ', ' and ')
-            ];
-            
-            for (const altName of alternatives) {
-              if (altName !== categoryName) {
-                console.log(`Trying alternative: ${altName}`);
-                const altResult = await productService.getUserProducts({
-                  category: altName,
-                  limit: 100
-                });
-                const altProducts = altResult.products || altResult.data?.products || [];
-                if (altProducts.length > 0) {
-                  console.log(`Found ${altProducts.length} products with alternative name: ${altName}`);
-                  result = altResult;
-                  break;
-                }
-              }
-            }
-          }
         } else {
           // Fallback: fetch all approved products
           console.log('Fetching all approved products');
           result = await productService.getUserProducts({ limit: 100 });
         }
 
-        const fetchedProducts = result.products || result.data?.products || result.data || [];
+        const fetchedProducts = result.products || result.data?.products || [];
         console.log(`Received ${fetchedProducts.length} products`);
         setApiProducts(fetchedProducts.map(mapProductToFrontend));
       } catch (error) {

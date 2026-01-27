@@ -38,7 +38,7 @@ const allVehicleModels = {
   FORD: fordModels,
   FIAT: fiatModels,
   KIA: kiaModels,
-  "ASHOK LEYLAND": ashokLaylandModels,
+ " ASHOK LEYLAND": ashokLaylandModels,
   AUDI: audiModels,
 };
 
