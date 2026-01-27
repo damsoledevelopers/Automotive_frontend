@@ -144,6 +144,66 @@ export const authService = {
 };
 
 /**
+ * OTP Service - Handles OTP-related API calls
+ */
+export const otpService = {
+  /**
+   * Send OTP to mobile number
+   * @param {string} mobileNumber - 10-digit mobile number
+   * @returns {Promise}
+   */
+  sendOTP: async (mobileNumber) => {
+    try {
+      console.log('Sending OTP request to:', '/auth/otp/send', 'with mobile:', mobileNumber);
+      const response = await api.post('/auth/otp/send', { mobileNumber });
+      console.log('OTP response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('OTP send error:', error.response?.data || error.message);
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to send OTP';
+      throw new Error(errorMessage);
+    }
+  },
+
+  /**
+   * Verify OTP
+   * @param {string} mobileNumber - 10-digit mobile number
+   * @param {string} otp - 6-digit OTP
+   * @returns {Promise}
+   */
+  verifyOTP: async (mobileNumber, otp) => {
+    try {
+      const response = await api.post('/auth/otp/verify', { mobileNumber, otp });
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'OTP verification failed';
+      throw new Error(errorMessage);
+    }
+  },
+
+  /**
+   * Resend OTP
+   * @param {string} mobileNumber - 10-digit mobile number
+   * @returns {Promise}
+   */
+  resendOTP: async (mobileNumber) => {
+    try {
+      const response = await api.post('/auth/otp/resend', { mobileNumber });
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 
+                          error.message || 
+                          'Failed to resend OTP';
+      throw new Error(errorMessage);
+    }
+  },
+};
+
+/**
  * User Service - Handles all user-related API calls
  */
 
