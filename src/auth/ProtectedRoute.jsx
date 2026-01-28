@@ -34,11 +34,15 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Get user role from user object or localStorage fallback
   const userRoleFromStorage = localStorage.getItem('userRole');
-  const userRole = user.role || userRoleFromStorage;
+  const userRole = (user.role || userRoleFromStorage || '').toLowerCase();
+  // Only redirect to select-role when user has no role or role is pending; if they have a role, go to their dashboard
+  const needsRoleSelection = !userRole || userRole === 'pending';
 
-  // If specific roles are required, check if user has one of them
+  if (allowedRoles.length > 0 && needsRoleSelection) {
+    return <Navigate to="/onboarding/select-role" replace />;
+  }
+
   if (allowedRoles.length > 0 && userRole) {
     const normalizedUserRole = userRole.toLowerCase();
     const normalizedAllowedRoles = allowedRoles.map(role => (role || '').toLowerCase());

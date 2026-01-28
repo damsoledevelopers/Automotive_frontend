@@ -503,58 +503,83 @@ const Categories = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {!loading && filteredCategories.map((category) => (
-          <div key={category._id || category.id} className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 hover:shadow-xl transition-all group border-b-4 border-b-transparent hover:border-b-blue-500">
-            <div className="flex items-center justify-between mb-6">
-              <div className="w-14 h-14 bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors duration-300 shadow-sm group-hover:shadow-lg group-hover:shadow-blue-500/20 overflow-hidden">
-                {category.icon ? (
-                  <img src={category.icon} alt={category.name} className="w-full h-full object-cover" />
-                ) : (
-                  <FaBox size={24} />
-                )}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleAction('edit', category)}
-                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition border border-transparent hover:border-green-100"
-                >
-                  <FaEdit />
-                </button>
-                <button
-                  onClick={() => handleAction('delete', category)}
-                  disabled={loading}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition border border-transparent hover:border-red-100 disabled:opacity-50"
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            </div>
-            <h3 className="text-xl font-black text-gray-900 mb-1 truncate uppercase tracking-tight">{category.name}</h3>
-            <p className="text-xs text-gray-500 font-bold mb-2">
-              {getCategoryPath(category).path}
-            </p>
-            <span className={`inline-block px-2 py-1 text-[9px] font-black uppercase tracking-widest rounded-full mb-2 ${
-              getCategoryPath(category).level === 1 ? 'bg-blue-100 text-blue-700' :
-              getCategoryPath(category).level === 2 ? 'bg-green-100 text-green-700' :
-              'bg-purple-100 text-purple-700'
-            }`}>
-              {getCategoryPath(category).level === 1 ? 'Parent' : getCategoryPath(category).level === 2 ? 'Category' : 'Subcategory'}
-            </span>
-            <div className="flex items-center gap-4 border-t border-gray-50 pt-4 mt-4">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">Products</span>
-                <span className="text-sm font-bold text-gray-900">{category.products || category.productCount || 0}</span>
-              </div>
-              <div className="w-px h-8 bg-gray-100" />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest font-mono">Subcategories</span>
-                <span className="text-sm font-bold text-gray-900">{category.subcategories || category.subCategoryCount || 0}</span>
-              </div>
-            </div>
+      {!loading && filteredCategories.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Icon</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Path</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Products</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subcategories</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredCategories.map((category) => {
+                  const pathInfo = getCategoryPath(category);
+                  return (
+                    <tr key={category._id || category.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="w-10 h-10 bg-blue-50 flex items-center justify-center text-blue-600 rounded-lg overflow-hidden shrink-0">
+                          {category.icon ? (
+                            <img src={category.icon} alt={category.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <FaBox size={20} />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="font-semibold text-gray-900">{category.name}</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate" title={pathInfo.path}>
+                        {pathInfo.path}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-block px-2 py-1 text-xs font-semibold uppercase tracking-wider rounded-full ${
+                          pathInfo.level === 1 ? 'bg-blue-100 text-blue-700' :
+                          pathInfo.level === 2 ? 'bg-green-100 text-green-700' :
+                          'bg-purple-100 text-purple-700'
+                        }`}>
+                          {pathInfo.level === 1 ? 'Parent' : pathInfo.level === 2 ? 'Category' : 'Subcategory'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                        {category.products ?? category.productCount ?? 0}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                        {category.subcategories ?? category.subCategoryCount ?? 0}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleAction('edit', category)}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
+                            title="Edit"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            onClick={() => handleAction('delete', category)}
+                            disabled={loading}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
+                            title="Delete"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

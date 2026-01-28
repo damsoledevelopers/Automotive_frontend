@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FaEye, FaEdit, FaTrash, FaSearch, FaTools, FaMapMarkerAlt, FaStar, FaPlus, FaSpinner } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaSearch, FaTools, FaMapMarkerAlt, FaStar, FaSpinner } from 'react-icons/fa';
 import { mechanicGarageService } from '../../../../services/apiService';
 import { toast } from 'react-toastify';
 
 const Garages = () => {
-  const [view, setView] = useState('list'); // 'list', 'add', 'edit', 'view'
+  const [view, setView] = useState('list'); // 'list', 'edit', 'view'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGarage, setSelectedGarage] = useState(null);
   const [garages, setGarages] = useState([]);
@@ -92,36 +92,7 @@ const Garages = () => {
     try {
       setSaving(true);
       
-      if (view === 'add') {
-        // Create new garage
-        const result = await mechanicGarageService.createGarage(formData);
-        const garage = result.garage || result;
-        
-        // Show password in toast notification (non-blocking)
-        if (garage.generatedPassword) {
-          toast.success(
-            <div>
-              <div className="font-bold mb-1">Garage Created Successfully!</div>
-              <div className="text-sm">Email: <strong>{garage.email}</strong></div>
-              <div className="text-sm">Password: <strong className="font-mono">{garage.generatedPassword}</strong></div>
-              <div className="text-xs mt-1 text-gray-600">Share these credentials with the garage</div>
-            </div>,
-            { 
-              autoClose: 10000, // Show for 10 seconds
-              position: "top-right"
-            }
-          );
-        } else {
-          toast.success('Garage created successfully!');
-        }
-        
-        // Reset form and go back to list (don't block the flow)
-        setView('list');
-        setFormData({ name: '', email: '', location: '', phone: '', password: '', status: 'Active' });
-        setSelectedGarage(null);
-        fetchGarages();
-        return; // Exit early to prevent duplicate reset
-      } else if (view === 'edit' && selectedGarage) {
+      if (view === 'edit' && selectedGarage) {
         // Update existing garage
         const garageId = selectedGarage.id || selectedGarage._id;
         // Only send password if it's provided (not empty)
@@ -144,12 +115,6 @@ const Garages = () => {
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleAddGarage = () => {
-    setFormData({ name: '', email: '', location: '', phone: '', password: '', status: 'Active' });
-    setSelectedGarage(null);
-    setView('add');
   };
 
   if (view === 'view' && selectedGarage) {
@@ -196,11 +161,11 @@ const Garages = () => {
     );
   }
 
-  if (view === 'add' || view === 'edit') {
+  if (view === 'edit') {
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-black text-gray-900 uppercase">{view === 'edit' ? 'Edit Garage' : 'Add New Garage'}</h2>
+          <h2 className="text-2xl font-black text-gray-900 uppercase">Edit Garage</h2>
           <button onClick={() => setView('list')} className="text-gray-500 font-bold hover:text-gray-900">← Back</button>
         </div>
 
@@ -233,26 +198,23 @@ const Garages = () => {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                Password {view === 'add' ? (formData.password ? '(Custom)' : '(Auto-generated if empty)') : '(Leave empty to keep existing password)'}
+                Password (Leave empty to keep existing password)
               </label>
               <input 
                 type="password" 
                 className="w-full px-5 py-4 bg-gray-50 rounded-2xl font-bold" 
                 value={formData.password} 
                 onChange={e => setFormData({ ...formData, password: e.target.value })} 
-                placeholder={view === 'add' ? "Leave empty to auto-generate password" : "Leave empty to keep existing password"}
+                placeholder="Leave empty to keep existing password"
               />
               <p className="text-[10px] text-gray-500 mt-1">
-                {view === 'add' 
-                  ? "If left empty, a random password will be generated and shown after creation."
-                  : "If left empty, the existing password will remain unchanged. Only enter a new password if you want to change it."
-                }
+                If left empty, the existing password will remain unchanged. Only enter a new password if you want to change it.
               </p>
             </div>
           </div>
           <button type="submit" disabled={saving} className="w-full py-4 bg-blue-600 text-white font-black rounded-2xl uppercase tracking-widest hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2">
             {saving && <FaSpinner className="animate-spin" />}
-            {view === 'edit' ? 'Update Garage Profile' : 'Create Garage Account'}
+            Update Garage Profile
           </button>
         </form>
       </div>
@@ -266,9 +228,6 @@ const Garages = () => {
           <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Garage Management</h2>
           <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Manage registered garages</p>
         </div>
-        <button onClick={handleAddGarage} className="px-6 py-3 bg-blue-600 text-white font-black rounded-2xl uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:scale-105 transition active:scale-95 flex items-center gap-2">
-          <FaPlus /> Add Garage
-        </button>
       </div>
 
       <div className="bg-white rounded-lg shadow-md p-4 border border-gray-100">

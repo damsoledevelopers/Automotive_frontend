@@ -109,6 +109,25 @@ export const authService = {
   },
 
   /**
+   * Complete onboarding - set role and role-specific details (first-time login)
+   * @param {Object} data - { role, vendorDetails?, mechanicDetails?, garageDetails? }
+   */
+  completeOnboarding: async (data) => {
+    try {
+      const response = await api.put('/auth/complete-onboarding', data);
+      const user = response.data?.data?.user || response.data?.user || response.data;
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('userRole', user.role);
+      }
+      return user;
+    } catch (error) {
+      const msg = error.response?.data?.message || error.message || 'Failed to complete onboarding';
+      throw new Error(msg);
+    }
+  },
+
+  /**
    * Logout - clear local storage
    */
   logout: () => {

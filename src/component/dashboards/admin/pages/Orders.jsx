@@ -1,8 +1,34 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FaEye, FaDownload, FaSearch, FaCheckCircle, FaTimesCircle, FaShoppingCart, FaMoneyBillWave, FaChartLine, FaCalendarAlt, FaSpinner, FaTruck, FaBox, FaMapMarkerAlt, FaClipboardCheck } from 'react-icons/fa';
+import { FaEye, FaDownload, FaSearch, FaCheckCircle, FaTimesCircle, FaShoppingCart, FaMoneyBillWave, FaChartLine, FaCalendarAlt, FaSpinner, FaTruck, FaBox, FaMapMarkerAlt, FaClipboardCheck, FaEdit } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { orderService } from '../../../../services/apiService';
 import { useAuth } from '../../../../auth/AuthContext';
+
+// Define order status constants
+const ORDER_STATUSES = [
+  'Pending Payment',
+  'Confirmed',
+  'Processing Item',
+  'Packed',
+  'Handed to Courier',
+  'Shipment In Transit',
+  'Delivery Completed',
+  'Cancelled',
+  'Returned'
+];
+
+// Stage mapping for tracking
+const STAGE_MAPPING = {
+  'Pending Payment': 0,
+  'Confirmed': 0,
+  'Processing Item': 1,
+  'Packed': 2,
+  'Handed to Courier': 3,
+  'Shipment In Transit': 4,
+  'Delivery Completed': 5,
+  'Cancelled': -1,
+  'Returned': -1
+};
 
 const Orders = ({ ordersData: initialOrdersData }) => {
   const { user } = useAuth(); // Get logged-in user/vendor info
@@ -14,6 +40,10 @@ const Orders = ({ ordersData: initialOrdersData }) => {
   const [ordersData, setOrdersData] = useState(initialOrdersData || []);
   const [loading, setLoading] = useState(false);
   const [orderStats, setOrderStats] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [newStatus, setNewStatus] = useState('');
 
   // Fetch orders from API on component mount and when user changes
   useEffect(() => {
@@ -103,11 +133,43 @@ const Orders = ({ ordersData: initialOrdersData }) => {
     if (type === 'view') {
       setView('view');
     } else if (type === 'status_update') {
-      alert(`Order ${order.orderId} status updated to ${type} (Simulation)`);
+      setNewStatus(order.status);
+      setShowStatusModal(true);
     } else if (type === 'cancel') {
       if (window.confirm(`Cancel order ${order.orderId}?`)) {
-        alert('Order cancelled');
+        handleStatusChange(order, 'Cancelled');
       }
+    }
+  };
+
+  // Handle status update (from dropdown or modal)
+  const handleStatusChange = async (order, status) => {
+    try {
+      setUpdatingStatus(true);
+      setUpdatingOrderId(order.id);
+      
+      await orderService.updateOrderStatus(order.id, status);
+      
+      setOrdersData(prevOrders => 
+        prevOrders.map(o => 
+          o.id === order.id 
+            ? { ...o, status: status, raw: { ...o.raw, status: status } }
+            : o
+        )
+      );
+      
+      if (selectedOrder && selectedOrder.id === order.id) {
+        setSelectedOrder({ ...selectedOrder, status: status, raw: { ...selectedOrder.raw, status: status } });
+      }
+      
+      setShowStatusModal(false);
+      toast.success(`Order status updated to ${status}`);
+    } catch (error) {
+      console.error('Failed to update order status:', error);
+      toast.error('Failed to update order status: ' + error.message);
+    } finally {
+      setUpdatingStatus(false);
+      setUpdatingOrderId(null);
     }
   };
 
@@ -373,16 +435,35 @@ const Orders = ({ ordersData: initialOrdersData }) => {
 
               {/* Order Tracking Timeline */}
               <div className="space-y-4">
-                <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">📍 Order Tracking Timeline</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest">📍 Order Tracking Timeline</h3>
+                  <button
+                    onClick={() => {
+                      setNewStatus(selectedOrder.status);
+                      setShowStatusModal(true);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold"
+                  >
+                    <FaEdit /> Update Status
+                  </button>
+                </div>
+                
                 <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 border border-gray-200">
                   <div className="space-y-6">
                     {/* Stage 1 - Order Placed */}
                     <div className="flex gap-4 md:gap-6">
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                        <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
+                          STAGE_MAPPING[selectedOrder.status] >= 0 ? 'bg-green-500' : 'bg-gray-300'
+                        }`}>
                           <FaCheckCircle className="text-lg md:text-xl" />
                         </div>
-                        <div className="w-1.5 h-16 md:h-20 bg-green-300 mt-2 rounded-full"></div>
+                        {STAGE_MAPPING[selectedOrder.status] >= 1 && (
+                          <div className="w-1.5 h-16 md:h-20 bg-green-300 mt-2 rounded-full"></div>
+                        )}
+                        {STAGE_MAPPING[selectedOrder.status] < 1 && STAGE_MAPPING[selectedOrder.status] >= 0 && (
+                          <div className="w-1.5 h-16 md:h-20 bg-gray-300 mt-2 rounded-full"></div>
+                        )}
                       </div>
                       <div className="pb-6 pt-1">
                         <p className="font-black text-gray-900 text-base md:text-lg">Order Placed</p>
@@ -393,10 +474,17 @@ const Orders = ({ ordersData: initialOrdersData }) => {
                     {/* Stage 2 - Processing Item */}
                     <div className="flex gap-4 md:gap-6">
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-green-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                        <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
+                          STAGE_MAPPING[selectedOrder.status] >= 1 ? 'bg-green-500' : 'bg-gray-300'
+                        }`}>
                           <FaBox className="text-lg md:text-xl" />
                         </div>
-                        <div className="w-1.5 h-16 md:h-20 bg-green-300 mt-2 rounded-full"></div>
+                        {STAGE_MAPPING[selectedOrder.status] >= 2 && (
+                          <div className="w-1.5 h-16 md:h-20 bg-green-300 mt-2 rounded-full"></div>
+                        )}
+                        {STAGE_MAPPING[selectedOrder.status] === 1 && (
+                          <div className="w-1.5 h-16 md:h-20 bg-gray-300 mt-2 rounded-full"></div>
+                        )}
                       </div>
                       <div className="pb-6 pt-1">
                         <p className="font-black text-gray-900 text-base md:text-lg">Processing Item</p>
@@ -407,10 +495,17 @@ const Orders = ({ ordersData: initialOrdersData }) => {
                     {/* Stage 3 - Packed */}
                     <div className="flex gap-4 md:gap-6">
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                        <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
+                          STAGE_MAPPING[selectedOrder.status] >= 2 ? 'bg-green-500' : 'bg-gray-300'
+                        }`}>
                           <FaBox className="text-lg md:text-xl" />
                         </div>
-                        <div className="w-1.5 h-16 md:h-20 bg-blue-300 mt-2 rounded-full"></div>
+                        {STAGE_MAPPING[selectedOrder.status] >= 3 && (
+                          <div className="w-1.5 h-16 md:h-20 bg-green-300 mt-2 rounded-full"></div>
+                        )}
+                        {STAGE_MAPPING[selectedOrder.status] === 2 && (
+                          <div className="w-1.5 h-16 md:h-20 bg-gray-300 mt-2 rounded-full"></div>
+                        )}
                       </div>
                       <div className="pb-6 pt-1">
                         <p className="font-black text-gray-900 text-base md:text-lg">Packed</p>
@@ -421,10 +516,17 @@ const Orders = ({ ordersData: initialOrdersData }) => {
                     {/* Stage 4 - Handed to Courier */}
                     <div className="flex gap-4 md:gap-6">
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                        <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
+                          STAGE_MAPPING[selectedOrder.status] >= 3 ? 'bg-green-500' : 'bg-gray-300'
+                        }`}>
                           <FaTruck className="text-lg md:text-xl" />
                         </div>
-                        <div className="w-1.5 h-16 md:h-20 bg-orange-300 mt-2 rounded-full"></div>
+                        {STAGE_MAPPING[selectedOrder.status] >= 4 && (
+                          <div className="w-1.5 h-16 md:h-20 bg-green-300 mt-2 rounded-full"></div>
+                        )}
+                        {STAGE_MAPPING[selectedOrder.status] === 3 && (
+                          <div className="w-1.5 h-16 md:h-20 bg-gray-300 mt-2 rounded-full"></div>
+                        )}
                       </div>
                       <div className="pb-6 pt-1">
                         <p className="font-black text-gray-900 text-base md:text-lg">Handed to Courier</p>
@@ -435,10 +537,17 @@ const Orders = ({ ordersData: initialOrdersData }) => {
                     {/* Stage 5 - Shipment In Transit */}
                     <div className="flex gap-4 md:gap-6">
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-cyan-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                        <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
+                          STAGE_MAPPING[selectedOrder.status] >= 4 ? 'bg-green-500' : 'bg-gray-300'
+                        }`}>
                           <FaTruck className="text-lg md:text-xl" />
                         </div>
-                        <div className="w-1.5 h-16 md:h-20 bg-cyan-300 mt-2 rounded-full"></div>
+                        {STAGE_MAPPING[selectedOrder.status] >= 5 && (
+                          <div className="w-1.5 h-16 md:h-20 bg-green-300 mt-2 rounded-full"></div>
+                        )}
+                        {STAGE_MAPPING[selectedOrder.status] === 4 && (
+                          <div className="w-1.5 h-16 md:h-20 bg-gray-300 mt-2 rounded-full"></div>
+                        )}
                       </div>
                       <div className="pb-6 pt-1">
                         <p className="font-black text-gray-900 text-base md:text-lg">Shipment In Transit</p>
@@ -449,7 +558,9 @@ const Orders = ({ ordersData: initialOrdersData }) => {
                     {/* Stage 6 - Delivery Completed */}
                     <div className="flex gap-4 md:gap-6">
                       <div className="flex flex-col items-center">
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-green-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                        <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-white font-bold shadow-lg ${
+                          STAGE_MAPPING[selectedOrder.status] >= 5 ? 'bg-green-600' : 'bg-gray-300'
+                        }`}>
                           <FaCheckCircle className="text-lg md:text-xl" />
                         </div>
                       </div>
@@ -464,19 +575,68 @@ const Orders = ({ ordersData: initialOrdersData }) => {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="px-6 md:px-8 py-6 md:py-8 border-t border-gray-200 flex flex-col md:flex-row gap-4">
-            <button className="flex-1 py-3 md:py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-black rounded-xl uppercase tracking-widest hover:shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200">
-              Update Status
-            </button>
-            <button 
-              onClick={() => setView('list')} 
-              className="flex-1 py-3 md:py-4 bg-white border-2 border-gray-300 text-gray-900 font-black rounded-xl uppercase tracking-widest hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
-            >
-              Print Invoice
-            </button>
-          </div>
         </div>
+        
+        {/* Status Update Modal */}
+        {showStatusModal && selectedOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-2xl">
+                <h3 className="text-xl font-black">Update Order Status</h3>
+                <p className="text-blue-100 text-sm">Order ID: {selectedOrder.orderId}</p>
+              </div>
+              
+              <div className="p-6">
+                <p className="text-sm text-gray-600 mb-4">Select new status for this order:</p>
+                
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-6"
+                >
+                  <option value="">-- Select Status --</option>
+                  {ORDER_STATUSES.map(status => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowStatusModal(false);
+                      setNewStatus('');
+                    }}
+                    disabled={updatingStatus}
+                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!newStatus) {
+                        toast.error('Please select a status');
+                        return;
+                      }
+                      handleStatusChange(selectedOrder, newStatus);
+                    }}
+                    disabled={updatingStatus || !newStatus}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {updatingStatus ? (
+                      <>
+                        <FaSpinner className="animate-spin" /> Updating...
+                      </>
+                    ) : (
+                      <>
+                        <FaCheckCircle /> Update
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -679,13 +839,25 @@ const Orders = ({ ordersData: initialOrdersData }) => {
                   <td className="px-6 py-4 text-sm font-semibold text-gray-900">{order.amount}</td>
                   <td className="px-6 py-4 text-sm text-gray-600">{order.items}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                      }`}>
-                      {order.status}
-                    </span>
+                    <select
+                      value={order.status}
+                      onChange={(e) => handleStatusChange(order, e.target.value)}
+                      disabled={updatingOrderId === order.id}
+                      className={`min-w-[140px] px-2 py-1 text-xs rounded-full border border-transparent focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-opacity-90 cursor-pointer disabled:opacity-70 ${
+                        order.status === 'Delivery Completed' || order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                        order.status === 'Shipment In Transit' || order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'Processing Item' || order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'Cancelled' || order.status === 'Returned' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {ORDER_STATUSES.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                    {updatingOrderId === order.id && (
+                      <FaSpinner className="inline-block ml-1 animate-spin text-blue-600" />
+                    )}
                   </td>
                   <td className="px-6 py-4 text-xs text-gray-500">{order.date}</td>
                   <td className="px-6 py-4 text-right">
@@ -717,6 +889,67 @@ const Orders = ({ ordersData: initialOrdersData }) => {
           </table>
         </div>
       </div>
+      
+      {/* Status Update Modal */}
+      {showStatusModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-2xl">
+              <h3 className="text-xl font-black">Update Order Status</h3>
+              <p className="text-blue-100 text-sm">Order ID: {selectedOrder.orderId}</p>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4">Select new status for this order:</p>
+              
+              <select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-6"
+              >
+                <option value="">-- Select Status --</option>
+                {ORDER_STATUSES.map(status => (
+                  <option key={status} value={status}>{status}</option>
+                ))}
+              </select>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowStatusModal(false);
+                    setNewStatus('');
+                  }}
+                  disabled={updatingStatus}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-semibold disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (!newStatus) {
+                      toast.error('Please select a status');
+                      return;
+                    }
+                    handleStatusChange(selectedOrder, newStatus);
+                  }}
+                  disabled={updatingStatus || !newStatus}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {updatingStatus ? (
+                    <>
+                      <FaSpinner className="animate-spin" /> Updating...
+                    </>
+                  ) : (
+                    <>
+                      <FaCheckCircle /> Update
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

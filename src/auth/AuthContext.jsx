@@ -270,9 +270,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   /**
-   * Get dashboard path based on role
+   * Get dashboard path based on role (always redirect to role dashboard after login)
    */
   const getDashboardPath = useCallback((role) => {
+    const r = (role || '').toLowerCase();
     const paths = {
       [USER_ROLES.CUSTOMER]: '/',
       [USER_ROLES.VENDOR]: '/vendor/dashboard',
@@ -281,7 +282,7 @@ export const AuthProvider = ({ children }) => {
       [USER_ROLES.GARAGE]: '/garage/dashboard',
       [USER_ROLES.SHIPPING]: '/shipping/dashboard'
     };
-    return paths[role] || '/';
+    return paths[r] || '/';
   }, []);
 
   const value = {

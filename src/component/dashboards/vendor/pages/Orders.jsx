@@ -3,6 +3,18 @@ import { FaEye, FaFilter, FaDownload, FaSpinner, FaTimes, FaBox, FaTruck, FaChec
 import { orderService } from '../../../../services/apiService';
 import { toast } from 'react-toastify';
 
+const ORDER_STATUSES = [
+  'Pending Payment',
+  'Confirmed',
+  'Processing Item',
+  'Packed',
+  'Handed to Courier',
+  'Shipment In Transit',
+  'Delivery Completed',
+  'Cancelled',
+  'Returned'
+];
+
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [summary, setSummary] = useState({
@@ -15,6 +27,7 @@ const Orders = () => {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [updatingOrderId, setUpdatingOrderId] = useState(null);
 
   // Hide scrollbar styles
   const hideScrollbarStyle = `
@@ -105,6 +118,24 @@ const Orders = () => {
     setSelectedOrder(null);
   };
 
+  const handleStatusChange = async (order, status) => {
+    try {
+      setUpdatingOrderId(order.id);
+      await orderService.updateOrderStatus(order.id, status);
+      setOrders(prev =>
+        prev.map(o => (o.id === order.id ? { ...o, status, raw: { ...o.raw, status } } : o))
+      );
+      if (selectedOrder && selectedOrder.id === order.id) {
+        setSelectedOrder({ ...selectedOrder, status, raw: { ...selectedOrder.raw, status } });
+      }
+      toast.success(`Order status updated to ${status}`);
+    } catch (err) {
+      toast.error(err.message || 'Failed to update order status');
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
   if (loading && orders.length === 0) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -191,14 +222,25 @@ const Orders = () => {
                   <td className="px-4 py-3 text-sm font-semibold text-gray-900">₹{order.amount.toLocaleString()}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{order.items}</td>
                   <td className="px-4 py-3">
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
-                      order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {order.status}
-                    </span>
+                    <select
+                      value={order.status}
+                      onChange={(e) => handleStatusChange(order, e.target.value)}
+                      disabled={updatingOrderId === order.id}
+                      className={`min-w-[140px] px-2 py-1 text-xs rounded-full border border-transparent focus:ring-2 focus:ring-blue-500 cursor-pointer disabled:opacity-70 ${
+                        order.status === 'Delivery Completed' || order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                        order.status === 'Shipment In Transit' || order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'Processing Item' || order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'Cancelled' || order.status === 'Returned' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {ORDER_STATUSES.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                    {updatingOrderId === order.id && (
+                      <FaSpinner className="inline-block ml-1 animate-spin text-blue-600" />
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 text-xs rounded-full ${order.payment === 'Paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'

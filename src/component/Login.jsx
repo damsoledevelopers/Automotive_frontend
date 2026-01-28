@@ -228,12 +228,8 @@ const Login = () => {
         return;
       }
       
-      if (redirectState?.from) {
-        navigate(redirectState.from);
-        return;
-      }
-      
-      const dashboardPath = getDashboardPath(user.role);
+      // Always redirect to role-specific dashboard after login (not to myprofile or previous page)
+      const dashboardPath = getDashboardPath(user?.role);
       navigate(dashboardPath);
     } catch (err) {
       setLocalError(err.message || "Login failed. Please check credentials.");
